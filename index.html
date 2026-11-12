@@ -1,0 +1,889 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#16351f">
+<title>Roll On · Fortunes</title>
+<meta name="description" content="Family board game on the TV. Phones are your dice, your wallet and your cards.">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Roll On">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎲</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Fredoka:wght@600;700&family=Orbitron:wght@700;900&family=Nunito:wght@600;700;800;900&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="themes.js?v=1"></script>
+<script src="engine.js?v=1"></script>
+<style>
+:root{
+  --felt:#16351f; --felt2:#0b1f12; --board:#f1e4c0; --board2:#e6d3a2; --ink:#2b1d0e; --accent:#e0b23e; --accent-ink:#2a1b00;
+  --panel:rgba(0,0,0,.32); --line:rgba(255,255,255,.14); --fg:#fff8e8; --muted:#d9cba5; --good:#3ddc84; --bad:#ff5d5d;
+  --title:"Cinzel",Georgia,serif; --body:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:dark;
+}
+body.th-city{--felt:#18283a;--felt2:#0c1520;--board:#eef2ec;--board2:#d9e2d6;--ink:#1c2a21;--accent:#ffcf3f;--accent-ink:#2b2100;--muted:#b9c7d6;--title:"Fredoka",system-ui,sans-serif}
+body.th-space{--felt:#0b0e2a;--felt2:#04051a;--board:#1f2558;--board2:#161b45;--ink:#eef0ff;--accent:#7df9ff;--accent-ink:#00262a;--muted:#a9b2ea;--title:"Orbitron",system-ui,sans-serif}
+body.th-northpole{--felt:#7c1424;--felt2:#4a0a14;--board:#f5fbff;--board2:#dcecf6;--ink:#173a2a;--accent:#ffd34d;--accent-ink:#3a2600;--muted:#f5c9cf;--title:"Fredoka",system-ui,sans-serif}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:radial-gradient(ellipse at 50% 40%,var(--felt),var(--felt2) 75%);color:var(--fg);font-family:var(--body);-webkit-tap-highlight-color:transparent;overflow:hidden}
+body.ph{overflow:auto}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+input{font:inherit;color:var(--fg);background:rgba(0,0,0,.3);border:2px solid var(--line);border-radius:12px;padding:.8em .9em;width:100%;min-width:0}
+.hidden{display:none!important}
+.muted{color:var(--muted)}
+.ttl{font-family:var(--title);font-weight:900;letter-spacing:.02em}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.4em;border-radius:14px;padding:.75em 1.1em;font-weight:800;font-size:1rem;background:rgba(255,255,255,.08);border:2px solid var(--line);text-align:center;line-height:1.15}
+.btn.gold{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.good{background:var(--good);color:#04210f;border-color:var(--good)}
+.btn.bad{background:var(--bad);color:#2a0000;border-color:var(--bad)}
+.btn.big{font-size:1.2rem;padding:.95em 1.2em;width:100%}
+.btn.sm{padding:.45em .7em;font-size:.88rem;border-radius:10px}
+.btn:disabled{opacity:.4;cursor:default}
+.chip{display:inline-flex;align-items:center;gap:.35em;padding:.42em .75em;border-radius:99px;border:2px solid var(--line);background:rgba(0,0,0,.25);font-weight:800;font-size:.88rem}
+.chip.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.setrow{display:flex;flex-wrap:wrap;gap:.35em;align-items:center;margin:.3em 0}
+.setrow b{width:100%;font-size:.8em;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.06em}
+.tokdot{display:inline-grid;place-items:center;width:1.9em;height:1.9em;border-radius:50%;font-size:1em;flex:none;box-shadow:0 0 0 2px rgba(255,255,255,.8),0 2px 6px rgba(0,0,0,.5)}
+.toast{position:fixed;left:50%;top:14px;transform:translateX(-50%);background:var(--accent);color:var(--accent-ink);padding:.6em 1.1em;border-radius:99px;font-weight:900;z-index:99;animation:pop .25s;box-shadow:0 6px 20px rgba(0,0,0,.4);max-width:92vw;text-align:center}
+@keyframes pop{from{transform:translateX(-50%) scale(.6);opacity:0}}
+
+/* ---------- home ---------- */
+.home{max-width:520px;margin:0 auto;padding:6vh 1.2em 2em;display:flex;flex-direction:column;gap:1em;min-height:100vh}
+.home h1{font-family:var(--title);font-size:clamp(2.4rem,9vw,3.6rem);margin:.1em 0 0;line-height:1;text-align:center}
+.home h1 small{display:block;font-size:.38em;letter-spacing:.3em;color:var(--accent);margin-bottom:.4em}
+.gamecard{border:2px solid var(--line);border-radius:18px;padding:1em;background:var(--panel)}
+.gamecard.soon{opacity:.55}
+.gamecard h3{margin:.1em 0 .3em;font-family:var(--title)}
+body.home-b{overflow:auto}
+
+/* ---------- TV ---------- */
+.tv{display:grid;grid-template-columns:auto 1fr;height:100vh;width:100vw;gap:1.6vh;padding:1.6vh}
+.bwrap{position:relative;height:calc(100vh - 3.2vh);aspect-ratio:1;max-width:66vw}
+.board{position:absolute;inset:0;display:grid;grid-template-columns:1.5fr repeat(8,1fr) 1.5fr;grid-template-rows:1.5fr repeat(8,1fr) 1.5fr;gap:.25vh;background:var(--ink);border:.5vh solid var(--ink);border-radius:1.2vh;box-shadow:0 2vh 6vh rgba(0,0,0,.55)}
+.sq{position:relative;background:var(--board);color:var(--ink);display:flex;overflow:hidden;font-size:1.22vh;line-height:1.1;font-weight:800}
+.sq .band{flex:none;display:flex;align-items:center;justify-content:center;gap:.1vh;font-size:1.5vh;line-height:1}
+.sq .tx{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:.3vh .35vh;gap:.3vh;min-width:0}
+.sq .nm{overflow-wrap:anywhere}
+.sq .pr{font-weight:900;opacity:.75;font-size:1.15vh}
+.sq.b{flex-direction:column}.sq.b .band{height:22%}
+.sq.t{flex-direction:column-reverse}.sq.t .band{height:22%}
+.sq.l{flex-direction:row-reverse}.sq.l .band{width:22%;flex-direction:column}
+.sq.r{flex-direction:row}.sq.r .band{width:22%;flex-direction:column}
+.sq .ic{font-size:3.2vh;line-height:1}
+.sq.corner{background:var(--board2)}
+.sq.corner .ic{font-size:4.6vh}
+.sq.corner .nm{font-size:1.45vh;font-family:var(--title)}
+.sq.owned{box-shadow:inset 0 0 0 .45vh var(--oc)}
+.sq .own{position:absolute;right:.3vh;bottom:.3vh;width:2.2vh;height:2.2vh;border-radius:50%;display:grid;place-items:center;font-size:1.3vh;background:var(--oc);box-shadow:0 0 0 .2vh #fff}
+.sq.l .own{left:.3vh;right:auto}
+.sq.mort .tx,.sq.mort .band{opacity:.35}
+.sq.mort::after{content:"MORTGAGED";position:absolute;inset:auto 0 42% 0;text-align:center;font-size:1vh;font-weight:900;color:#a40000;transform:rotate(-18deg);letter-spacing:.08em}
+.sq.hl{animation:hl 1s ease-in-out infinite alternate}
+@keyframes hl{to{background:#fff6b8}}
+body.th-space .sq.hl{animation-name:hls}@keyframes hls{to{background:#3b4aa8}}
+.center{grid-area:2/2/10/10;background:linear-gradient(160deg,var(--board),var(--board2));color:var(--ink);position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2vh;text-align:center;overflow:hidden}
+.logo{font-family:var(--title);font-weight:900;font-size:6vh;line-height:.9;letter-spacing:.03em;text-shadow:0 .3vh 0 rgba(0,0,0,.12)}
+.logo small{display:block;font-size:.36em;letter-spacing:.32em;opacity:.7;margin-top:.5vh}
+.stage{width:100%;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.4vh;min-height:0}
+.stage .msg{font-size:2.6vh;font-weight:900}
+.stage .sub{font-size:1.9vh;font-weight:700;opacity:.8}
+.qrbox{background:#fff;padding:1.4vh;border-radius:1.4vh;display:inline-block;box-shadow:0 1vh 3vh rgba(0,0,0,.25)}
+.qrbox img,.qrbox canvas{display:block;width:30vh!important;height:30vh!important}
+.dice{display:flex;gap:2vh;justify-content:center}
+.die{width:9vh;height:9vh;border-radius:1.6vh;background:#fff;box-shadow:inset 0 -.6vh 0 rgba(0,0,0,.12),0 .8vh 1.6vh rgba(0,0,0,.3);display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:1.2vh;border:.25vh solid rgba(0,0,0,.15)}
+.die i{width:1.9vh;height:1.9vh;border-radius:50%;background:#1d1d1d;place-self:center;visibility:hidden}
+.die i.on{visibility:visible}
+.die.rolling{animation:tumble .18s linear infinite}
+@keyframes tumble{0%{transform:rotate(0) translateY(0)}50%{transform:rotate(180deg) translateY(-1vh)}100%{transform:rotate(360deg) translateY(0)}}
+.deed{width:28vh;background:#fff;color:#1d1d1d;border-radius:1vh;box-shadow:0 1vh 3vh rgba(0,0,0,.3);overflow:hidden;border:.3vh solid #1d1d1d;font-size:1.55vh;font-weight:700}
+.deed .hd{padding:1.1vh .8vh;font-weight:900;font-size:2.1vh;color:#fff;text-shadow:0 .15vh 0 rgba(0,0,0,.35);line-height:1.1}
+.deed .hd small{display:block;font-size:.6em;letter-spacing:.2em;opacity:.9}
+.deed table{width:100%;border-collapse:collapse;margin:.6vh 0}
+.deed td{padding:.25vh 1vh;text-align:left}
+.deed td:last-child{text-align:right;font-weight:900}
+.deed .ft{border-top:.2vh solid #ddd;padding:.6vh 1vh;font-size:1.35vh;opacity:.75}
+.bigcard{width:min(46vh,90%);background:#fffdf6;color:#222;border-radius:1.6vh;padding:2vh 2.4vh;box-shadow:0 1.2vh 3vh rgba(0,0,0,.35);border:.4vh solid var(--accent);animation:flip .5s}
+.bigcard .ci{font-size:6vh;line-height:1}
+.bigcard h4{margin:.4vh 0 1vh;font-family:var(--title);font-size:2.6vh}
+.bigcard p{margin:0;font-size:2.3vh;font-weight:800;line-height:1.25}
+@keyframes flip{from{transform:rotateY(90deg) scale(.7)}}
+.timerbar{width:min(46vh,90%);height:1.2vh;border-radius:99px;background:rgba(0,0,0,.15);overflow:hidden}
+.timerbar i{display:block;height:100%;background:var(--accent);transition:width .25s linear}
+.bidders{display:flex;gap:1vh;flex-wrap:wrap;justify-content:center}
+.bidders span{opacity:.3;font-size:3vh}.bidders span.in{opacity:1}
+.toks{position:absolute;inset:0;pointer-events:none}
+.tok{position:absolute;width:3.4vh;height:3.4vh;margin:-1.7vh 0 0 -1.7vh;border-radius:50%;display:grid;place-items:center;font-size:2.2vh;transition:left .2s,top .2s;box-shadow:0 0 0 .3vh #fff,0 .6vh 1.2vh rgba(0,0,0,.55);z-index:3}
+.tok.cur{width:4.4vh;height:4.4vh;margin:-2.2vh 0 0 -2.2vh;font-size:2.8vh;z-index:4;animation:bob .9s ease-in-out infinite alternate}
+.tok.jailed::after{content:"";position:absolute;inset:0;border-radius:50%;background:repeating-linear-gradient(90deg,transparent 0 .6vh,rgba(40,40,40,.85) .6vh .9vh)}
+@keyframes bob{to{transform:translateY(-.6vh)}}
+.side{display:flex;flex-direction:column;gap:1.4vh;min-width:0;min-height:0}
+.shead{display:flex;align-items:center;gap:1.4vh}
+.shead .ttl{font-size:3.2vh;line-height:1}
+.shead .code{margin-left:auto;text-align:right;font-size:1.6vh;color:var(--muted);font-weight:800}
+.shead .code b{display:block;font-size:3.6vh;color:var(--fg);letter-spacing:.12em;font-family:var(--title)}
+.info{display:flex;gap:1vh;flex-wrap:wrap}
+.info span{background:var(--panel);border:1px solid var(--line);border-radius:99px;padding:.5vh 1.3vh;font-weight:800;font-size:1.8vh}
+.info span.warn{background:var(--accent);color:var(--accent-ink)}
+.plist{display:flex;flex-direction:column;gap:.9vh}
+.prow{display:flex;align-items:center;gap:1.2vh;background:var(--panel);border:.25vh solid var(--line);border-radius:1.4vh;padding:.9vh 1.3vh;font-size:2vh;font-weight:800}
+.prow.turn{border-color:var(--accent);background:rgba(255,255,255,.12)}
+.prow.out{opacity:.4}
+.prow .pn{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prow .pn small{display:block;font-size:.7em;color:var(--muted);font-weight:700}
+.prow .cash{font-size:2.6vh;font-weight:900}
+.prow .tokdot{font-size:2.2vh}
+.minis{display:flex;flex-wrap:wrap;gap:.3vh;margin-top:.4vh}
+.minis i{width:1.2vh;height:1.2vh;border-radius:.25vh;display:inline-block;box-shadow:0 0 0 1px rgba(0,0,0,.4)}
+.minis i.m{opacity:.35}
+.feed{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;gap:.6vh;font-size:1.75vh;font-weight:700;color:var(--muted);mask-image:linear-gradient(transparent,#000 35%)}
+.feed div:last-child{color:var(--fg)}
+.tvctl{display:flex;gap:.8vh;flex-wrap:wrap}
+.tvctl .btn{font-size:1.5vh;padding:.7vh 1.2vh}
+.lobbyside .panel{background:var(--panel);border:.25vh solid var(--line);border-radius:1.6vh;padding:1.6vh}
+.lobbyside{font-size:1.8vh}
+.lobbyside .chip{font-size:1.6vh}
+.flyers{position:absolute;left:50%;top:9%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:.8vh;z-index:6;pointer-events:none;width:90%}
+.flyer{background:var(--ink);color:var(--board);padding:1vh 2vh;border-radius:99px;font-weight:900;font-size:2.1vh;animation:fly 3.6s forwards;box-shadow:0 .8vh 2vh rgba(0,0,0,.35);white-space:nowrap}
+@keyframes fly{0%{opacity:0;transform:translateY(1vh) scale(.8)}8%{opacity:1;transform:none}85%{opacity:1}100%{opacity:0;transform:translateY(-2vh)}}
+.podium{display:flex;align-items:flex-end;gap:2vh;justify-content:center}
+.podium .pp{display:flex;flex-direction:column;align-items:center;gap:.6vh;font-weight:900}
+.podium .blk{width:13vh;border-radius:1vh 1vh 0 0;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-family:var(--title);font-size:4vh}
+.awards{display:grid;grid-template-columns:1fr 1fr;gap:1vh;width:100%;max-width:70vh}
+.award{background:rgba(0,0,0,.08);border-radius:1vh;padding:1vh;font-size:1.6vh;font-weight:800;text-align:left;display:flex;gap:1vh;align-items:center}
+.award .ai{font-size:3vh}
+.paused{position:absolute;inset:0;background:rgba(0,0,0,.55);display:grid;place-items:center;z-index:10;font-family:var(--title);font-size:7vh;color:#fff}
+.snow{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.snow i{position:absolute;top:-2vh;border-radius:50%;background:#fff;animation:fall linear infinite}
+@keyframes fall{to{transform:translate(var(--dx),105vh)}}
+body.th-space .stars{position:fixed;inset:0;pointer-events:none;background-image:radial-gradient(1px 1px at 10% 20%,#fff,transparent),radial-gradient(1px 1px at 30% 70%,#fff,transparent),radial-gradient(2px 2px at 70% 30%,#fff,transparent),radial-gradient(1px 1px at 85% 80%,#fff,transparent),radial-gradient(1px 1px at 50% 50%,#fff,transparent),radial-gradient(2px 2px at 20% 90%,#cdf,transparent),radial-gradient(1px 1px at 90% 10%,#fff,transparent);opacity:.7}
+
+/* ---------- phone ---------- */
+.pw{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh;max-width:560px;margin:0 auto}
+.ptop{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:.6em;padding:.7em .9em;background:rgba(0,0,0,.45);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.ptop .nm{font-weight:900;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ptop .cash{font-weight:900;font-size:1.45rem}
+.ptop .gear{font-size:1.3rem;padding:.1em .3em}
+.pmain{flex:1;padding:1em .9em 6.5em;display:flex;flex-direction:column;gap:.9em}
+.ptabs{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;background:rgba(0,0,0,.6);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+.ptabs button{flex:1;padding:.75em .2em .8em;font-weight:800;font-size:.85rem;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:.1em;position:relative}
+.ptabs button b{font-size:1.4rem}
+.ptabs button.on{color:var(--fg);background:rgba(255,255,255,.08)}
+.ptabs .badge{position:absolute;top:.35em;right:28%;background:var(--bad);color:#fff;border-radius:99px;font-size:.7rem;padding:.05em .45em}
+.card{background:var(--panel);border:2px solid var(--line);border-radius:18px;padding:1em}
+.card.hot{border-color:var(--accent)}
+.card.red{border-color:var(--bad);background:rgba(120,0,0,.35)}
+.card h2{margin:0 0 .3em;font-size:1.35rem}
+.card h3{margin:0 0 .4em;font-size:1.05rem}
+.center-c{text-align:center}
+.bigemoji{font-size:4.5rem;line-height:1.1}
+.help{background:rgba(255,230,120,.14);border:2px dashed var(--accent);border-radius:14px;padding:.7em .8em;font-weight:700;font-size:.95rem}
+.pdice{display:flex;gap:1em;justify-content:center;margin:.4em 0}
+.pdice .die{width:5.2rem;height:5.2rem;border-radius:1rem;padding:.75rem}
+.pdice .die i{width:1.05rem;height:1.05rem}
+.shake{animation:shk 1.2s ease-in-out infinite}
+@keyframes shk{0%,100%{transform:rotate(0)}10%{transform:rotate(-14deg)}20%{transform:rotate(12deg)}30%{transform:rotate(-8deg)}40%{transform:rotate(0)}}
+.row2{display:flex;gap:.6em}
+.row2>*{flex:1}
+.stepper{display:flex;align-items:center;gap:.4em;justify-content:center;flex-wrap:wrap}
+.stepper{flex-wrap:nowrap}.stepper .btn.sm{padding:.45em .5em}
+.stepper .val{font-size:1.8rem;font-weight:900;min-width:4.2rem;text-align:center;white-space:nowrap}
+.pdeed{border-radius:14px;overflow:hidden;background:#fff;color:#1d1d1d;font-weight:700}
+.pdeed .hd{padding:.7em .8em;color:#fff;font-weight:900;font-size:1.2rem;text-shadow:0 1px 0 rgba(0,0,0,.35)}
+.pdeed .hd small{display:block;font-size:.65em;letter-spacing:.15em;opacity:.9}
+.pdeed table{width:100%;border-collapse:collapse;font-size:.92rem}
+.pdeed td{padding:.25em .8em}.pdeed td:last-child{text-align:right;font-weight:900}
+.pdeed .ft{padding:.4em .8em .6em;font-size:.82rem;opacity:.7;border-top:1px solid #ddd}
+.land{display:flex;align-items:center;gap:.6em;padding:.6em;border-radius:12px;background:rgba(0,0,0,.25);margin-top:.5em;flex-wrap:wrap}
+.land .sw{width:.9em;align-self:stretch;border-radius:4px;flex:none}
+.land .ln{flex:1;min-width:8em;font-weight:800}
+.land .ln small{display:block;color:var(--muted);font-weight:700}
+.land .acts{display:flex;gap:.35em;flex-wrap:wrap;width:100%}
+.land .acts .btn{flex:1}
+.land.m{opacity:.7}
+.pick{display:flex;flex-wrap:wrap;gap:.4em}
+.pick .chip{border-left-width:.6em}
+.vote{display:flex;gap:.8em}
+.vote .btn{flex:1;font-size:2.4rem;padding:.4em}
+.sheet{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:20;display:flex;align-items:flex-end}
+.sheet>div{background:var(--felt2);border-top:2px solid var(--line);border-radius:22px 22px 0 0;width:100%;max-width:560px;margin:0 auto;padding:1.1em 1em 2em;display:flex;flex-direction:column;gap:.7em}
+details.rules{font-size:.95rem}
+details.rules summary{font-weight:900;cursor:pointer}
+details.rules li{margin:.25em 0}
+.secret{font-size:1.9rem;font-weight:900;line-height:1.2;text-align:center;background:#fff;color:#222;border-radius:14px;padding:.6em}
+.timer{font-weight:900;color:var(--accent)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// =====================================================================
+// Roll On — TV + phone screens.
+// Same set-up as Buzz In: the TV runs the game, phones scan to join,
+// live sync over Supabase Realtime (broadcast only, nothing stored).
+// Add &local=1 to test with several tabs on one computer.
+// =====================================================================
+const SUPA_URL = "https://uqwlmegbelyqtbegxqlz.supabase.co";
+const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVxd2xtZWdiZWx5cXRiZWd4cWx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3NTYzNzAsImV4cCI6MjEwNzMzMjM3MH0.bSeF8_kwKqSrEj3n8Ku2OeSU8E5nMqJj0hcfgXb8cW0";
+const E = window.Engine, BOARD = E.BOARD, GROUPS = E.GROUPS;
+const P = new URLSearchParams(location.search);
+const LOCAL = P.has("local");
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const app = $("#app");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const now = () => Date.now();
+const uid = () => Math.random().toString(36).slice(2, 10);
+const ls = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { } }, del(k) { try { localStorage.removeItem(k); } catch (e) { } } };
+const code4 = () => Array.from({ length: 4 }, () => "BCDFGHJKLMNPQRSTVWXZ"[Math.random() * 20 | 0]).join("");
+const vib = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) { } };
+const fmtN = n => Number(n).toLocaleString("en-GB");
+const tok = (S, p) => E.theme(S).tokens[p.ci % 8];
+const ordinal = n => n + (["th", "st", "nd", "rd"][(n % 100 - 20) % 10] || ["th", "st", "nd", "rd"][n % 100] || "th");
+const PIPS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
+const dieHTML = (n, cls) => `<div class="die ${cls || ""}">${Array.from({ length: 9 }, (_, i) => `<i class="${PIPS[n].includes(i) ? "on" : ""}"></i>`).join("")}</div>`;
+function toast(t, ms) { const d = document.createElement("div"); d.className = "toast"; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), ms || 1800); }
+
+function setTheme(key) {
+  ["kingdom", "city", "space", "northpole"].forEach(k => document.body.classList.toggle("th-" + k, k === key));
+  const mc = document.querySelector('meta[name="theme-color"]'); if (mc) mc.content = getComputedStyle(document.body).getPropertyValue("--felt").trim() || "#16351f";
+  let sn = document.querySelector(".snow");
+  if (key === "northpole") { if (!sn) { sn = document.createElement("div"); sn.className = "snow"; for (let i = 0; i < 50; i++) { const z = 3 + Math.random() * 6, el = document.createElement("i"); el.style.cssText = `left:${Math.random() * 100}vw;width:${z}px;height:${z}px;--dx:${(Math.random() - .5) * 12}vw;animation-duration:${9 + Math.random() * 10}s;animation-delay:-${Math.random() * 18}s;opacity:${.3 + Math.random() * .5}`; sn.appendChild(el); } document.body.prepend(sn); } }
+  else if (sn) sn.remove();
+  let st = document.querySelector(".stars");
+  if (key === "space") { if (!st) { st = document.createElement("div"); st.className = "stars"; document.body.prepend(st); } } else if (st) st.remove();
+}
+
+// deed (title card) for a property or station
+function deedHTML(S, i, cls) {
+  const b = BOARD[i], t = E.theme(S), m = n => E.money(S, n);
+  if (b.t === "station") return `<div class="${cls}"><div class="hd" style="background:#333"><small>${esc(t.icons.station)} TRAVEL</small>${esc(E.sqName(S, i))}</div>
+    <table><tr><td>Price</td><td>${m(b.price)}</td></tr>${E.STATION_RENT.map((r, k) => `<tr><td>Rent if ${k + 1} owned</td><td>${m(r)}</td></tr>`).join("")}</table><div class="ft">Mortgage value ${m(b.price / 2)}</div></div>`;
+  const G = GROUPS[b.g];
+  return `<div class="${cls}"><div class="hd" style="background:${G.c}"><small>${esc(G.name.toUpperCase())}</small>${esc(E.sqName(S, i))}</div>
+    <table><tr><td>Price</td><td>${m(b.price)}</td></tr><tr><td>Rent</td><td>${m(b.rent[0])}</td></tr><tr><td>With full set</td><td>${m(b.rent[0] * 2)}</td></tr>
+    ${[1, 2, 3, 4].map(h => `<tr><td>With ${h} ${esc(t.house.i)}</td><td>${m(b.rent[h])}</td></tr>`).join("")}<tr><td>With a ${esc(t.hotel.n)} ${esc(t.hotel.i)}</td><td>${m(b.rent[5])}</td></tr></table>
+    <div class="ft">Each ${esc(t.house.n)} costs ${m(b.house)} · Mortgage ${m(b.price / 2)}</div></div>`;
+}
+const RULES = S => {
+  const t = E.theme(S), m = n => E.money(S, n);
+  return `<details class="rules"><summary>📖 How to play</summary><ul>
+  <li>Everyone starts with ${m(1500)}. On your turn, <b>shake your phone</b> (or tap) to roll.</li>
+  <li>Land on a place nobody owns: <b>buy it</b>, or it goes to a <b>secret auction</b> where everyone bids on their phone.</li>
+  <li>Land on someone else's place: pay them rent. Own a whole colour set and rent doubles, then build ${esc(t.house.n)}s ${esc(t.house.i)} and a ${esc(t.hotel.n)} ${esc(t.hotel.i)} for much bigger rent.</li>
+  <li>Pass ${esc(t.start)} to collect ${m(200)}. Doubles roll again, but three doubles sends you to ${esc(t.jail)}.</li>
+  <li>${esc(t.chance.icon)} ${esc(t.chance.name)} and ${esc(t.quest.icon)} ${esc(t.quest.name)} cards bring luck, bills, and fun tasks (impressions, mimes, tongue twisters) for bonus ${esc(t.moneyWord)}.</li>
+  <li>Trade places and ${esc(t.moneyWord)} with anyone, any time, from the Trade tab. Short of money? Mortgage places in My lands.</li>
+  <li>${esc(E.endText(S.settings))}. Your fortune = ${esc(t.moneyWord)} + places + buildings.</li></ul></details>`;
+};
+
+// ===== Transport (same as Buzz In) =====
+async function connect(room, onMsg, onStatus) {
+  if (LOCAL) {
+    const bc = new BroadcastChannel("rollon-" + room);
+    bc.onmessage = e => onMsg(e.data);
+    onStatus && onStatus("ok");
+    return { send: m => bc.postMessage(m) };
+  }
+  const sb = window.supabase.createClient(SUPA_URL, SUPA_KEY, { realtime: { params: { eventsPerSecond: 30 } } });
+  const ch = sb.channel("rollon-" + room, { config: { broadcast: { self: false } } });
+  ch.on("broadcast", { event: "m" }, ({ payload }) => onMsg(payload));
+  await new Promise((res, rej) => {
+    let done = false;
+    ch.subscribe(st => {
+      if (st === "SUBSCRIBED") { onStatus && onStatus("ok"); if (!done) { done = true; res(); } }
+      else if (st === "CHANNEL_ERROR" || st === "TIMED_OUT" || st === "CLOSED") { onStatus && onStatus("lost"); if (!done) { done = true; rej(new Error(st)); } }
+    });
+  });
+  return { send: m => ch.send({ type: "broadcast", event: "m", payload: m }) };
+}
+
+// ===== Sounds (TV) =====
+const SFX = (() => {
+  let ac = null, on = ls.get("rollon_sound", true);
+  const ctx = () => { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { } } if (ac && ac.state === "suspended") ac.resume(); return ac; };
+  const tone = (f, d, type, vol, at) => { const a = ctx(); if (!a || !on) return; const t0 = a.currentTime + (at || 0), o = a.createOscillator(), g = a.createGain(); o.type = type || "sine"; o.frequency.setValueAtTime(f, t0); g.gain.setValueAtTime(vol || .15, t0); g.gain.exponentialRampToValueAtTime(.001, t0 + d); o.connect(g); g.connect(a.destination); o.start(t0); o.stop(t0 + d + .02); };
+  const click = at => { const a = ctx(); if (!a || !on) return; const b = a.createBuffer(1, 2200, a.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 3); const s = a.createBufferSource(), g = a.createGain(); g.gain.value = .5; s.buffer = b; s.connect(g); g.connect(a.destination); s.start(a.currentTime + (at || 0)); };
+  return {
+    get on() { return on; }, toggle() { on = !on; ls.set("rollon_sound", on); if (on) ctx(); return on; }, unlock() { ctx(); },
+    dice() { for (let i = 0; i < 9; i++) click(i * .09 + Math.random() * .04); },
+    step() { tone(660, .06, "triangle", .06); },
+    coin() { tone(988, .08, "square", .06); tone(1319, .25, "square", .06, .08); },
+    pay() { tone(392, .12, "triangle", .12); tone(262, .25, "triangle", .12, .1); },
+    card() { tone(523, .1, "sine", .12); tone(784, .2, "sine", .12, .1); },
+    jail() { tone(196, .2, "sawtooth", .08); tone(147, .4, "sawtooth", .08, .2); },
+    build() { tone(440, .07, "square", .05); tone(554, .07, "square", .05, .08); tone(659, .15, "square", .05, .16); },
+    fanfare() { [523, 659, 784, 1047, 784, 1047].forEach((f, i) => tone(f, i === 5 ? .7 : .18, "triangle", .14, i * .17)); },
+    turn() { tone(880, .1, "sine", .08); },
+  };
+})();
+
+// ===== Router =====
+if (P.has("tv")) tvMain();
+else if (P.has("join")) phoneMain(P.get("join"));
+else home();
+
+function home() {
+  document.body.className = "home-b"; setTheme("kingdom");
+  const phone = matchMedia("(pointer:coarse)").matches && Math.min(innerWidth, innerHeight) < 700;
+  const sv = ls.get("rollon_save", null), canResume = sv && sv.S && sv.S.phase === "play";
+  app.innerHTML = `<div class="home">
+    <h1><small>ROLL ON</small>Board Games</h1>
+    <p class="muted" style="text-align:center;margin:0">The board goes on the TV. Your phone is your dice, your wallet and your cards.</p>
+    <div class="gamecard"><h3>🏰 Fortunes</h3><div class="muted">Buy up the land, charge rent, build ${"castles"}, trade and bid on your phone. Fun Quest tasks for everyone. Kingdom, City, Space and North Pole themes. About an hour or more.</div></div>
+    ${canResume ? `<button class="btn big gold" id="res">▶ Carry on the saved game (code ${esc(sv.S.room)}, round ${sv.S.round})</button>` : ""}
+    <button class="btn big ${phone || canResume ? "" : "gold"}" id="tvb">📺 This is the TV screen</button>
+    <p class="muted" style="font-size:.9rem;margin:0">Open on the laptop you cast from or plug into the TV, the same as Buzz In.</p>
+    <div style="display:flex;gap:.6em"><input id="code" maxlength="4" placeholder="Code" autocapitalize="characters" style="text-transform:uppercase;font-size:1.3rem;letter-spacing:.15em">
+    <button class="btn ${phone ? "gold" : ""}" id="jb" style="flex:none">Join</button></div>
+    <div class="gamecard soon"><h3>🔍 Mystery <small class="muted">(coming soon)</small></h3><div class="muted">Secret clues on every phone. Who ate the cake?</div></div>
+    <div class="gamecard soon"><h3>🗺️ Adventure <small class="muted">(coming soon)</small></h3><div class="muted">Everyone on one team, racing to the treasure before the storm.</div></div>
+  </div>`;
+  $("#tvb").onclick = () => { location.search = "?tv" + (LOCAL ? "&local=1" : ""); };
+  if (canResume) $("#res").onclick = () => { location.search = "?tv=" + sv.S.room + (LOCAL ? "&local=1" : ""); };
+  const go = () => { const c = $("#code").value.trim().toUpperCase(); if (c.length === 4) location.search = "?join=" + c + (LOCAL ? "&local=1" : ""); };
+  $("#jb").onclick = go; $("#code").onkeydown = e => { if (e.key === "Enter") go(); };
+}
+
+// ======================================================================
+// TV — runs the game
+// ======================================================================
+async function tvMain() {
+  document.body.className = "tvb";
+  let room = (P.get("tv") || "").toUpperCase().replace(/[^A-Z]/g, "").slice(0, 4);
+  const sv = ls.get("rollon_save", null);
+  let S;
+  if (room && sv && sv.S && sv.S.room === room && sv.S.phase !== "lobby") { S = sv.S; S.lastTick = now(); Object.values(S.players).forEach(p => p.seen = 0); }
+  else { room = room || code4(); S = E.newState(room); const st = ls.get("rollon_settings", null); if (st) Object.assign(S.settings, st); if (new Date().getMonth() === 11 && !st) S.settings.theme = "northpole"; }
+  history.replaceState(null, "", "?tv=" + room + (LOCAL ? "&local=1" : ""));
+  const joinUrl = location.origin + location.pathname + "?join=" + room + (LOCAL ? "&local=1" : "");
+  let link = null, conn = "Connecting…", lastBuild = "", lastFx = S.fxN || 0, lastRoll = S.rollN || 0, rollingUntil = 0, pushT = null, saveT = null, shownAuction = 0;
+  const send = m => link && link.send(m);
+  const alive = p => p.seen && now() - p.seen < 20000;
+
+  function push() {
+    render();
+    clearTimeout(pushT); pushT = setTimeout(() => send({ t: "state", st: E.pub(S) }), 40);
+    clearTimeout(saveT); saveT = setTimeout(() => { if (S.phase === "lobby") ls.set("rollon_settings", S.settings); ls.set("rollon_save", { S, at: now() }); }, 500);
+  }
+  function sendSecret() { const q = S.quest; if (q && q.t === "secret") send({ t: "secret", to: q.pid, q: { cat: q.cat, what: q.what, n: S.fxN } }); }
+
+  function onMsg(m) {
+    if (!m || !m.t || !m.id || m.t === "state" || m.t === "secret" || m.t === "nope") return;
+    const id = String(m.id);
+    if (m.t === "join") {
+      const r = E.join(S, id, m.name, m.kid);
+      if (r !== "ok") send({ t: "nope", to: id, why: r });
+      else { S.players[id].seen = now(); if (S.quest && S.quest.pid === id) setTimeout(sendSecret, 300); }
+      return push();
+    }
+    const p = S.players[id];
+    if (!p) { send({ t: "rejoin", to: id }); return; }
+    const was = alive(p); p.seen = now();
+    if (m.t === "hi") { if (!was) push(); if (S.quest && S.quest.pid === id && S.quest.t === "secret" && m.needSecret) sendSecret(); return; }
+    if (m.t === "leave") { E.leaveLobby(S, id); return push(); }
+    if (m.t === "act" && m.a) { const a = Object.assign({}, m.a); delete a.tv; if (E.act(S, id, a)) push(); }
+  }
+  if (LOCAL) { window.__S = () => S; window.__push = () => push(); window.__E = E; }
+  const hostAct = a => { SFX.unlock(); if (E.act(S, S.host || "tv", Object.assign({ tv: true }, a))) push(); };
+
+  // ---- clock ----
+  setInterval(() => { if (E.tick(S)) push(); else updLive(); }, 200);
+  setInterval(() => send({ t: "state", st: E.pub(S) }), 3000);
+  setInterval(() => { if (S.phase === "play") ls.set("rollon_save", { S, at: now() }); }, 10000);
+
+  // ---- board ----
+  const pos = i => i === 0 ? [10, 10] : i < 9 ? [10, 10 - i] : i === 9 ? [10, 1] : i < 18 ? [19 - i, 1] : i === 18 ? [1, 1] : i < 27 ? [1, i - 17] : i === 27 ? [1, 10] : [i - 26, 10];
+  const side = i => [0, 9, 18, 27].includes(i) ? "corner" : i < 9 ? "b" : i < 18 ? "l" : i < 27 ? "t" : "r";
+  function sqHTML(i) {
+    const b = BOARD[i], t = E.theme(S), o = S.own[i];
+    if (b.t === "start" || b.t === "jail" || b.t === "free" || b.t === "gojail") {
+      const extra = b.t === "start" ? `<div class="pr">Collect ${E.money(S, E.PASS)}</div>` : b.t === "jail" ? `<div class="pr">Just visiting</div>` : "";
+      return `<div class="tx"><div class="ic">${t.icons[b.t]}</div><div class="nm">${esc(E.sqName(S, i))}</div>${extra}</div>`;
+    }
+    if (b.t === "chance" || b.t === "quest") { const c = b.t === "chance" ? t.chance : t.quest; return `<div class="tx"><div class="ic">${c.icon}</div><div class="nm">${esc(c.name)}</div></div>`; }
+    const owner = o && S.players[o.o];
+    const band = b.t === "prop" ? `<div class="band" style="background:${GROUPS[b.g].c}">${o && o.h ? (o.h === 5 ? t.hotel.i : t.house.i.repeat(o.h)) : ""}</div>` : "";
+    const price = owner ? (o.m ? "" : `Rent ${E.money(S, E.rentOf(S, i))}`) : E.money(S, b.price);
+    return `${band}<div class="tx">${b.t === "station" ? `<div class="ic" style="font-size:2.4vh">${t.icons.station}</div>` : ""}<div class="nm">${esc(E.sqName(S, i))}</div><div class="pr">${price}</div></div>${owner ? `<span class="own">${tok(S, owner)}</span>` : ""}`;
+  }
+  function boardHTML(centre) {
+    return `<div class="board" id="board">${BOARD.map((b, i) => { const [r, c] = pos(i); return `<div class="sq ${side(i)}" id="sq${i}" style="grid-row:${r};grid-column:${c}"></div>`; }).join("")}
+      <div class="center" id="center">${centre}</div></div><div class="toks" id="toks"></div><div class="flyers" id="flyers"></div>`;
+  }
+  let sqCache = [];
+  function updBoard() {
+    const hl = S.phase === "play" ? (S.step === "buy" ? S.offer : S.auction ? S.auction.sq : -1) : -1;
+    BOARD.forEach((b, i) => {
+      const el = $("#sq" + i); if (!el) return;
+      const o = S.own[i], key = S.settings.theme + "|" + JSON.stringify(o) + "|" + (o ? E.rentOf(S, i) : "") + (hl === i);
+      if (sqCache[i] === key) return; sqCache[i] = key;
+      el.innerHTML = sqHTML(i);
+      el.classList.toggle("owned", !!o); el.classList.toggle("mort", !!(o && o.m)); el.classList.toggle("hl", hl === i);
+      if (o) el.style.setProperty("--oc", S.players[o.o].color);
+    });
+  }
+  // tokens: worked out from the clock so they move square by square in step with the engine
+  function tokenSpots() {
+    const spot = {}, m = S.move;
+    S.order.forEach(id => {
+      const p = S.players[id]; if (p.out || S.phase !== "play") return;
+      let at = p.pos;
+      if (m && m.pid === id) { const startAt = S.moveEnd - m.path.length * 240, k = Math.floor((now() - startAt) / 240); at = k < 0 ? p.pos : m.path[Math.min(m.path.length - 1, k)]; }
+      spot[id] = at;
+    });
+    return spot;
+  }
+  let lastSpots = "";
+  function updTokens(force) {
+    const box = $("#toks"), bd = $("#board"); if (!box || !bd) return;
+    const spots = tokenSpots(), key = JSON.stringify(spots) + S.turnPid + S.settings.theme + JSON.stringify(S.order.map(id => S.players[id].jail));
+    if (key === lastSpots && !force) return;
+    if (lastSpots && key !== lastSpots && S.move) SFX.step();
+    lastSpots = key;
+    const br = bd.getBoundingClientRect(), wr = box.getBoundingClientRect(), by = {};
+    Object.entries(spots).forEach(([id, i]) => (by[i] = by[i] || []).push(id));
+    const html = [];
+    Object.entries(by).forEach(([i, ids]) => {
+      const el = $("#sq" + i); if (!el) return; const r = el.getBoundingClientRect();
+      ids.forEach((id, k) => {
+        const n = ids.length, cols = n > 4 ? 3 : n > 1 ? 2 : 1, row = Math.floor(k / cols), col = k % cols, rows = Math.ceil(n / cols);
+        // sit on the colour band (inner edge) so the names stay readable; corners use the middle
+        const sd = side(+i), across = (col + .5) / cols - .5, deep = row * .2;
+        let x, y;
+        if (sd === "b") { x = .5 + across * .82; y = .13 + deep; } else if (sd === "t") { x = .5 + across * .82; y = .87 - deep; }
+        else if (sd === "l") { y = .5 + across * .82; x = .89 - deep * .8; } else if (sd === "r") { y = .5 + across * .82; x = .11 + deep * .8; }
+        else { x = .5 + across * .7; y = .42 + (row - (rows - 1) / 2) * .3; }
+        x = r.left - wr.left + r.width * x; y = r.top - wr.top + r.height * y;
+        const p = S.players[id], cls = (id === S.turnPid ? " cur" : "") + (p.jail && +i === E.JAIL ? " jailed" : "");
+        html.push(`<div class="tok${cls}" style="left:${x}px;top:${y}px;background:${p.color}">${tok(S, p)}</div>`);
+      });
+    });
+    box.innerHTML = html.join("");
+  }
+  // centre of the board: what's happening now
+  function stageHTML() {
+    const t = E.theme(S), cp = S.players[S.turnPid], cn = cp ? esc(cp.name) : "";
+    const dice = `<div class="dice" id="dice">${dieHTML(S.dice[0])}${dieHTML(S.dice[1])}</div>`;
+    switch (S.step) {
+      case "roll": return `${dice}<div class="msg">${tok(S, cp)} ${cn}'s turn</div><div class="sub">${cp.jail ? `In ${esc(t.jail)}! Roll a double, pay ${E.money(S, E.JAIL_FINE)} or use a card.` : "Shake your phone or tap Roll."}</div>`;
+      case "moving": return `${dice}<div class="msg">${tok(S, cp)} ${cn} rolled ${S.dice[0] + S.dice[1]}${S.dice[0] === S.dice[1] ? " · a double!" : ""}</div>`;
+      case "buy": return `<div style="display:flex;gap:3vh;align-items:center">${deedHTML(S, S.offer, "deed")}<div style="max-width:24vh"><div class="msg">${tok(S, cp)} ${cn}</div><div class="sub">Buy it for ${E.money(S, BOARD[S.offer].price)}, or send it to auction?</div></div></div>`;
+      case "auction": { const a = S.auction, al = E.alive(S); return `<div style="display:flex;gap:3vh;align-items:center">${deedHTML(S, a.sq, "deed")}<div style="max-width:26vh"><div class="msg">🔨 AUCTION!</div><div class="sub">Everyone bid secretly on your phone. Highest bid wins.</div><div class="bidders" id="bidders">${al.map(id => `<span class="${a.bids[id] ? "in" : ""}" title="${esc(S.players[id].name)}">${tok(S, S.players[id])}</span>`).join("")}</div></div></div><div class="timerbar"><i id="tb"></i></div>`; }
+      case "card": { const c = S.card; return `<div class="bigcard"><div class="ci">${c.icon}</div><h4>${esc(c.title)}</h4><p>${esc(c.txt)}</p></div><div class="sub">${cn}, tap OK on your phone.</div>`; }
+      case "quest": {
+        const q = S.quest, title = `<div class="ci">${q.icon}</div><h4>${esc(q.title)} for ${cn} · win ${E.money(S, q.reward)}</h4>`;
+        if (q.t === "secret") return `<div class="bigcard">${title}<p>🤫 ${esc(q.cat)}…<br>Their phone says what. <b>Shout out your guesses!</b></p></div><div class="timerbar"><i id="tb"></i></div><div class="sub">${cn} taps ✅ when someone guesses it.</div>`;
+        const v = E.voters(S); return `<div class="bigcard">${title}<p>${esc(q.txt)}</p></div><div class="timerbar"><i id="tb"></i></div><div class="sub">Everyone else: vote 👍 or 👎 on your phone</div><div class="bidders">${v.map(id => `<span class="${q.votes[id] != null ? "in" : ""}">${tok(S, S.players[id])}</span>`).join("")}</div>`;
+      }
+      case "debt": return `<div class="bigemoji" style="font-size:7vh">😬</div>${S.debts.map(d => `<div class="msg">${tok(S, S.players[d.pid])} ${esc(S.players[d.pid].name)} owes ${E.money(S, d.amt)}${d.to ? ` to ${esc(S.players[d.to].name)}` : ""}</div>`).join("")}<div class="sub">Raising the money on their phone (mortgage, sell, or trade)…</div>`;
+      case "end": { const la = S.lastAuction && now() - S.lastAuction.at < 9000 ? S.lastAuction : null;
+        const auc = la ? `<div class="bigcard" style="padding:1.4vh 2vh"><h4>🔨 ${esc(E.sqName(S, la.sq))}</h4><p style="font-size:2vh">${la.bids.length ? la.bids.map(([id, a], k) => `${k === 0 && la.w ? "🏆 " : ""}${esc(S.players[id] ? S.players[id].name : "?")}: ${E.money(S, a)}`).join("<br>") : "No bids"}</p></div>` : "";
+        return `${auc || dice}<div class="msg">${tok(S, cp)} ${cn}</div><div class="sub">Build, trade or press End turn on your phone.</div>`; }
+    }
+    return dice;
+  }
+  function updLive() {
+    if (S.phase !== "play") return;
+    updTokens();
+    const tb = $("#tb"); if (tb) { const end = S.auction ? S.auction.endsAt : S.quest ? S.quest.endsAt : 0, tot = S.auction ? 25000 : S.quest && S.quest.t === "secret" ? 75000 : 60000; tb.style.width = Math.max(0, Math.min(100, (end - now()) / tot * 100)) + "%"; }
+    const dc = $("#dice"); if (dc) { const r = now() < rollingUntil; if (r) dc.innerHTML = dieHTML(1 + Math.random() * 6 | 0, "rolling") + dieHTML(1 + Math.random() * 6 | 0, "rolling"); else if (dc.dataset.r === "1") dc.innerHTML = dieHTML(S.dice[0]) + dieHTML(S.dice[1]); dc.dataset.r = r ? "1" : "0"; }
+    const ti = $("#timeinfo"); if (ti) ti.innerHTML = infoHTML();
+  }
+  function infoHTML() {
+    const st = S.settings; let a = `<span>Round ${S.round}${st.end === "rounds" ? ` of ${st.endVal}` : ""}</span>`;
+    if (st.end === "time") { const left = Math.max(0, st.endVal * 60000 - S.playMs), mm = Math.ceil(left / 60000); a += left > 0 ? `<span>⏱️ ${mm >= 60 ? Math.floor(mm / 60) + "h " + (mm % 60) + "m" : mm + " min"} left</span>` : `<span class="warn">⏱️ Last round!</span>`; }
+    if (st.end === "rounds" && S.round >= st.endVal) a += `<span class="warn">Last round!</span>`;
+    if (st.end === "target") a += `<span>🎯 First to ${E.money(S, fmtN(st.endVal))}</span>`;
+    if (st.end === "classic") a += `<span>👑 Last one standing</span>`;
+    return a;
+  }
+  function playersHTML() {
+    const list = S.order.map(id => S.players[id]);
+    return list.map(p => {
+      const mine = E.mine(S, p.id), owes = E.owed(S, p.id);
+      const status = p.out ? "💀 Out" : [p.id === S.host ? "⭐ Host" : "", p.kid ? "🧒" : "", p.jail ? "⛓️ " + E.theme(S).jailName : "", owes ? "😬 owes " + E.money(S, owes) : "", alive(p) ? "" : "📵 offline"].filter(Boolean).join(" · ");
+      return `<div class="prow ${p.id === S.turnPid && S.phase === "play" ? "turn" : ""} ${p.out ? "out" : ""}"><span class="tokdot" style="background:${p.color}">${tok(S, p)}</span>
+        <div class="pn">${esc(p.name)}<small>${p.out ? status : [status, `Fortune ${E.money(S, fmtN(E.netWorth(S, p.id)))}`].filter(Boolean).join(" · ")}</small><div class="minis">${mine.map(i => `<i class="${S.own[i].m ? "m" : ""}" style="background:${BOARD[i].t === "station" ? "#333" : GROUPS[BOARD[i].g].c}"></i>`).join("")}</div></div>
+        <div class="cash">${p.out ? "" : E.money(S, fmtN(p.cash))}</div></div>`;
+    }).join("");
+  }
+
+  function build() {
+    setTheme(S.settings.theme);
+    const t = E.theme(S), logo = `<div class="logo">${esc(t.title)}<small>${esc(t.sub.toUpperCase())}</small></div>`;
+    sqCache = []; lastSpots = "";
+    if (S.phase === "lobby") {
+      const n = S.order.length;
+      app.innerHTML = `<div class="tv"><div class="bwrap">${boardHTML(`${logo}<div class="stage"><div class="qrbox" id="qr"></div><div class="msg">Scan to join · or enter code <span class="ttl" style="letter-spacing:.15em">${room}</span></div><div class="sub">${n < 2 ? "Needs at least 2 players" : n + " players in. Ready when you are!"}</div></div>`)}</div>
+        <div class="side lobbyside"><div class="shead"><span class="ttl">Roll On</span><div class="code">Join code<b>${room}</b></div></div>
+          <div class="panel"><div class="plist">${S.order.map(id => { const p = S.players[id]; return `<div class="prow"><span class="tokdot" style="background:${p.color}">${tok(S, p)}</span><div class="pn">${esc(p.name)}<small>${p.id === S.host ? "⭐ Host · " : ""}${p.kid ? "🧒 Child (helper on)" : "Grown-up"}</small></div></div>`; }).join("") || `<div class="muted">Waiting for players…</div>`}</div></div>
+          <div class="panel" id="sets">${setsHTML()}</div>
+          <button class="btn gold big" id="start" ${n < 2 ? "disabled" : ""}>Start the game</button>
+          <div class="muted" style="font-size:1.6vh">The first player to join is the host and can also start and change settings from their phone. ${esc(conn)}</div></div></div>`;
+      try { new QRCode($("#qr"), { text: joinUrl, width: 400, height: 400, correctLevel: QRCode.CorrectLevel.M }); } catch (e) { $("#qr").textContent = joinUrl; }
+      $("#start").onclick = () => hostAct({ t: "start" });
+      $("#sets").onclick = setClick;
+    } else if (S.phase === "play") {
+      app.innerHTML = `<div class="tv"><div class="bwrap">${boardHTML(`${logo}<div class="stage" id="stage"></div>`)}<div id="pz"></div></div>
+        <div class="side"><div class="shead"><span class="ttl">${esc(t.title)}</span><div class="code">Join code<b>${room}</b></div></div>
+          <div class="info" id="timeinfo"></div><div class="plist" id="plist"></div><div class="feed" id="feed"></div>
+          <div class="tvctl"><button class="btn" id="pause">⏸️ Pause</button><button class="btn" id="nudge" title="Moves a stuck turn along">⏭ Move it along</button><button class="btn" id="snd">${SFX.on ? "🔊" : "🔇"}</button><button class="btn" id="endnow">🏁 Finish game</button><span class="muted" style="font-size:1.4vh;align-self:center">${esc(conn)}</span></div></div></div>`;
+      $("#pause").onclick = () => hostAct({ t: "pause" });
+      $("#nudge").onclick = () => hostAct({ t: "nudge" });
+      $("#snd").onclick = e => { e.target.textContent = SFX.toggle() ? "🔊" : "🔇"; };
+      $("#endnow").onclick = () => { if (confirm("Finish the game now and count up everyone's fortune?")) hostAct({ t: "endnow" }); };
+    } else {
+      const R = S.results, P0 = S.players, rk = R.rank, pod = [rk[1], rk[0], rk[2]].filter(Boolean);
+      app.innerHTML = `<div class="tv"><div class="bwrap">${boardHTML(`${logo}<div class="stage"><div class="msg" style="font-size:3.4vh">🏆 ${esc(P0[rk[0].id].name)} wins!</div>
+        <div class="podium">${pod.map(r => { const k = rk.indexOf(r), p = P0[r.id]; return `<div class="pp"><span class="tokdot" style="background:${p.color};font-size:3vh">${tok(S, p)}</span>${esc(p.name)}<small>${r.out ? "Out" : E.money(S, fmtN(r.nw))}</small><div class="blk" style="height:${[16, 11, 8][k]}vh">${k + 1}</div></div>`; }).join("")}</div>
+        <div class="awards">${R.awards.map(a => `<div class="award"><span class="ai">${a[0]}</span><div>${esc(a[1])}<br><span style="opacity:.7">${esc(P0[a[2]].name)} · ${esc(a[3])}</span></div></div>`).join("")}</div></div>`)}</div>
+        <div class="side lobbyside"><div class="shead"><span class="ttl">Final fortunes</span></div>
+          <div class="panel"><div class="plist">${rk.map((r, k) => { const p = P0[r.id]; return `<div class="prow"><b>${ordinal(k + 1)}</b><span class="tokdot" style="background:${p.color}">${tok(S, p)}</span><div class="pn">${esc(p.name)}</div><div class="cash">${r.out ? "Out" : E.money(S, fmtN(r.nw))}</div></div>`; }).join("")}</div></div>
+          <div class="panel" id="sets">${setsHTML()}</div>
+          <button class="btn gold big" id="again">▶ Play again (same players)</button><button class="btn" id="tolobby">Back to the lobby (to add players)</button></div></div>`;
+      $("#again").onclick = () => hostAct({ t: "again" }); $("#tolobby").onclick = () => hostAct({ t: "lobby" }); $("#sets").onclick = setClick;
+    }
+  }
+  function setsHTML() {
+    const st = S.settings;
+    return E.SETTINGS().map(([k, label, vals]) => {
+      if (k === "endVal") { const v = E.END_VALS[st.end]; return v.length ? `<div class="setrow">${v.map(([x, l]) => `<button class="chip ${st.endVal === x ? "on" : ""}" data-set="endVal" data-val="${x}">${esc(l)}</button>`).join("")}</div>` : ""; }
+      return `<div class="setrow"><b>${label}</b>${vals.map(([x, l]) => `<button class="chip ${st[k] === x ? "on" : ""}" data-set="${k}" data-val="${x}">${esc(l)}</button>`).join("")}</div>`;
+    }).join("");
+  }
+  function setClick(e) { const b = e.target.closest("[data-set]"); if (!b) return; const v = b.dataset.val; hostAct({ t: "set", k: b.dataset.set, v: v === "true" ? true : v === "false" ? false : isNaN(v) ? v : Number(v) }); }
+
+  function render() {
+    const key = S.phase + "|" + S.settings.theme + "|" + (S.phase === "lobby" || S.phase === "end" ? JSON.stringify([S.order, S.order.map(id => [S.players[id].name, S.players[id].kid]), S.settings, S.host, conn]) : conn);
+    if (key !== lastBuild) { lastBuild = key; build(); }
+    if (S.phase === "lobby" || S.phase === "end") { updBoard(); return; }
+    // new roll: tumble the dice
+    if (S.rollN !== lastRoll) { lastRoll = S.rollN; rollingUntil = now() + 1100; SFX.dice(); }
+    const sk = S.step + "|" + S.turnPid + "|" + S.offer + "|" + S.rollN + "|" + JSON.stringify(S.auction ? Object.keys(S.auction.bids) : 0) + JSON.stringify(S.quest ? S.quest.votes : 0) + JSON.stringify(S.debts) + (S.card ? S.card.ci : "") + S.settings.theme;
+    const sg = $("#stage"); if (sg && sg.dataset.k !== sk) { sg.dataset.k = sk; sg.innerHTML = stageHTML(); if (now() < rollingUntil) $("#dice") && ($("#dice").dataset.r = "1"); }
+    $("#plist").innerHTML = playersHTML();
+    $("#feed").innerHTML = S.log.slice(-8).map(l => `<div>${esc(l)}</div>`).join("");
+    $("#pz").innerHTML = S.paused ? `<div class="paused">⏸ Paused</div>` : "";
+    $("#pause").textContent = S.paused ? "▶️ Resume" : "⏸️ Pause";
+    updBoard(); updTokens(true); updLive();
+    // effects
+    (S.fx || []).filter(f => f.n > lastFx).forEach(effect); lastFx = S.fxN;
+  }
+  function flyer(txt) { const f = $("#flyers"); if (!f) return; const d = document.createElement("div"); d.className = "flyer"; d.textContent = txt; f.appendChild(d); setTimeout(() => d.remove(), 3700); }
+  function effect(f) {
+    const P0 = S.players, n = id => P0[id] ? P0[id].name : "";
+    switch (f.k) {
+      case "cash": if (f.why === "pass") { flyer(`${n(f.pid)} +${E.money(S, f.amt)} for passing ${E.theme(S).start}`); SFX.coin(); } else if (f.why === "quest") { flyer(`🎉 ${n(f.pid)} wins ${E.money(S, f.amt)}!`); SFX.fanfare(); } break;
+      case "rent": flyer(`${n(f.pid)} → ${n(f.to)}: ${E.money(S, f.amt)} rent`); SFX.pay(); break;
+      case "bought": flyer(`${n(f.pid)} bought ${E.sqName(S, f.sq)}`); SFX.coin(); break;
+      case "sold": if (f.pid) { flyer(`🔨 Sold to ${n(f.pid)}!`); SFX.coin(); } break;
+      case "card": case "quest": SFX.card(); break;
+      case "jail": flyer(`⛓️ ${n(f.pid)} goes to ${E.theme(S).jail}`); SFX.jail(); break;
+      case "build": flyer(`${f.h === 5 ? E.theme(S).hotel.i : E.theme(S).house.i} ${n(f.pid)} built on ${E.sqName(S, f.sq)}`); SFX.build(); break;
+      case "trade": flyer(`🤝 ${n(f.a)} and ${n(f.b)} made a trade`); SFX.coin(); break;
+      case "out": flyer(`💀 ${n(f.pid)} is out!`); SFX.jail(); break;
+      case "turn": SFX.turn(); break;
+      case "end": SFX.fanfare(); break;
+    }
+  }
+  addEventListener("resize", () => { lastSpots = ""; sqCache = []; render(); });
+  addEventListener("click", () => SFX.unlock(), { once: true });
+
+  render();
+  try {
+    link = await connect(room, onMsg, st => { const c = st === "ok" ? (LOCAL ? "Local test mode" : "") : "Connection lost. Reload if phones stop working."; if (c !== conn) { conn = c; lastBuild = ""; render(); } });
+  } catch (e) { conn = "Couldn't connect. Check the internet and reload."; }
+  lastBuild = ""; push();
+}
+
+// ======================================================================
+// Phone
+// ======================================================================
+async function phoneMain(codeRaw) {
+  document.body.className = "ph";
+  const room = String(codeRaw || "").toUpperCase().replace(/[^A-Z]/g, "").slice(0, 4);
+  if (room.length !== 4) return home();
+  const SLOT = LOCAL ? (P.get("slot") || "") : ""; // &slot=2 lets several test tabs on one computer be different players
+  const KID = "rollon_id" + SLOT, KME = "rollon_me" + SLOT;
+  const id = ls.get(KID, null) || uid(); ls.set(KID, id);
+  let me = ls.get(KME, null);
+  let S = null, link = null, lastState = 0, tab = "play", lastKey = "", watch = false, secret = null, lastFx = -1, sheet = null;
+  let bid = null, bidFor = -1, tr = null, joinedOnce = false;
+  const send = m => link && link.send(Object.assign({ id }, m));
+  const act = a => { send({ t: "act", a }); vib(15); };
+
+  function joinForm() {
+    lastKey = "join"; setTheme("kingdom");
+    app.innerHTML = `<div class="home"><h1><small>ROLL ON</small>Fortunes</h1><p class="muted" style="text-align:center">Game ${esc(room)}</p>
+      <input id="nm" maxlength="14" placeholder="Your name" value="${esc(me ? me.name : "")}">
+      <label class="card" style="display:flex;gap:.7em;align-items:flex-start"><input type="checkbox" id="kid" style="width:auto;margin-top:.3em" ${me && me.kid ? "checked" : ""}><span>🧒 <b>A child is playing</b><br><span class="muted" style="font-size:.9em">Turns on the helper (tips on what to buy, easy money sorting) and kids' Quest tasks.</span></span></label>
+      <button class="btn big gold" id="go">Join</button>
+      ${watch ? `<p class="muted">This game has already started. If you were playing, type the same name you used before to carry on.</p>` : ""}</div>`;
+    const go = () => { const v = $("#nm").value.trim(); if (!v) return $("#nm").focus(); me = { name: v, kid: $("#kid").checked }; ls.set(KME, me); askMotion(); watch = false; lastKey = ""; send({ t: "join", name: me.name, kid: me.kid }); joinedOnce = true; render(); };
+    $("#go").onclick = go; $("#nm").onkeydown = e => { if (e.key === "Enter") go(); };
+  }
+
+  // ---- shake to roll ----
+  let motionOK = false, lastA = null, lastShake = 0;
+  function askMotion() {
+    try { if (window.DeviceMotionEvent && typeof DeviceMotionEvent.requestPermission === "function") DeviceMotionEvent.requestPermission().then(r => { motionOK = r === "granted"; }).catch(() => { }); else motionOK = true; } catch (e) { }
+  }
+  addEventListener("devicemotion", e => {
+    const a = e.accelerationIncludingGravity; if (!a || a.x == null) return;
+    if (lastA) { const d = Math.abs(a.x - lastA.x) + Math.abs(a.y - lastA.y) + Math.abs(a.z - lastA.z); if (d > 26 && now() - lastShake > 1500 && canRoll()) { lastShake = now(); doRoll(); } }
+    lastA = { x: a.x, y: a.y, z: a.z };
+  });
+  const canRoll = () => S && S.phase === "play" && S.turnPid === id && S.step === "roll" && !S.paused && tab === "play";
+  function doRoll() { if (!canRoll()) return; act({ t: "roll" }); vib([40, 30, 40, 30, 80]); const pd = $("#pdice"); if (pd) pd.innerHTML = dieHTML(1 + Math.random() * 6 | 0, "rolling") + dieHTML(1 + Math.random() * 6 | 0, "rolling"); }
+
+  function onMsg(m) {
+    if (!m) return;
+    if (m.t === "state") {
+      const first = !S; S = m.st; lastState = now();
+      if (me && !S.players[id] && !watch) send({ t: "join", name: me.name, kid: me.kid });
+      if (first) lastFx = S.fxN || 0;
+      (S.fx || []).filter(f => f.n > lastFx).forEach(effect); lastFx = S.fxN || 0;
+      if (S.quest && S.quest.pid === id && S.quest.t === "secret" && !secret) send({ t: "hi", needSecret: true });
+      if (!S.quest) secret = null;
+      render(); return;
+    }
+    if (m.to !== id) return;
+    if (m.t === "secret") { secret = m.q; lastKey = ""; render(); }
+    if (m.t === "rejoin" && me) send({ t: "join", name: me.name, kid: me.kid });
+    if (m.t === "nope") { if (m.why === "watch") { watch = true; lastKey = ""; render(); } if (m.why === "full") toast("Sorry, the game is full (8 players)."); }
+  }
+  function effect(f) {
+    if (f.k === "turn" && f.pid === id) { vib([80, 60, 80]); toast("🎲 Your turn!"); if (tab !== "play") { tab = "play"; lastKey = ""; } }
+    if (f.k === "rent" && f.pid === id) vib(200);
+    if (f.k === "rent" && f.to === id) { vib([30, 30, 30]); toast(`💰 ${S.players[f.pid].name} paid you ${E.money(S, f.amt)} rent`); }
+    if (f.k === "offer" && f.to === id) { vib([60, 40, 60]); toast(`🤝 ${S.players[f.pid].name} sent you a trade offer`); }
+    if (f.k === "declined" && f.pid === id) toast("Your trade offer was turned down.");
+    if (f.k === "trade" && (f.a === id || f.b === id)) toast("🤝 Trade done!");
+    if (f.k === "debt" && f.pid === id) { vib(300); tab = "play"; lastKey = ""; }
+    if (f.k === "auction") { vib(60); tab = "play"; lastKey = ""; }
+    if (f.k === "quest" && S.quest && S.quest.t === "perform") { tab = "play"; lastKey = ""; }
+    if (f.k === "jail" && f.pid === id) vib(400);
+  }
+  setInterval(() => { send({ t: "hi" }); if (S && now() - lastState > 12000) { const w = $("#lost"); if (w) w.classList.remove("hidden"); } }, 5000);
+  setInterval(() => { const t = $("#ptm"); if (t && S) { const end = S.auction ? S.auction.endsAt : S.quest ? S.quest.endsAt : 0; t.textContent = end ? Math.max(0, Math.ceil((end - now()) / 1000)) + "s" : ""; } }, 250);
+
+  const mineP = () => S && S.players[id];
+  const helperOn = () => { const p = mineP(); return S && p && (S.settings.helper === "all" || (S.settings.helper === "kids" && p.kid)); };
+  const adviceHTML = () => { if (!helperOn()) return ""; const a = E.advice(S, id); return a ? `<div class="help">${a.map(esc).join("<br>")}</div>` : ""; };
+  const m = n => E.money(S, fmtN(n));
+  const pname = pid => S.players[pid] ? esc(S.players[pid].name) : "?";
+  const ptok = pid => S.players[pid] ? `<span class="tokdot" style="background:${S.players[pid].color};font-size:.75em">${tok(S, S.players[pid])}</span>` : "";
+
+  function render() {
+    if (!me || (watch && !S?.players[id])) { if (lastKey !== "join") joinForm(); return; }
+    if (S) setTheme(S.settings.theme);
+    const p = mineP();
+    const key = !S ? "wait" : !p ? "joining" : [S.phase, tab, S.step, S.turnPid, S.offer, S.rollN, S.auction ? S.auction.sq + (S.auction.bids[id] ? "b" : "") : "", S.quest ? S.quest.ti + (S.quest.votes[id] != null ? "v" : "") + (S.quest.ready ? "r" : "") : "", JSON.stringify(S.debts), JSON.stringify(S.trades), S.card ? S.card.ci : "", p.cash, p.jail, p.esc ? p.esc.length : 0, JSON.stringify(S.own), S.paused, S.settings, S.host, S.order.length, secret ? secret.what : "", S.phase !== "play" ? JSON.stringify(S.order.map(x => S.players[x].name + S.players[x].kid)) : "", p.out, JSON.stringify(tr)].join("|");
+    if (key === lastKey) return; lastKey = key;
+    if (!S) { app.innerHTML = `<div class="home" style="justify-content:center;text-align:center"><div class="bigemoji">🎲</div><h2>Finding the TV…</h2><p class="muted">Make sure the TV screen is on game ${esc(room)}.</p></div>`; return; }
+    if (!p) { app.innerHTML = `<div class="home" style="justify-content:center;text-align:center"><div class="bigemoji">🎲</div><h2>Joining…</h2></div>`; return; }
+    const isHost = S.host === id, inPlay = S.phase === "play";
+    const incoming = inPlay ? Object.values(S.trades).filter(t => t.to === id).length : 0;
+    app.innerHTML = `<div class="pw"><div class="ptop"><span class="tokdot" style="background:${p.color}">${tok(S, p)}</span><span class="nm">${esc(p.name)}${isHost ? " ⭐" : ""}</span><span class="timer" id="ptm"></span>${inPlay && !p.out ? `<span class="cash">${m(p.cash)}</span>` : ""}${isHost && inPlay ? `<button class="gear" id="gear">⚙️</button>` : ""}</div>
+      <div class="help hidden" id="lost" style="margin:.6em">📡 Lost touch with the TV. Check the TV screen is still open, or reload this page.</div>
+      <div class="pmain" id="pm">${body()}</div>
+      ${inPlay && !p.out ? `<div class="ptabs">${[["play", "🎲", "Play"], ["lands", E.theme(S).hotel.i, "My lands"], ["trade", "🤝", "Trade"]].map(([k, i, l]) => `<button class="${tab === k ? "on" : ""}" data-tab="${k}"><b>${i}</b>${l}${k === "trade" && incoming ? `<span class="badge">${incoming}</span>` : ""}</button>`).join("")}</div>` : ""}</div>`;
+    wire();
+    if (sheet) openSheet(sheet);
+  }
+
+  function body() {
+    const p = mineP(), t = E.theme(S);
+    if (S.phase === "lobby") {
+      const isHost = S.host === id;
+      return `<div class="card center-c"><div class="bigemoji">${tok(S, p)}</div><h2>You're in!</h2><p class="muted" style="margin:.2em 0">${p.kid ? "🧒 Child player · helper on" : "Grown-up player"} · <button id="edit" style="text-decoration:underline;color:var(--muted)">change</button></p></div>
+        ${isHost ? `<div class="card"><h3>⭐ You're the host</h3><div id="sets">${phoneSets()}</div><button class="btn gold big" id="start" style="margin-top:.6em" ${S.order.length < 2 ? "disabled" : ""}>Start the game</button><div class="muted center-c" style="margin-top:.4em">${S.order.length} player${S.order.length === 1 ? "" : "s"} in${S.order.length < 2 ? ", needs at least 2" : ""}.</div></div>`
+          : `<div class="card center-c"><p style="margin:0">Waiting for ${pname(S.host)} to start the game.</p><p class="muted" style="margin:.4em 0 0">${esc(t.label)} · ${esc(E.endText(S.settings))}</p></div>`}
+        <div class="card">${RULES(S)}</div><button class="btn" id="leave">Leave the game</button>`;
+    }
+    if (S.phase === "end") {
+      const R = S.results, k = R.rank.findIndex(r => r.id === id), r = R.rank[k];
+      return `<div class="card center-c"><div class="bigemoji">${k === 0 ? "🏆" : k === 1 ? "🥈" : k === 2 ? "🥉" : "🎲"}</div><h2>${k === 0 ? "You win!" : `You came ${ordinal(k + 1)}`}</h2><p class="muted" style="margin:0">${r && !r.out ? `Your fortune: ${m(r.nw)}` : "You went bust, but there's always next time!"}</p></div>
+        ${R.awards.filter(a => a[2] === id).map(a => `<div class="card hot">${a[0]} <b>${esc(a[1])}</b> · ${esc(a[3])}</div>`).join("")}
+        ${S.host === id ? `<div class="card"><div id="sets">${phoneSets()}</div><button class="btn gold big" id="again" style="margin-top:.5em">▶ Play again</button><button class="btn big" id="tolobby" style="margin-top:.5em">Back to the lobby</button></div>` : `<p class="muted center-c">Waiting for ${pname(S.host)} to start another game.</p>`}`;
+    }
+    if (p.out) return `<div class="card center-c"><div class="bigemoji">💀</div><h2>You're out!</h2><p class="muted">Keep watching the TV to see who wins.</p></div>`;
+    if (S.paused) return `<div class="card center-c"><div class="bigemoji">⏸</div><h2>Game paused</h2><p class="muted">${S.host === id ? "Tap ⚙️ to carry on." : "Waiting for the host to carry on."}</p></div>`;
+    if (tab === "lands") return landsHTML();
+    if (tab === "trade") return tradeHTML();
+    return playHTML();
+  }
+  function phoneSets() {
+    const st = S.settings;
+    return E.SETTINGS().map(([k, label, vals]) => {
+      if (k === "endVal") { const v = E.END_VALS[st.end]; return v.length ? `<div class="setrow">${v.map(([x, l]) => `<button class="chip ${st.endVal === x ? "on" : ""}" data-set="endVal" data-val="${x}">${esc(l)}</button>`).join("")}</div>` : ""; }
+      return `<div class="setrow"><b>${label}</b>${vals.map(([x, l]) => `<button class="chip ${st[k] === x ? "on" : ""}" data-set="${k}" data-val="${x}">${esc(l)}</button>`).join("")}</div>`;
+    }).join("");
+  }
+
+  function playHTML() {
+    const p = mineP(), t = E.theme(S), cur = S.players[S.turnPid], myTurn = S.turnPid === id, out = [];
+    // trade offers waiting for me
+    Object.values(S.trades).filter(x => x.to === id).forEach(x => out.push(offerCard(x, true)));
+    // money owed
+    const owes = E.owed(S, id);
+    if (owes) {
+      const pl = E.raisePlan(S, id, owes);
+      out.push(`<div class="card red"><h2>😬 You owe ${m(owes)}</h2><p style="margin:.2em 0 .7em">You have ${m(p.cash)}. Raise the rest by mortgaging places or selling ${esc(t.house.n)}s in <b>My lands</b>, or trade with someone.</p>${adviceHTML()}
+        ${pl.enough ? `<button class="btn gold big" id="auto" style="margin-top:.6em">🪄 Sort it for me</button>` : ""}<button class="btn big" data-tab="lands" style="margin-top:.5em">Go to My lands</button><button class="btn bad" id="bust" style="margin-top:.8em;width:100%">I can't pay — I'm out</button></div>`);
+      return out.join("");
+    }
+    if (S.step === "auction" && S.auction) {
+      const a = S.auction, done = a.bids[id];
+      if (bidFor !== a.sq + "|" + S.rollN) { bidFor = a.sq + "|" + S.rollN; bid = helperOn() ? E.suggestBid(S, id) : 0; }
+      out.push(`<div class="card hot"><h2>🔨 Auction!</h2>${deedHTML(S, a.sq, "pdeed")}
+        ${done ? `<p class="center-c" style="font-size:1.2rem;font-weight:900;margin:.8em 0 0">✅ Your secret bid is in. Watch the TV!</p>` : `<p class="muted" style="margin:.6em 0">Bid secretly. Highest bid wins, and nobody sees your bid until the end. Bid 0 to skip.</p>${adviceHTML()}
+        <div class="stepper" style="margin:.6em 0"><button class="btn sm" data-b="-50">−50</button><button class="btn sm" data-b="-10">−10</button><span class="val" id="bidv">${m(bid)}</span><button class="btn sm" data-b="10">+10</button><button class="btn sm" data-b="50">+50</button></div>
+        <div class="pick" style="justify-content:center;margin-bottom:.6em">${[0, BOARD[a.sq].price / 2, BOARD[a.sq].price].concat(helperOn() ? [E.suggestBid(S, id)] : []).filter((v, i, arr) => arr.indexOf(v) === i && v <= p.cash).map(v => `<button class="chip" data-bset="${v}">${m(v)}</button>`).join("")}</div>
+        <button class="btn gold big" id="bidgo">Place my bid</button>`}</div>`);
+      return out.join("");
+    }
+    if (S.step === "quest" && S.quest) {
+      const q = S.quest;
+      if (q.pid === id) {
+        if (q.t === "secret") out.push(`<div class="card hot"><h2>${q.icon} Your ${esc(q.title)}!</h2><p class="muted" style="margin:.2em 0 .7em">Don't show anyone! ${esc(q.cat || "")}:</p><div class="secret">${secret ? esc(secret.what) : "…"}</div><p class="muted">Everyone shouts out guesses. Win ${m(q.reward)} if someone gets it.</p>
+          <div class="row2"><button class="btn good big" data-qd="1">✅ Someone guessed it</button><button class="btn bad big" data-qd="0">❌ Nobody got it</button></div><button class="btn" data-qskip="1" style="margin-top:.6em;width:100%">Skip this task</button></div>`);
+        else out.push(`<div class="card hot"><h2>${q.icon} Your ${esc(q.title)}!</h2><div class="secret" style="font-size:1.4rem">${esc(q.txt)}</div><p class="muted">Do it now! Everyone else votes 👍 or 👎. Win ${m(q.reward)} if most say 👍.</p>${q.ready ? `<p class="center-c"><b>Waiting for the votes…</b></p>` : `<button class="btn gold big" data-qd="1">I've done it, vote now!</button>`}<button class="btn" data-qskip="1" style="margin-top:.6em;width:100%">Skip this task</button></div>`);
+      } else if (q.t === "perform") {
+        out.push(`<div class="card hot"><h2>${q.icon} ${pname(q.pid)}'s ${esc(q.title)}</h2><div class="secret" style="font-size:1.3rem">${esc(q.txt)}</div>${q.votes[id] != null ? `<p class="center-c" style="font-weight:900">Thanks, your vote is in!</p>` : `<p class="muted center-c">Did they do it well?</p><div class="vote"><button class="btn good" data-vote="1">👍</button><button class="btn bad" data-vote="0">👎</button></div>`}</div>`);
+      } else out.push(`<div class="card hot center-c"><div class="bigemoji">🤫</div><h2>${pname(q.pid)}'s secret ${esc(q.title)}</h2><p>${esc(q.cat || "")}… <b>Shout out what you think it is!</b></p></div>`);
+      return out.join("");
+    }
+    if (myTurn) {
+      if (S.step === "roll") {
+        out.push(`<div class="card hot center-c"><h2>🎲 Your turn!</h2><div class="pdice ${motionOK ? "shake" : ""}" id="pdice">${dieHTML(S.dice[0])}${dieHTML(S.dice[1])}</div>
+          ${p.jail ? `<p style="font-weight:800">You're in ${esc(t.jail)}. Roll a double to get out free${p.jail >= 3 ? " (last try, then you must pay)" : ""}, or:</p><div class="row2" style="margin-bottom:.6em"><button class="btn" id="jpay" ${p.cash < E.JAIL_FINE ? "disabled" : ""}>Pay ${m(E.JAIL_FINE)}</button>${p.esc.length ? `<button class="btn" id="jcard">Use free card</button>` : ""}</div>` : ""}
+          <button class="btn gold big" id="roll">Tap to roll</button><p class="muted" style="margin:.5em 0 0">…or give your phone a shake!</p></div>`);
+      } else if (S.step === "moving") out.push(`<div class="card center-c"><div class="pdice">${dieHTML(S.dice[0])}${dieHTML(S.dice[1])}</div><h2>You rolled ${S.dice[0] + S.dice[1]}${S.dice[0] === S.dice[1] ? ", a double!" : ""}</h2><p class="muted">Watch the TV…</p></div>`);
+      else if (S.step === "buy") {
+        const b = BOARD[S.offer];
+        out.push(`<div class="card hot"><h2>Buy ${esc(E.sqName(S, S.offer))}?</h2>${deedHTML(S, S.offer, "pdeed")}${adviceHTML() ? `<div style="margin-top:.7em">${adviceHTML()}</div>` : ""}
+          <div class="row2" style="margin-top:.8em"><button class="btn gold big" id="buy" ${p.cash < b.price ? "disabled" : ""}>Buy ${m(b.price)}</button><button class="btn big" id="pass">🔨 Auction</button></div>
+          ${p.cash < b.price ? `<p class="muted">Not enough ${esc(t.moneyWord)}. You can mortgage something in My lands first.</p>` : ""}</div>`);
+      } else if (S.step === "card" && S.card) out.push(`<div class="card hot center-c"><div class="bigemoji">${S.card.icon}</div><h2>${esc(S.card.title)}</h2><p style="font-size:1.2rem;font-weight:800">${esc(S.card.txt)}</p><button class="btn gold big" id="cardok">OK</button></div>`);
+      else if (S.step === "end") out.push(`<div class="card hot center-c"><h2>Anything else?</h2>${adviceHTML()}<p class="muted">Build, mortgage or trade now, or pass the dice on.</p><button class="btn gold big" id="endturn">End my turn ➜</button></div>`);
+      else if (S.step === "debt") out.push(`<div class="card center-c"><div class="bigemoji">⏳</div><h2>Waiting for ${S.debts.map(d => pname(d.pid)).join(" and ")} to pay up…</h2></div>`);
+    } else {
+      const what = S.step === "buy" ? `is deciding whether to buy ${esc(E.sqName(S, S.offer))}` : S.step === "card" ? `drew a card: “${esc(S.card ? S.card.txt : "")}”` : S.step === "debt" ? `is waiting for money to be paid` : S.step === "moving" ? `rolled ${S.dice[0] + S.dice[1]}` : S.step === "end" ? "is finishing their turn" : "is about to roll";
+      out.push(`<div class="card center-c"><div class="bigemoji">${tok(S, cur)}</div><h2>${pname(S.turnPid)}'s turn</h2><p class="muted" style="margin:0">${pname(S.turnPid)} ${what}.</p></div>`);
+      out.push(`<div class="card"><b>You:</b> ${m(p.cash)} · ${E.mine(S, id).length} place${E.mine(S, id).length === 1 ? "" : "s"} · fortune ${m(E.netWorth(S, id))}${p.jail ? ` · ⛓️ in ${esc(t.jail)}` : ""}${p.esc.length ? ` · 🎟️ get-out-free card` : ""}</div>`);
+      out.push(`<p class="muted center-c" style="margin:0">You can build, mortgage and trade while you wait.</p>`);
+    }
+    return out.join("");
+  }
+  function offerCard(x, incoming) {
+    const lst = arr => arr.length ? arr.map(i => `<span class="chip" style="border-left:.6em solid ${BOARD[i].t === "station" ? "#333" : GROUPS[BOARD[i].g].c}">${esc(E.sqName(S, i))}</span>`).join(" ") : "";
+    const a = incoming ? x.from : x.to;
+    const youGet = incoming ? [lst(x.give), x.gc ? m(x.gc) : ""] : [lst(x.get), x.tc ? m(x.tc) : ""];
+    const youGive = incoming ? [lst(x.get), x.tc ? m(x.tc) : ""] : [lst(x.give), x.gc ? m(x.gc) : ""];
+    const f = arr => arr.filter(Boolean).join(" ") || "<span class='muted'>nothing</span>";
+    return `<div class="card hot"><h3>🤝 ${incoming ? `${ptok(a)} ${pname(a)} offers you a trade` : `Your offer to ${ptok(a)} ${pname(a)}`}</h3>
+      <p style="margin:.3em 0"><b>You get:</b> ${f(youGet)}</p><p style="margin:.3em 0 .7em"><b>You give:</b> ${f(youGive)}</p>
+      ${incoming ? `<div class="row2"><button class="btn good" data-ans="${x.id}" data-ok="1">✅ Accept</button><button class="btn bad" data-ans="${x.id}" data-ok="0">✖ No thanks</button></div>` : `<p class="muted" style="margin:0 0 .5em">Waiting for ${pname(a)} to answer on their phone…</p><button class="btn" data-cancel="${x.id}" style="width:100%">Cancel offer</button>`}</div>`;
+  }
+
+  function landsHTML() {
+    const p = mineP(), t = E.theme(S), mine = E.mine(S, id);
+    if (!mine.length) return `<div class="card center-c"><div class="bigemoji">🗺️</div><h2>No places yet</h2><p class="muted">Land on a place nobody owns and buy it, or win it at auction.</p></div>`;
+    const groups = [...new Set(mine.map(i => BOARD[i].t === "station" ? "s" : BOARD[i].g))];
+    return groups.map(g => {
+      const list = g === "s" ? mine.filter(i => BOARD[i].t === "station") : GROUPS[g].sq;
+      const full = g !== "s" && E.groupOwner(S, g) === id;
+      const head = g === "s" ? `${t.icons.station} Travel (${list.length} of 4)` : `${GROUPS[g].name}: ${mine.filter(i => BOARD[i].g === g && BOARD[i].t === "prop").length} of ${GROUPS[g].sq.length}${full ? " ⭐ full set!" : ""}`;
+      return `<div class="card"><h3>${head}</h3>${list.map(i => {
+        const o = S.own[i], b = BOARD[i], col = b.t === "station" ? "#555" : GROUPS[b.g].c;
+        if (!o || o.o !== id) return `<div class="land" style="opacity:.45"><span class="sw" style="background:${col}"></span><div class="ln">${esc(E.sqName(S, i))}<small>${o ? "Owned by " + pname(o.o) : "Not owned yet"}</small></div></div>`;
+        const acts = [];
+        if (b.t === "prop" && full) { acts.push(`<button class="btn sm gold" data-mg="build" data-i="${i}" ${E.canBuild(S, id, i) ? "" : "disabled"}>+ ${o.h === 4 ? t.hotel.i + " " + esc(t.hotel.n) : t.house.i + " " + esc(t.house.n)} ${m(b.house)}</button>`); if (o.h) acts.push(`<button class="btn sm" data-mg="sell" data-i="${i}" ${E.canSell(S, id, i) ? "" : "disabled"}>Sell one +${m(b.house / 2)}</button>`); }
+        if (o.m) acts.push(`<button class="btn sm" data-mg="unmortgage" data-i="${i}" ${E.canUnmortgage(S, id, i) ? "" : "disabled"}>Pay off mortgage ${m(E.unmortCost(i))}</button>`);
+        else acts.push(`<button class="btn sm" data-mg="mortgage" data-i="${i}" ${E.canMortgage(S, id, i) ? "" : "disabled"}>Mortgage +${m(E.mortVal(i))}</button>`);
+        return `<div class="land ${o.m ? "m" : ""}"><span class="sw" style="background:${col}"></span><div class="ln">${esc(E.sqName(S, i))} ${o.h ? (o.h === 5 ? t.hotel.i : t.house.i.repeat(o.h)) : ""}<small>${o.m ? "Mortgaged, no rent" : "Rent now " + m(E.rentOf(S, i))}</small></div><div class="acts">${acts.join("")}</div></div>`;
+      }).join("")}${full && !list.some(i => S.own[i].h) ? `<p class="muted" style="margin:.5em 0 0;font-size:.85rem">Build evenly: every place in a set needs a ${esc(t.house.n)} before any gets a second.</p>` : ""}</div>`;
+    }).join("") + `<p class="muted center-c" style="font-size:.85rem">Mortgaged places charge no rent. You can't mortgage a set with buildings on it.</p>`;
+  }
+
+  function tradeHTML() {
+    const mineOut = Object.values(S.trades).filter(x => x.from === id), incoming = Object.values(S.trades).filter(x => x.to === id), out = [];
+    incoming.forEach(x => out.push(offerCard(x, true)));
+    if (mineOut.length) { out.push(offerCard(mineOut[0], false)); return out.join(""); }
+    const others = E.alive(S).filter(x => x !== id);
+    if (!tr || !others.includes(tr.to)) tr = { to: null, give: [], get: [], gc: 0, tc: 0 };
+    out.push(`<div class="card"><h3>🤝 Make a trade with…</h3><div class="pick">${others.map(x => `<button class="chip ${tr.to === x ? "on" : ""}" data-tto="${x}">${tok(S, S.players[x])} ${pname(x)}</button>`).join("")}</div></div>`);
+    if (tr.to) {
+      const p = mineP(), them = S.players[tr.to];
+      const chips = (owner, sel, key) => { const list = E.mine(S, owner); return list.length ? list.map(i => { const ok = E.tradable(S, i); return `<button class="chip ${sel.includes(i) ? "on" : ""}" data-${key}="${i}" ${ok ? "" : "disabled title='Sell the buildings first'"} style="border-left-color:${BOARD[i].t === "station" ? "#333" : GROUPS[BOARD[i].g].c}">${esc(E.sqName(S, i))}${S.own[i].m ? " (mortgaged)" : ""}</button>`; }).join("") : `<span class="muted">No places</span>`; };
+      const step = (k, max) => `<div class="stepper"><button class="btn sm" data-c="${k}" data-d="-100">−100</button><button class="btn sm" data-c="${k}" data-d="-10">−10</button><span class="val" style="font-size:1.4rem">${m(tr[k])}</span><button class="btn sm" data-c="${k}" data-d="10">+10</button><button class="btn sm" data-c="${k}" data-d="100">+100</button></div>`;
+      out.push(`<div class="card"><h3>You give ${pname(tr.to)}</h3><div class="pick">${chips(id, tr.give, "tg")}</div><p class="muted" style="margin:.6em 0 .2em">Plus ${esc(E.theme(S).moneyWord)} (you have ${m(p.cash)})</p>${step("gc")}</div>`);
+      out.push(`<div class="card"><h3>You get from ${pname(tr.to)}</h3><div class="pick">${chips(tr.to, tr.get, "tt")}</div><p class="muted" style="margin:.6em 0 .2em">Plus ${esc(E.theme(S).moneyWord)} (they have ${m(them.cash)})</p>${step("tc")}</div>`);
+      const empty = !tr.give.length && !tr.get.length && !tr.gc && !tr.tc;
+      out.push(`<button class="btn gold big" id="sendtr" ${empty ? "disabled" : ""}>Send offer to ${pname(tr.to)}</button><p class="muted center-c" style="margin:0;font-size:.85rem">They'll see it on their phone and can say yes or no.</p>`);
+    }
+    return out.join("");
+  }
+
+  function openSheet(kind) {
+    sheet = kind; const d = document.createElement("div"); d.className = "sheet"; d.id = "sheet";
+    d.innerHTML = `<div><h3 style="margin:0">⚙️ Host controls</h3>
+      <button class="btn big" data-h="pause">${S.paused ? "▶ Carry on" : "⏸ Pause the game"}</button>
+      <button class="btn big" data-h="nudge">⏭ Move a stuck turn along</button><p class="muted" style="margin:-.3em 0 0;font-size:.85rem">Rolls, auctions, or ends the turn for someone who's wandered off.</p>
+      <button class="btn big" data-h="endnow">🏁 Finish now and count up fortunes</button>
+      <button class="btn big gold" id="shclose">Close</button></div>`;
+    document.body.appendChild(d);
+    d.onclick = e => {
+      if (e.target === d || e.target.id === "shclose") { sheet = null; d.remove(); return; }
+      const h = e.target.closest("[data-h]"); if (!h) return;
+      if (h.dataset.h === "endnow" && !confirm("Finish the game now?")) return;
+      act({ t: h.dataset.h }); sheet = null; d.remove();
+    };
+  }
+
+  function wire() {
+    const on = (sel, f) => { const el = $(sel); if (el) el.onclick = f; };
+    $$("[data-tab]").forEach(b => b.onclick = () => { tab = b.dataset.tab; lastKey = ""; render(); scrollTo(0, 0); });
+    on("#gear", () => { $("#sheet") && $("#sheet").remove(); openSheet("host"); });
+    on("#edit", () => { lastKey = ""; me = null; joinForm(); me = ls.get(KME, null); });
+    on("#leave", () => { send({ t: "leave" }); ls.del(KME); me = null; lastKey = ""; render(); });
+    on("#start", () => act({ t: "start" })); on("#again", () => act({ t: "again" })); on("#tolobby", () => act({ t: "lobby" }));
+    $$("#sets [data-set]").forEach(b => b.onclick = () => { const v = b.dataset.val; act({ t: "set", k: b.dataset.set, v: v === "true" ? true : v === "false" ? false : isNaN(v) ? v : Number(v) }); });
+    on("#roll", () => { askMotion(); doRoll(); });
+    on("#jpay", () => act({ t: "jailpay" })); on("#jcard", () => act({ t: "jailcard" }));
+    on("#buy", () => act({ t: "buy" })); on("#pass", () => act({ t: "pass" }));
+    on("#cardok", () => act({ t: "cardok" })); on("#endturn", () => act({ t: "endturn" }));
+    on("#auto", () => act({ t: "autoraise" }));
+    on("#bust", () => { if (confirm("Give up and leave the game? Everything you own goes to whoever you owe.")) act({ t: "bankrupt" }); });
+    $$("[data-b]").forEach(b => b.onclick = () => { bid = Math.max(0, Math.min(mineP().cash, bid + +b.dataset.b)); $("#bidv").textContent = m(bid); vib(8); });
+    $$("[data-bset]").forEach(b => b.onclick = () => { bid = +b.dataset.bset; $("#bidv").textContent = m(bid); vib(8); });
+    on("#bidgo", () => act({ t: "bid", a: bid }));
+    $$("[data-qd]").forEach(b => b.onclick = () => act({ t: "qdone", ok: b.dataset.qd === "1" }));
+    $$("[data-qskip]").forEach(b => b.onclick = () => { if (confirm("Skip this task? You won't get the reward.")) act({ t: "qdone", skip: true }); });
+    $$("[data-vote]").forEach(b => b.onclick = () => act({ t: "vote", ok: b.dataset.vote === "1" }));
+    $$("[data-mg]").forEach(b => b.onclick = () => act({ t: b.dataset.mg, i: +b.dataset.i }));
+    $$("[data-ans]").forEach(b => b.onclick = () => act({ t: "answer", id: b.dataset.ans, ok: b.dataset.ok === "1" }));
+    $$("[data-cancel]").forEach(b => b.onclick = () => act({ t: "cancel", id: b.dataset.cancel }));
+    $$("[data-tto]").forEach(b => b.onclick = () => { tr = { to: b.dataset.tto, give: [], get: [], gc: 0, tc: 0 }; lastKey = ""; render(); });
+    const tog = (arr, i) => { const k = arr.indexOf(i); k >= 0 ? arr.splice(k, 1) : arr.push(i); };
+    $$("[data-tg]").forEach(b => b.onclick = () => { tog(tr.give, +b.dataset.tg); lastKey = ""; render(); });
+    $$("[data-tt]").forEach(b => b.onclick = () => { tog(tr.get, +b.dataset.tt); lastKey = ""; render(); });
+    $$("[data-c]").forEach(b => b.onclick = () => { const k = b.dataset.c, max = k === "gc" ? mineP().cash : S.players[tr.to].cash; tr[k] = Math.max(0, Math.min(max, tr[k] + +b.dataset.d)); lastKey = ""; render(); });
+    on("#sendtr", () => { act(Object.assign({ t: "offer" }, tr)); tr = null; });
+  }
+
+  render();
+  try {
+    link = await connect(room, onMsg, st => { const w = $("#lost"); if (w) w.classList.toggle("hidden", st === "ok"); });
+    if (me) { send({ t: "join", name: me.name, kid: me.kid }); joinedOnce = true; }
+  } catch (e) { app.innerHTML = `<div class="home"><h2>Couldn't connect</h2><p class="muted">Check the internet and reload.</p></div>`; }
+}
+</script>
+</body>
+</html>
