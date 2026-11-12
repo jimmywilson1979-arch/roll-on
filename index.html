@@ -16,8 +16,8 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Fredoka:wght@600;700&family=Orbitron:wght@700;900&family=Nunito:wght@600;700;800;900&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="themes.js?v=1"></script>
-<script src="engine.js?v=1"></script>
+<script src="themes.js?v=2"></script>
+<script src="engine.js?v=2"></script>
 <style>
 :root{
   --felt:#16351f; --felt2:#0b1f12; --board:#f1e4c0; --board2:#e6d3a2; --ink:#2b1d0e; --accent:#e0b23e; --accent-ink:#2a1b00;
@@ -363,7 +363,7 @@ async function tvMain() {
   const joinUrl = location.origin + location.pathname + "?join=" + room + (LOCAL ? "&local=1" : "");
   let link = null, conn = "Connecting…", lastBuild = "", lastFx = S.fxN || 0, lastRoll = S.rollN || 0, rollingUntil = 0, pushT = null, saveT = null, shownAuction = 0;
   const send = m => link && link.send(m);
-  const alive = p => p.seen && now() - p.seen < 20000;
+  const alive = p => p.bot || (p.seen && now() - p.seen < 20000);
 
   function push() {
     render();
@@ -392,7 +392,7 @@ async function tvMain() {
   const hostAct = a => { SFX.unlock(); if (E.act(S, S.host || "tv", Object.assign({ tv: true }, a))) push(); };
 
   // ---- clock ----
-  setInterval(() => { if (E.tick(S)) push(); else updLive(); }, 200);
+  setInterval(() => { const a = E.tick(S), b = E.botStep(S); if (a || b) push(); else updLive(); }, 200);
   setInterval(() => send({ t: "state", st: E.pub(S) }), 3000);
   setInterval(() => { if (S.phase === "play") ls.set("rollon_save", { S, at: now() }); }, 10000);
 
@@ -470,7 +470,7 @@ async function tvMain() {
     const t = E.theme(S), cp = S.players[S.turnPid], cn = cp ? esc(cp.name) : "";
     const dice = `<div class="dice" id="dice">${dieHTML(S.dice[0])}${dieHTML(S.dice[1])}</div>`;
     switch (S.step) {
-      case "roll": return `${dice}<div class="msg">${tok(S, cp)} ${cn}'s turn</div><div class="sub">${cp.jail ? `In ${esc(t.jail)}! Roll a double, pay ${E.money(S, E.JAIL_FINE)} or use a card.` : "Shake your phone or tap Roll."}</div>`;
+      case "roll": return `${dice}<div class="msg">${tok(S, cp)} ${cn}'s turn</div><div class="sub">${cp.bot ? "🤖 Computer player, thinking…" : cp.jail ? `In ${esc(t.jail)}! Roll a double, pay ${E.money(S, E.JAIL_FINE)} or use a card.` : "Shake your phone or tap Roll."}</div>`;
       case "moving": return `${dice}<div class="msg">${tok(S, cp)} ${cn} rolled ${S.dice[0] + S.dice[1]}${S.dice[0] === S.dice[1] ? " · a double!" : ""}</div>`;
       case "buy": return `<div style="display:flex;gap:3vh;align-items:center">${deedHTML(S, S.offer, "deed")}<div style="max-width:24vh"><div class="msg">${tok(S, cp)} ${cn}</div><div class="sub">Buy it for ${E.money(S, BOARD[S.offer].price)}, or send it to auction?</div></div></div>`;
       case "auction": { const a = S.auction, al = E.alive(S); return `<div style="display:flex;gap:3vh;align-items:center">${deedHTML(S, a.sq, "deed")}<div style="max-width:26vh"><div class="msg">🔨 AUCTION!</div><div class="sub">Everyone bid secretly on your phone. Highest bid wins.</div><div class="bidders" id="bidders">${al.map(id => `<span class="${a.bids[id] ? "in" : ""}" title="${esc(S.players[id].name)}">${tok(S, S.players[id])}</span>`).join("")}</div></div></div><div class="timerbar"><i id="tb"></i></div>`; }
@@ -483,7 +483,7 @@ async function tvMain() {
       case "debt": return `<div class="bigemoji" style="font-size:7vh">😬</div>${S.debts.map(d => `<div class="msg">${tok(S, S.players[d.pid])} ${esc(S.players[d.pid].name)} owes ${E.money(S, d.amt)}${d.to ? ` to ${esc(S.players[d.to].name)}` : ""}</div>`).join("")}<div class="sub">Raising the money on their phone (mortgage, sell, or trade)…</div>`;
       case "end": { const la = S.lastAuction && now() - S.lastAuction.at < 9000 ? S.lastAuction : null;
         const auc = la ? `<div class="bigcard" style="padding:1.4vh 2vh"><h4>🔨 ${esc(E.sqName(S, la.sq))}</h4><p style="font-size:2vh">${la.bids.length ? la.bids.map(([id, a], k) => `${k === 0 && la.w ? "🏆 " : ""}${esc(S.players[id] ? S.players[id].name : "?")}: ${E.money(S, a)}`).join("<br>") : "No bids"}</p></div>` : "";
-        return `${auc || dice}<div class="msg">${tok(S, cp)} ${cn}</div><div class="sub">Build, trade or press End turn on your phone.</div>`; }
+        return `${auc || dice}<div class="msg">${tok(S, cp)} ${cn}</div><div class="sub">${cp.bot ? "🤖 Thinking about building or trading…" : "Build, trade or press End turn on your phone."}</div>`; }
     }
     return dice;
   }
@@ -506,7 +506,7 @@ async function tvMain() {
     const list = S.order.map(id => S.players[id]);
     return list.map(p => {
       const mine = E.mine(S, p.id), owes = E.owed(S, p.id);
-      const status = p.out ? "💀 Out" : [p.id === S.host ? "⭐ Host" : "", p.kid ? "🧒" : "", p.jail ? "⛓️ " + E.theme(S).jailName : "", owes ? "😬 owes " + E.money(S, owes) : "", alive(p) ? "" : "📵 offline"].filter(Boolean).join(" · ");
+      const status = p.out ? "💀 Out" : [p.id === S.host ? "⭐ Host" : "", p.bot ? "🤖 Computer" : "", p.kid ? "🧒" : "", p.jail ? "⛓️ " + E.theme(S).jailName : "", owes ? "😬 owes " + E.money(S, owes) : "", alive(p) ? "" : "📵 offline"].filter(Boolean).join(" · ");
       return `<div class="prow ${p.id === S.turnPid && S.phase === "play" ? "turn" : ""} ${p.out ? "out" : ""}"><span class="tokdot" style="background:${p.color}">${tok(S, p)}</span>
         <div class="pn">${esc(p.name)}<small>${p.out ? status : [status, `Fortune ${E.money(S, fmtN(E.netWorth(S, p.id)))}`].filter(Boolean).join(" · ")}</small><div class="minis">${mine.map(i => `<i class="${S.own[i].m ? "m" : ""}" style="background:${BOARD[i].t === "station" ? "#333" : GROUPS[BOARD[i].g].c}"></i>`).join("")}</div></div>
         <div class="cash">${p.out ? "" : E.money(S, fmtN(p.cash))}</div></div>`;
@@ -518,12 +518,12 @@ async function tvMain() {
     const t = E.theme(S), logo = `<div class="logo">${esc(t.title)}<small>${esc(t.sub.toUpperCase())}</small></div>`;
     sqCache = []; lastSpots = "";
     if (S.phase === "lobby") {
-      const n = S.order.length;
-      app.innerHTML = `<div class="tv"><div class="bwrap">${boardHTML(`${logo}<div class="stage"><div class="qrbox" id="qr"></div><div class="msg">Scan to join · or enter code <span class="ttl" style="letter-spacing:.15em">${room}</span></div><div class="sub">${n < 2 ? "Needs at least 2 players" : n + " players in. Ready when you are!"}</div></div>`)}</div>
+      const n = S.order.length, nb = E.botCount(S), ready = n >= 1 && n + nb >= 2;
+      app.innerHTML = `<div class="tv"><div class="bwrap">${boardHTML(`${logo}<div class="stage"><div class="qrbox" id="qr"></div><div class="msg">Scan to join · or enter code <span class="ttl" style="letter-spacing:.15em">${room}</span></div><div class="sub">${!n ? "Waiting for players" : !ready ? "Needs another player, or add a computer player" : n + (n === 1 ? " player" : " players") + (nb ? ` + ${nb} computer player${nb > 1 ? "s" : ""} 🤖` : "") + ". Ready when you are!"}</div></div>`)}</div>
         <div class="side lobbyside"><div class="shead"><span class="ttl">Roll On</span><div class="code">Join code<b>${room}</b></div></div>
           <div class="panel"><div class="plist">${S.order.map(id => { const p = S.players[id]; return `<div class="prow"><span class="tokdot" style="background:${p.color}">${tok(S, p)}</span><div class="pn">${esc(p.name)}<small>${p.id === S.host ? "⭐ Host · " : ""}${p.kid ? "🧒 Child (helper on)" : "Grown-up"}</small></div></div>`; }).join("") || `<div class="muted">Waiting for players…</div>`}</div></div>
           <div class="panel" id="sets">${setsHTML()}</div>
-          <button class="btn gold big" id="start" ${n < 2 ? "disabled" : ""}>Start the game</button>
+          <button class="btn gold big" id="start" ${ready ? "" : "disabled"}>Start the game</button>
           <div class="muted" style="font-size:1.6vh">The first player to join is the host and can also start and change settings from their phone. ${esc(conn)}</div></div></div>`;
       try { new QRCode($("#qr"), { text: joinUrl, width: 400, height: 400, correctLevel: QRCode.CorrectLevel.M }); } catch (e) { $("#qr").textContent = joinUrl; }
       $("#start").onclick = () => hostAct({ t: "start" });
@@ -702,7 +702,7 @@ async function phoneMain(codeRaw) {
     if (S.phase === "lobby") {
       const isHost = S.host === id;
       return `<div class="card center-c"><div class="bigemoji">${tok(S, p)}</div><h2>You're in!</h2><p class="muted" style="margin:.2em 0">${p.kid ? "🧒 Child player · helper on" : "Grown-up player"} · <button id="edit" style="text-decoration:underline;color:var(--muted)">change</button></p></div>
-        ${isHost ? `<div class="card"><h3>⭐ You're the host</h3><div id="sets">${phoneSets()}</div><button class="btn gold big" id="start" style="margin-top:.6em" ${S.order.length < 2 ? "disabled" : ""}>Start the game</button><div class="muted center-c" style="margin-top:.4em">${S.order.length} player${S.order.length === 1 ? "" : "s"} in${S.order.length < 2 ? ", needs at least 2" : ""}.</div></div>`
+        ${isHost ? `<div class="card"><h3>⭐ You're the host</h3><div id="sets">${phoneSets()}</div><button class="btn gold big" id="start" style="margin-top:.6em" ${S.order.length + E.botCount(S) < 2 ? "disabled" : ""}>Start the game</button><div class="muted center-c" style="margin-top:.4em">${S.order.length} player${S.order.length === 1 ? "" : "s"} in${E.botCount(S) ? ` + ${E.botCount(S)} computer player${E.botCount(S) > 1 ? "s" : ""} 🤖` : ""}${S.order.length + E.botCount(S) < 2 ? ". Add a computer player to play on your own" : ""}.</div></div>`
           : `<div class="card center-c"><p style="margin:0">Waiting for ${pname(S.host)} to start the game.</p><p class="muted" style="margin:.4em 0 0">${esc(t.label)} · ${esc(E.endText(S.settings))}</p></div>`}
         <div class="card">${RULES(S)}</div><button class="btn" id="leave">Leave the game</button>`;
     }

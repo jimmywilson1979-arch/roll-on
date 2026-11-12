@@ -56,8 +56,9 @@
     ["endVal", null, null],
     ["quests", "Quest tasks", [[true, "🎭 On"], [false, "Off"]]],
     ["helper", "Helper mode", [["kids", "🧒 Kids"], ["all", "Everyone"], ["off", "Off"]]],
+    ["bots", "🤖 Computer players", [["auto", "Auto"], [0, "None"], [1, "1"], [2, "2"], [3, "3"]]],
   ];
-  E.defaultSettings = () => ({ theme: "kingdom", end: "time", endVal: 90, quests: true, helper: "kids" });
+  E.defaultSettings = () => ({ theme: "kingdom", end: "time", endVal: 90, quests: true, helper: "kids", bots: "auto" });
   E.setSetting = (S, k, v) => {
     if (!(S.phase === "lobby" || S.phase === "end")) return false;
     const st = S.settings;
@@ -66,6 +67,7 @@
     else if (k === "endVal" && (E.END_VALS[st.end] || []).some(x => x[0] === v)) st.endVal = v;
     else if (k === "quests") st.quests = !!v;
     else if (k === "helper" && ["kids", "all", "off"].includes(v)) st.helper = v;
+    else if (k === "bots" && ["auto", 0, 1, 2, 3].includes(v)) st.bots = v;
     else return false;
     return true;
   };
@@ -142,7 +144,21 @@
     if (S.host === id) S.host = S.order[0] || null;
   };
 
+  E.humans = S => S.order.filter(id => !S.players[id].bot);
+  E.botCount = S => { const h = E.humans(S).length, b = S.settings.bots; return Math.max(0, Math.min(8 - h, b === "auto" || b == null ? (h === 1 ? 2 : 0) : +b)); };
+  const BOT_NAMES = ["Robo Rex", "Lady Luck", "Captain Coin", "Professor Penny", "Sir Rollsalot"];
+  function addBots(S) {
+    S.order.filter(id => S.players[id].bot).forEach(id => delete S.players[id]);
+    S.order = S.order.filter(id => S.players[id]);
+    const n = E.botCount(S), names = shuffle(BOT_NAMES);
+    for (let k = 0; k < n; k++) {
+      const used = new Set(S.order.map(x => S.players[x].ci)), ci = [0, 1, 2, 3, 4, 5, 6, 7].find(i => !used.has(i)), id = "bot" + k;
+      S.players[id] = { id, name: names[k], kid: false, bot: true, ci, color: COLORS[ci], cash: 0, pos: 0 }; S.order.push(id);
+    }
+  }
   E.start = S => {
+    if (!E.humans(S).length) return false;
+    addBots(S);
     if (S.order.length < 2) return false;
     const r = R(S.order.length); S.order = S.order.slice(r).concat(S.order.slice(0, r));
     S.order.forEach(id => Object.assign(S.players[id], { cash: 1500, pos: 0, jail: 0, esc: [], out: false, outAt: 0, stats: { rentIn: 0, bought: 0, quests: 0, doubles: 0, jailed: 0, built: 0 } }));
@@ -461,7 +477,7 @@
       if (t === "set") return E.setSetting(S, m.k, m.v);
       if (t === "start" && S.phase === "lobby") return E.start(S);
       if (t === "again" && S.phase === "end") return E.start(S);
-      if (t === "lobby" && S.phase === "end") { S.phase = "lobby"; S.results = null; return true; }
+      if (t === "lobby" && S.phase === "end") { S.phase = "lobby"; S.results = null; S.order.filter(id => S.players[id].bot).forEach(id => delete S.players[id]); S.order = S.order.filter(id => S.players[id]); return true; }
       return false;
     }
     if (S.phase !== "play") return false;
@@ -593,6 +609,82 @@
       else v *= .8;
     }
     return Math.max(0, Math.min(Math.round(v / 10) * 10, Math.max(0, p.cash - 50)));
+  };
+
+
+  // ---------- computer players ----------
+  // Runs on the TV. One small action at a time, with a pause so people can follow it.
+  const bwait = (S, ms) => { S.botWait = E.now() + ms; };
+  const isBot = (S, id) => S.players[id] && S.players[id].bot && !S.players[id].out;
+  function tradeValue(S, ids) { return ids.reduce((a, i) => a + BOARD[i].price, 0); }
+  E.botStep = S => {
+    if (S.phase !== "play" || S.paused) return false;
+    const n = E.now();
+    if (S.botWait && n < S.botWait) return false;
+    // a computer player's offer that nobody answers is withdrawn after a minute
+    for (const k of Object.keys(S.trades)) if (isBot(S, S.trades[k].from) && n - S.trades[k].at > 60000) delete S.trades[k];
+    // answer trade offers sent to a bot
+    for (const t of Object.values(S.trades)) if (isBot(S, t.to)) {
+      const get = tradeValue(S, t.give) + t.gc, give = tradeValue(S, t.get) + t.tc;
+      const finishesTheirSet = t.get.some(i => BOARD[i].t === "prop" && GROUPS[BOARD[i].g].sq.every(j => j === i || (S.own[j] && S.own[j].o === t.from) || t.get.includes(j)));
+      const ok = get >= give * (finishesTheirSet ? 1.6 : 1.15) && S.players[t.to].cash >= t.tc;
+      E.act(S, t.to, { t: "answer", id: t.id, ok }); bwait(S, 900); return true;
+    }
+    // money owed
+    for (const d of S.debts) if (isBot(S, d.pid)) {
+      E.act(S, d.pid, { t: "autoraise" });
+      if (S.debts.some(x => x.pid === d.pid)) E.act(S, d.pid, { t: "bankrupt" });
+      bwait(S, 1200); return true;
+    }
+    if (S.step === "auction" && S.auction) {
+      const left = S.auction.endsAt - n, todo = E.alive(S).filter(id => isBot(S, id) && !S.auction.bids[id]);
+      if (todo.length && left < 22000) { const id = todo[0], v = E.suggestBid(S, id); E.act(S, id, { t: "bid", a: Math.max(0, Math.round(v * (.8 + E.rng() * .35) / 10) * 10) }); bwait(S, 700 + R(1200)); return true; }
+      return false;
+    }
+    if (S.step === "quest" && S.quest) {
+      const q = S.quest;
+      if (isBot(S, q.pid)) { if (!q.botAt) { q.botAt = n + 4000; return true; } if (n < q.botAt) return false; const ok = E.rng() < .65; log(S, `🤖 ${S.players[q.pid].name} has a go at the ${q.title}…${ok ? "" : " beep boop, no luck!"}`); resolveQuest(S, ok); bwait(S, 1500); return true; }
+      if (q.t === "perform") { const v = E.voters(S).find(id => isBot(S, id) && q.votes[id] == null); if (v && n > q.endsAt - 52000) { E.act(S, v, { t: "vote", ok: E.rng() < .85 }); bwait(S, 600); return true; } }
+      return false;
+    }
+    const id = S.turnPid; if (!isBot(S, id)) return false;
+    const p = S.players[id];
+    switch (S.step) {
+      case "roll":
+        if (p.jail && p.esc.length) E.act(S, id, { t: "jailcard" });
+        else if (p.jail && p.cash > 500 && E.rng() < .6) E.act(S, id, { t: "jailpay" });
+        else E.act(S, id, { t: "roll" });
+        bwait(S, 900); return true;
+      case "buy": {
+        const b = BOARD[S.offer], left = p.cash - b.price;
+        const finishes = b.t === "prop" && GROUPS[b.g].sq.every(j => j === S.offer || (S.own[j] && S.own[j].o === id));
+        E.act(S, id, { t: left >= 150 || (finishes && left >= 0) ? "buy" : "pass" }); bwait(S, 1400); return true;
+      }
+      case "card": E.act(S, id, { t: "cardok" }); bwait(S, 900); return true;
+      case "end": {
+        // build where it can, keeping some money back; pay off mortgages when rich
+        const mine = E.mine(S, id);
+        const b = mine.filter(i => E.canBuild(S, id, i) && p.cash - BOARD[i].house >= 250).sort((x, y) => S.own[x].h - S.own[y].h)[0];
+        if (b != null) { E.act(S, id, { t: "build", i: b }); bwait(S, 800); return true; }
+        const u = mine.find(i => E.canUnmortgage(S, id, i) && p.cash - E.unmortCost(i) >= 500);
+        if (u != null) { E.act(S, id, { t: "unmortgage", i: u }); bwait(S, 800); return true; }
+        // try to buy the missing piece of a set (from anyone, people included) now and then
+        S.botAsked = S.botAsked || {};
+        if (!Object.values(S.trades).some(t => t.from === id)) {
+          for (let g = 0; g < GROUPS.length; g++) {
+            const G = GROUPS[g].sq, have = G.filter(j => S.own[j] && S.own[j].o === id).length, miss = G.filter(j => !S.own[j] || S.own[j].o !== id);
+            if (have < G.length - 1 || miss.length !== 1) continue;
+            const j = miss[0], o = S.own[j]; if (!o || !E.tradable(S, j) || E.groupHasHouses(S, g)) continue;
+            const offer = Math.round(BOARD[j].price * 1.7 / 10) * 10, key = id + ":" + j;
+            if (p.cash - offer < 200 || (S.botAsked[key] || 0) > S.round - 4) continue;
+            S.botAsked[key] = S.round;
+            if (E.act(S, id, { t: "offer", to: o.o, give: [], get: [j], gc: offer, tc: 0 })) { bwait(S, 1200); return true; }
+          }
+        }
+        E.act(S, id, { t: "endturn" }); bwait(S, 1100); return true;
+      }
+    }
+    return false;
   };
 
   // what the phones are allowed to see

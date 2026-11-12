@@ -9,7 +9,7 @@ Family board games on the TV. Each phone is that player's dice, wallet and cards
 ### Setting up
 1. On the laptop or Chromebook, open the link and choose **This is the TV screen**. Cast the tab to the TV or plug in with HDMI, the same as Buzz In.
 2. Players scan the QR code or enter the 4-letter code. Tick **A child is playing** for kids.
-3. The first player to join is the **host**. The host picks the settings on their phone or on the TV, then presses **Start**.
+3. The first player to join is the **host**. The host picks the settings on their phone or on the TV, then presses **Start**. You can play on your own: computer players join automatically.
 
 ### Settings (chosen before the game)
 - **Theme:** 🏰 Fantasy Kingdom, 🏙️ City Streets, 🚀 Space Colony or 🎄 North Pole. The rules are the same in every theme. Only the names, money, pieces and look change.
@@ -40,6 +40,19 @@ Family board games on the TV. Each phone is that player's dice, wallet and cards
 - **My lands:** build, sell buildings (you get half back), mortgage places (half their price, but no rent) and pay off mortgages (the amount plus 10%).
 - **Can't pay?** Raise the money by mortgaging, selling or trading. **Sort it for me** does this automatically. If even that isn't enough, you're out, and everything you own goes to whoever you owe.
 - **Your fortune** is your money + the price of your places (half if mortgaged) + the cost of your buildings.
+
+### Playing on your own (computer players)
+Under **🤖 Computer players** in the lobby, choose **Auto**, None, 1, 2 or 3. Auto adds 2 computer players when only one person has joined, and none when there are more.
+
+Computer players:
+- roll, buy, bid in auctions and build
+- pay off mortgages
+- vote on Quest tasks
+- have a go at their own Quests
+- answer your trade offers (they want a good deal, and a great one if it finishes your set)
+- sometimes offer to buy the last piece of a set from you.
+
+They take a moment over each move so you can follow along on the TV.
 
 ### Helper mode
 For children (or everyone, if chosen), the helper:
