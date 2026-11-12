@@ -74,11 +74,48 @@ The TV saves the game as it goes. If the TV page closes, open the site on the sa
 ### Testing on one computer
 Open `?tv=TEST&local=1` in one tab. Then open `?join=TEST&local=1&slot=1`, `&slot=2` and so on in other tabs. Each slot is a different player.
 
+## Treasure Island (team adventure)
+**Play:** https://jimmywilson1979-arch.github.io/roll-on/adventure.html
+
+Everyone plays as one team against the board. Games take 20–30 minutes, and there are three adventures to choose from:
+
+| Adventure | The danger | Find 4… | Then reach… |
+|---|---|---|---|
+| 🏝️ Treasure Island | 🌩️ the storm | 🗺️ map pieces | ❌ the treasure |
+| 🐉 Dragon's Mountain | 🐉 the dragon waking | 🔷 rune stones | 🐉 the dragon's lair |
+| 🎄 Save Christmas | 🕛 midnight | 🎁 present sacks | 🛷 Santa's sleigh |
+
+- **Heroes:** each player picks one on their phone. More than one person can pick the same hero.
+  - **Brave** (Captain, Knight or Head Elf): gets a second go at any challenge.
+  - **Peek** (Lookout, Wizard or Star Gazer): turns over a hidden square next to them, once a turn.
+  - **Healer** (Ship's Doctor, Healer or Mrs Claus): never gets stuck, and frees stuck teammates.
+  - **Fast** (Explorer, Ranger or Reindeer): moves 1 extra step every turn.
+- **On your turn:** shake or tap to roll for 1–3 steps, then tap a glowing square on your phone to move. Stepping onto a hidden square turns it over and ends your move.
+- **Squares:**
+  - items
+  - challenges (win an item)
+  - map pieces (some are guarded by a challenge)
+  - quicksand (you get stuck)
+  - snake pit (be quick or drop an item)
+  - dark cave (memory challenge, or walk in safely with a torch)
+  - rockfall (tap fast or the danger moves closer)
+  - lookout tower (reveals the squares around it).
+- **Items** can be given to a teammate at any time:
+  - 🪢 Rope: climb out of quicksand
+  - 🔦 Torch: safe in caves
+  - 🧭 Compass: +2 steps
+  - 🍌 Snack: +1 step or get un-stuck
+  - 🍀 Lucky Charm: pushes the danger back 1
+- **Phone challenges:** Tap Frenzy, Memory, Quick Count, Odd One Out, Quick Reflexes and Steady Hand. Kids get easier versions.
+- **The danger** moves 1 step closer each round. Bigger teams get fewer rounds, and the Easy, Normal and Hard settings change how many.
+- **Team Finale:** once all 4 pieces are found, the target appears on the map. Get someone there and press DIG. Then everyone taps on their phone for 10 seconds, and the team total must beat the target.
+- **One-player mode:** computer teammates join automatically when only one person has joined.
+
 ## Files
 - `index.html`: TV and phone screens, plus the live connection (Supabase Realtime broadcast, nothing stored).
 - `engine.js`: all the rules. It has no screen code, so it can be tested on its own.
 - `themes.js`: themes, cards and quest tasks. Add a theme here.
+- `adventure.html` and `adv-engine.js`: the team adventure (screens, and rules plus computer teammates).
 
 ## Coming next
 - 🔍 Mystery: secret clues on every phone.
-- 🗺️ Adventure: a team game where everyone plays together.
