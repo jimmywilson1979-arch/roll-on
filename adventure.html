@@ -16,7 +16,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="adv-engine.js?v=1"></script>
-<script src="art.js?v=2"></script>
+<script src="art.js?v=3"></script>
 <style>
 :root{--sea:#1678b8;--sea2:#0c4f80;--land:#f0d58c;--land2:#d9b865;--fog:#3f8f6a;--fog2:#2a6b4d;--ink:#3a2a10;--accent:#ffcf3f;--fg:#fff;--muted:#cfe3f2;--panel:rgba(0,0,0,.3);--line:rgba(255,255,255,.16);--good:#3ddc84;--bad:#ff5d5d;
   --title:"Pirata One","Fredoka",serif;--body:"Nunito",system-ui,sans-serif;color-scheme:dark}
@@ -201,6 +201,16 @@ details.rules li{margin:.25em 0}
 .fx .th-island .shead .ttl,.fx .th-island .lobbybox h1{color:#ffe08a;text-shadow:0 .35vh 0 #7a4a10,0 .7vh 1vh rgba(0,0,0,.4)}
 .fx .th-island .bigover .card{background:linear-gradient(#fcf3da,#ecd8a6);color:#3a2a10;border-color:#b8862a}
 .fx .th-island .bigover .card .muted{color:#6b5530}
+.fx .th-dragon .tile.fog{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cg fill='%23ffffff' fill-opacity='.16'%3E%3Cellipse cx='22' cy='24' rx='18' ry='8'/%3E%3Cellipse cx='34' cy='20' rx='12' ry='8'/%3E%3Cellipse cx='66' cy='62' rx='20' ry='8'/%3E%3Cellipse cx='54' cy='58' rx='12' ry='7'/%3E%3Cellipse cx='14' cy='76' rx='12' ry='5'/%3E%3C/g%3E%3C/svg%3E"),linear-gradient(160deg,#6a6f8c,#3d4158);background-size:calc(9*var(--vh,1vh)) calc(9*var(--vh,1vh)),auto;color:#e6e0ff}
+.fx .th-xmas .tile.fog{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='70' height='70'%3E%3Cg stroke='%23ffffff' stroke-opacity='.7' stroke-width='1.6' stroke-linecap='round'%3E%3Cpath d='M14 8v12M8 11l12 6M8 17l12-6'/%3E%3Cpath d='M50 40v10M45.5 42.5l9 5M45.5 47.5l9-5'/%3E%3Cpath d='M22 52v8M18.5 54l7 4M18.5 58l7-4'/%3E%3C/g%3E%3Cg fill='%23ffffff' fill-opacity='.55'%3E%3Ccircle cx='40' cy='14' r='1.6'/%3E%3Ccircle cx='60' cy='24' r='1.2'/%3E%3Ccircle cx='6' cy='40' r='1.3'/%3E%3Ccircle cx='38' cy='64' r='1.5'/%3E%3C/g%3E%3C/svg%3E"),linear-gradient(160deg,#a9c8de,#7d9fb8);background-size:calc(7*var(--vh,1vh)) calc(7*var(--vh,1vh)),auto;color:#fff}
+.fx .th-dragon .tile.fog::after,.fx .th-xmas .tile.fog::after{background:radial-gradient(circle at 50% 50%,rgba(0,0,0,.18) 0 26%,transparent 27%)}
+.fx .th-dragon .die i{background:radial-gradient(circle at 35% 32%,#ff9d4a,#a33a08)}
+.fx .th-xmas .die i{background:radial-gradient(circle at 35% 32%,#2fae5c,#0f4d26)}
+.fx .th-dragon .shead .ttl,.fx .th-dragon .lobbybox h1{color:#ffd08a;text-shadow:0 0 1.2vh rgba(255,120,40,.7),0 .35vh 0 #5a1a08}
+.fx .th-xmas .shead .ttl,.fx .th-xmas .lobbybox h1{color:#fff;text-shadow:0 .35vh 0 #c4162a,0 .7vh 1vh rgba(0,0,0,.4)}
+.fx .th-dragon .bigover .card{background:linear-gradient(#2a2440,#171326);border-color:#ffb347;box-shadow:0 0 3vh rgba(255,140,60,.35)}
+.fx .th-xmas .bigover .card{background:linear-gradient(#fff,#eef6fb);color:#16324a;border-color:#c4162a;box-shadow:inset 0 0 0 .5vh #fff,inset 0 0 0 .8vh #2e9b4f}
+.fx .th-xmas .bigover .card .muted{color:#4a6a85}
 .sheet>div{background:var(--sea2);border-top:2px solid var(--line);border-radius:22px 22px 0 0;width:100%;max-width:560px;margin:0 auto;padding:1.1em 1em 2em;display:flex;flex-direction:column;gap:.7em}
 </style>
 </head>
@@ -361,7 +371,7 @@ async function tvMain() {
       if (!t.rev) { el.className = "tile fog"; el.innerHTML = "?"; return; }
       const was = el.classList.contains("fog");
       el.className = "tile land" + (t.used && ["item", "chal", "map", "cave", "rock", "look"].includes(t.k) ? " used" : "") + (isX ? " x" : "") + (was && S.phase === "play" ? " flip" : "");
-      el.innerHTML = `<div class="ic">${art(t.k, A.tileIcon(S, i))}</div><div class="nm">${esc(isX ? A.th(S).x : A.tileName(S, i))}</div>`;
+      el.innerHTML = `<div class="ic">${art(isX ? "xknown" : t.k, A.tileIcon(S, i))}</div><div class="nm">${esc(isX ? A.th(S).x : A.tileName(S, i))}</div>`;
     });
   }
   let lastTok = "";

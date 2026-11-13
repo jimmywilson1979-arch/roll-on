@@ -362,6 +362,136 @@
       <path d="M20 60 Q6 58 8 44 Q10 30 26 33 Q30 16 50 18 Q64 10 74 26 Q92 24 92 42 Q94 60 78 60 Z" fill="#6b7686" ${O}/>
       <path d="M52 52 L42 72 H52 L46 92 L66 64 H56 L62 52 Z" fill="#ffd34d" ${O} stroke-width="2.5"/>`),
   };
+  I.xknown = I.x;
+
+  // shared bits for the next two adventures
+  const pineT = (x, b, h, snow) => { const w = h * .55; return `<rect x="${x - 3.5}" y="${b - h * .16}" width="7" height="${h * .16}" fill="#7a4a25" ${O} stroke-width="2"/>
+    <path d="M${x} ${b - h} L${x + w * .5} ${b - h * .55} H${x + w * .28} L${x + w * .72} ${b - h * .14} H${x - w * .72} L${x - w * .28} ${b - h * .55} H${x - w * .5} Z" fill="url(#lgPine)" ${O} stroke-width="2.5"/>
+    ${snow ? `<path d="M${x - w * .18} ${b - h * .8} L${x} ${b - h} L${x + w * .18} ${b - h * .8} Q${x} ${b - h * .74} ${x - w * .18} ${b - h * .8} Z M${x - w * .42} ${b - h * .5} Q${x} ${b - h * .44} ${x + w * .42} ${b - h * .5} L${x + w * .3} ${b - h * .56} Q${x} ${b - h * .5} ${x - w * .3} ${b - h * .56} Z" fill="#fff"/>` : ""}`; };
+  const flake = (x, y, r, c) => `<path d="${[0, 60, 120].map(a => { const dx = r * Math.cos(a * Math.PI / 180), dy = r * Math.sin(a * Math.PI / 180); return `M${(x - dx).toFixed(1)} ${(y - dy).toFixed(1)} L${(x + dx).toFixed(1)} ${(y + dy).toFixed(1)}`; }).join(" ")}" stroke="${c || "#6fb3e0"}" stroke-width="2.5" stroke-linecap="round"/>`;
+  const caveBody = (rock, dark, shade) => `<path d="M6 88 Q10 40 40 24 Q60 14 78 30 Q96 48 94 88 Z" fill="${rock}" ${O}/>
+    <path d="M62 20 Q90 40 92 86 H74 Q80 52 62 20 Z" fill="${shade}"/>
+    <path d="M6 88 Q10 40 40 24 Q60 14 78 30 Q96 48 94 88 Z" fill="none" ${O}/>
+    <path d="M30 88 V66 Q30 44 50 44 Q70 44 70 66 V88 Z" fill="${dark}" ${O}/>`;
+  const dragonHead = svg(`<path d="M14 94 Q16 62 34 48 Q28 32 44 24 L58 22 Q76 24 88 36 Q95 44 86 50 L70 52 Q64 58 56 58 Q50 72 56 94 Z" fill="#c0392b" ${O}/>
+    <path d="M26 64 Q34 78 34 94 M22 76 L34 76 M20 86 L34 86" stroke="#2b1d0e" stroke-width="2" fill="none"/><path d="M24 62 Q34 76 35 94 H52 Q46 74 54 58 Q40 60 24 62 Z" fill="#f0b46a" opacity=".85"/>
+    <path d="M44 25 L32 4 L52 20 Z M55 22 L54 2 L64 20 Z" fill="#f4e6c8" ${O} stroke-width="2.2"/>
+    <path d="M34 48 L22 44 L30 54 M28 58 L16 58 L26 64" fill="#a52a20" ${O} stroke-width="2"/>
+    <ellipse cx="63" cy="34" rx="6" ry="4.5" fill="#ffd34d" stroke="#2b1d0e" stroke-width="1.6"/><path d="M63 30.5 V37.5" stroke="#111" stroke-width="2"/>
+    <circle cx="84" cy="40" r="1.8" fill="#2b1d0e"/>
+    <path d="M70 51 l3 5 3 -5 M78 50 l2.5 4 2.5 -4" fill="#fff" stroke="#2b1d0e" stroke-width="1.2"/>
+    <circle cx="94" cy="30" r="4" fill="#9aa0a8" opacity=".7"/><circle cx="96" cy="22" r="3" fill="#9aa0a8" opacity=".5"/>`);
+
+  // =================== Adventure: Dragon's Mountain ===================
+  const D = {
+    camp: svg(`<ellipse cx="50" cy="90" rx="46" ry="5" fill="#000" opacity=".15"/>
+      <rect x="52" y="46" width="40" height="42" fill="#e9d8b0" ${O}/><path d="M46 50 L72 20 L98 50 Z" fill="#8e5a2b" ${O}/>
+      <rect x="64" y="58" width="14" height="11" fill="#ffe27a" ${O} stroke-width="2"/>
+      <rect x="10" y="54" width="38" height="34" fill="#f4e6c8" ${O}/><path d="M4 58 L29 30 L54 58 Z" fill="url(#lgRoof)" ${O}/>
+      <rect x="23" y="70" width="11" height="18" fill="#6b3f1d" ${O} stroke-width="2"/>`),
+    calm: svg(`<ellipse cx="50" cy="91" rx="40" ry="5" fill="#6fa85a" ${O} stroke-width="2"/>${pineT(36, 90, 74)}${pineT(70, 91, 52)}`),
+    item: svg(`<rect x="16" y="14" width="68" height="15" rx="7.5" fill="#4f7d9e" ${O}/><path d="M30 14 V29 M70 14 V29" stroke="#2b1d0e" stroke-width="3"/>
+      <rect x="22" y="28" width="56" height="60" rx="13" fill="#a86b30" ${O}/>
+      <path d="M22 46 Q22 28 50 28 Q78 28 78 46 V54 H22 Z" fill="#8a5222" ${O}/>
+      <rect x="44" y="47" width="12" height="12" rx="2" fill="url(#lgGold)" ${O} stroke-width="2"/>
+      <rect x="32" y="64" width="36" height="18" rx="5" fill="#8a5222" ${O} stroke-width="2.5"/>`),
+    chal: svg(`<path d="M24 90 L28 30 Q30 12 50 12 Q70 12 72 30 L76 90 Z" fill="#9a948a" ${O}/>
+      <path d="M58 14 Q70 16 72 30 L76 88 H64 Z" fill="#847e74"/>
+      <path d="M24 90 L28 30 Q30 12 50 12 Q70 12 72 30 L76 90 Z" fill="none" ${O}/>
+      <path d="M41 38 Q41 27 51 27 Q61 27 61 36 Q61 43 51 46 V53" fill="none" stroke="#7df9ff" stroke-width="11" stroke-linecap="round" opacity=".3"/>
+      <path d="M41 38 Q41 27 51 27 Q61 27 61 36 Q61 43 51 46 V53" fill="none" stroke="#bff9ff" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="51" cy="63" r="3.5" fill="#bff9ff"/>
+      <path d="M18 92 q6 -8 12 0 q5 -7 10 0 M62 92 q6 -9 12 0 q4 -6 8 0" fill="#5e8f45" stroke="#2f5a2a" stroke-width="2"/>`),
+    map: svg(`<path d="M50 8 L82 27 V69 L50 90 L18 69 V27 Z" fill="#3b82f6" ${O}/>
+      <path d="M50 8 L82 27 L50 42 L18 27 Z" fill="#7cb5ff"/><path d="M50 42 V90 M18 27 L50 42 L82 27" stroke="#1e4fa8" stroke-width="1.6" fill="none"/>
+      <path d="M50 8 L82 27 V69 L50 90 L18 69 V27 Z" fill="none" ${O}/>
+      <path d="M42 50 L54 62 L42 74 M56 50 V74" stroke="#bfe3ff" stroke-width="8" stroke-linecap="round" opacity=".35" fill="none"/>
+      <path d="M42 50 L54 62 L42 74 M56 50 V74" stroke="#eef8ff" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+      ${spark(86, 12, 7)}${spark(14, 86, 5)}`),
+    quick: svg(`${[0, 1, 2, 3, 4, 5, 6, 7].map(k => { const a = k * Math.PI / 4; return `<path d="M50 48 L${(50 + 44 * Math.cos(a)).toFixed(1)} ${(48 + 44 * Math.sin(a)).toFixed(1)}" stroke="#4b5160" stroke-width="2"/>`; }).join("")}
+      ${[12, 22, 32, 42].map(r => `<path d="${[0, 1, 2, 3, 4, 5, 6, 7, 8].map((k, j) => { const a = k * Math.PI / 4; return (j ? "L" : "M") + (50 + r * Math.cos(a)).toFixed(1) + " " + (48 + r * Math.sin(a)).toFixed(1); }).join(" ")}" fill="none" stroke="#4b5160" stroke-width="1.8"/>`).join("")}
+      <path d="M70 4 V22" stroke="#4b5160" stroke-width="1.5"/>
+      <path d="M62 22 l-8 -6 M62 26 l-9 0 M62 30 l-8 5 M78 22 l8 -6 M78 26 l9 0 M78 30 l8 5" stroke="#111" stroke-width="2.2" stroke-linecap="round"/>
+      <ellipse cx="70" cy="28" rx="8" ry="9" fill="#222" ${O} stroke-width="2"/><circle cx="70" cy="18" r="5" fill="#222"/><circle cx="68" cy="17" r="1.4" fill="#ff5d5d"/><circle cx="72" cy="17" r="1.4" fill="#ff5d5d"/>`),
+    snake: svg(`<path d="M50 90 Q30 88 26 66 L18 28 L37 43 Q50 37 63 43 L82 28 L74 66 Q70 88 50 90 Z" fill="#8d939e" ${O}/>
+      <path d="M22 36 L32 46 L26 52 Z M78 36 L68 46 L74 52 Z" fill="#e6b8b8"/>
+      <path d="M38 66 Q50 56 62 66 Q62 86 50 88 Q38 86 38 66 Z" fill="#e5e7eb" ${O} stroke-width="2"/>
+      <path d="M32 58 Q38 52 45 57 Q38 62 32 58 Z M68 58 Q62 52 55 57 Q62 62 68 58 Z" fill="#ffd34d" stroke="#2b1d0e" stroke-width="1.6"/><circle cx="39" cy="57" r="1.8" fill="#111"/><circle cx="61" cy="57" r="1.8" fill="#111"/>
+      <path d="M31 51 L44 54 M69 51 L56 54" stroke="#2b1d0e" stroke-width="2.4" stroke-linecap="round"/>
+      <ellipse cx="50" cy="70" rx="5.5" ry="3.8" fill="#222"/><path d="M50 74 V79 M44 80 Q50 84 56 80" stroke="#222" stroke-width="2" fill="none"/>`),
+    cave: svg(`${caveBody("#8a8478", "#120e0c", "#736d62")}<circle cx="43" cy="70" r="3.4" fill="#b6ff4a"/><circle cx="56" cy="70" r="3.4" fill="#b6ff4a"/>
+      <circle cx="43" cy="70" r="7" fill="#b6ff4a" opacity=".2"/><circle cx="56" cy="70" r="7" fill="#b6ff4a" opacity=".2"/>
+      <path d="M4 88 q6 -8 12 0 q5 -7 10 0 M74 88 q6 -9 12 0 q4 -6 8 0" fill="#5e8f45" stroke="#2f5a2a" stroke-width="2"/>`),
+    rock: I.rock,
+    look: svg(`<path d="M4 90 L38 26 L52 46 L64 34 L96 90 Z" fill="#8f97a8" ${O}/>
+      <path d="M38 26 L66 90 H96 L64 34 L52 46 Z" fill="#7a8295" opacity=".7"/>
+      <path d="M38 26 L48 44 L42 40 L36 48 L30 40 Z M64 34 L74 52 L68 48 L62 54 L58 46 Z" fill="#fff" ${O} stroke-width="2"/>
+      <path d="M38 26 V6" ${O}/><path d="M38 6 L52 10 L38 14 Z" fill="#e8483f" ${O} stroke-width="2"/>`),
+    x: svg(`<path d="M8 90 Q8 70 26 66 Q40 64 44 76 Q48 90 8 90 Z" fill="#4a4440" ${O}/><path d="M50 90 Q50 66 68 64 Q88 64 92 80 V90 Z" fill="#5a524c" ${O}/>
+      <path d="M50 72 Q34 60 44 40 Q46 50 52 50 Q48 32 58 18 Q60 38 68 44 Q72 36 70 30 Q86 50 70 66 Q62 76 50 72 Z" fill="url(#lgFlame)" stroke="#c2410c" stroke-width="2"/>
+      <path d="M54 66 Q46 58 52 48 Q56 56 60 54 Q66 62 54 66 Z" fill="#fff3a0"/>
+      ${[[30, 40], [80, 34], [24, 56]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="2.4" fill="#ffb02e"/>`).join("")}`),
+    xknown: dragonHead,
+    danger: dragonHead,
+  };
+
+  // =================== Adventure: Save Christmas ===================
+  const sleigh = N.station;
+  const X = {
+    camp: svg(`<ellipse cx="50" cy="90" rx="44" ry="5" fill="#9fbcd3" opacity=".5"/>
+      <rect x="66" y="16" width="11" height="22" fill="#8a3a28" ${O} stroke-width="2.5"/>
+      <rect x="16" y="44" width="68" height="44" fill="url(#lgRed)" ${O}/>
+      <path d="M8 48 L50 14 L92 48 Z" fill="#fff" ${O}/>
+      <path d="M8 48 q7 7 14 0 q7 7 14 0 q7 7 14 0 q7 7 14 0 q7 7 14 0 q7 7 14 0" fill="#fff" stroke="#2b1d0e" stroke-width="2.5"/>
+      <rect x="23" y="58" width="13" height="11" fill="#ffe27a" ${O} stroke-width="2"/><rect x="64" y="58" width="13" height="11" fill="#ffe27a" ${O} stroke-width="2"/>
+      <rect x="43" y="64" width="14" height="24" fill="#2e9b4f" ${O} stroke-width="2.5"/><circle cx="50" cy="72" r="4" fill="none" stroke="#1f6b38" stroke-width="2.5"/><circle cx="50" cy="69" r="1.3" fill="#e8483f"/>`),
+    calm: svg(`<ellipse cx="50" cy="91" rx="42" ry="5" fill="#fff" ${O} stroke-width="2"/>${pineT(36, 90, 74, 1)}${pineT(70, 91, 52, 1)}${flake(84, 16, 5, "#9fd0f0")}${flake(14, 30, 4, "#9fd0f0")}`),
+    item: svg(`<rect x="10" y="50" width="44" height="38" fill="url(#lgRed)" ${O}/><path d="M32 50 V88 M10 66 H54" stroke="#ffd34d" stroke-width="5"/>
+      <rect x="56" y="58" width="34" height="30" fill="#2e9b4f" ${O}/><path d="M73 58 V88" stroke="#fff" stroke-width="4.5"/>
+      <rect x="28" y="22" width="36" height="28" fill="#3b82f6" ${O}/><path d="M46 22 V50 M28 36 H64" stroke="#fff" stroke-width="4"/>
+      <path d="M46 22 Q36 10 40 18 Q42 22 46 22 Q50 10 56 16 Q54 22 46 22 Z" fill="#ffd34d" ${O} stroke-width="2"/>`),
+    chal: svg(`<path d="M24 34 H42 A9 9 0 1 1 58 34 H76 V48 A9 9 0 1 1 76 62 V80 H58 A9 9 0 1 0 42 80 H24 V62 A9 9 0 1 0 24 48 Z" fill="#2e9b4f" ${O}/>
+      <path d="M30 40 H40 M30 40 V50" stroke="#7fd39a" stroke-width="3.5" stroke-linecap="round"/>
+      <circle cx="50" cy="57" r="4" fill="#e8483f" stroke="#2b1d0e" stroke-width="1.5"/>`),
+    map: svg(`<rect x="34" y="8" width="16" height="16" fill="#e8483f" ${O} stroke-width="2"/><path d="M42 8 V24" stroke="#ffd34d" stroke-width="3"/>
+      <rect x="52" y="12" width="14" height="14" fill="#2e9b4f" ${O} stroke-width="2"/><path d="M59 12 V26" stroke="#fff" stroke-width="3"/>
+      <path d="M26 90 Q12 72 22 50 Q28 36 40 33 H60 Q72 36 78 50 Q88 72 74 90 Z" fill="#b07a3e" ${O}/>
+      <path d="M36 32 Q50 24 64 32 L62 38 Q50 34 38 38 Z" fill="#9c6a30" ${O} stroke-width="2"/>
+      <path d="M36 36 Q50 30 64 36" stroke="#e8483f" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <rect x="54" y="60" width="13" height="13" fill="#8a5a2b" stroke="#2b1d0e" stroke-width="1.6" stroke-dasharray="3 2"/>
+      <path d="M32 56 Q34 70 30 80" stroke="#8a5a2b" stroke-width="2" fill="none"/>`),
+    quick: svg(`<path d="M4 90 Q18 54 42 62 Q60 42 80 56 Q96 62 96 90 Z" fill="#fff" ${O}/>
+      <path d="M8 90 Q30 76 52 82 Q74 74 94 86 V90 Z" fill="#dcecf6"/>
+      <path d="M58 64 h10 v-14 h8 v18 q0 6 -6 6 h-12 Z" fill="#e8483f" ${O} stroke-width="2"/><path d="M68 50 h8" stroke="#fff" stroke-width="4"/>
+      ${flake(26, 26, 10)}${flake(60, 18, 7)}${flake(84, 34, 5)}`),
+    snake: svg(`<circle cx="26" cy="30" r="11" fill="#fff" ${O}/><circle cx="74" cy="30" r="11" fill="#fff" ${O}/><circle cx="26" cy="30" r="5" fill="#f3d6d6"/><circle cx="74" cy="30" r="5" fill="#f3d6d6"/>
+      <ellipse cx="50" cy="56" rx="34" ry="30" fill="#fff" ${O}/>
+      <ellipse cx="50" cy="68" rx="15" ry="11" fill="#eef4f8" ${O} stroke-width="2"/>
+      <ellipse cx="50" cy="62" rx="6.5" ry="4.5" fill="#222"/><circle cx="38" cy="50" r="3.6" fill="#222"/><circle cx="62" cy="50" r="3.6" fill="#222"/>
+      <path d="M50 66 V71 M44 74 Q50 78 56 74" stroke="#222" stroke-width="2" fill="none"/>
+      <path d="M20 80 Q50 94 80 80 L80 88 Q50 100 20 88 Z" fill="#e8483f" ${O} stroke-width="2.5"/><path d="M30 86 v6 M42 89 v6 M58 89 v6 M70 86 v6" stroke="#fff" stroke-width="2.5"/>`),
+    cave: svg(`${caveBody("#cfe8f7", "#1e3a5f", "#a9d2ee")}${[36, 44, 52, 60].map((x, k) => `<path d="M${x - 3} ${48 + (k % 2) * 2} L${x} ${58 + (k % 2) * 4} L${x + 3} ${48 + (k % 2) * 2} Z" fill="#fff" stroke="#2b1d0e" stroke-width="1.2"/>`).join("")}${flake(80, 18, 6, "#6fb3e0")}`),
+    rock: svg(`<path d="M4 90 L44 22 L96 90 Z" fill="#dcecf6" ${O}/><path d="M44 22 L56 42 L48 38 L40 46 L33 40 Z" fill="#fff" ${O} stroke-width="2"/>
+      ${[[60, 58, 9], [74, 70, 7], [46, 74, 6], [84, 82, 5]].map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#fff" ${O} stroke-width="2"/>`).join("")}
+      <path d="M50 50 l-6 -3 M66 62 l-6 -3 M80 76 l-6 -3" stroke="#6fb3e0" stroke-width="2.4" stroke-linecap="round"/>`),
+    look: svg(`<path d="M50 24 L6 10 V38 Z M50 24 L94 10 V38 Z" fill="#ffe27a" opacity=".45"/>
+      <rect x="30" y="86" width="40" height="7" fill="#8f97a8" ${O} stroke-width="2"/>
+      <path d="M38 88 L42 32 H58 L62 88 Z" fill="#fff" ${O}/>
+      <path d="M40.7 50 H59.3 L60.2 62 H39.8 Z M39.1 74 H60.9 L61.9 88 H38.1 Z" fill="#e8483f"/>
+      <path d="M38 88 L42 32 H58 L62 88 Z" fill="none" ${O}/>
+      <rect x="40" y="20" width="20" height="12" fill="#ffe27a" ${O} stroke-width="2.5"/><path d="M36 20 L50 8 L64 20 Z" fill="#e8483f" ${O} stroke-width="2.5"/>`),
+    x: svg(`<path d="M22 94 Q42 62 32 34 Q28 20 38 6 M44 94 Q64 62 54 34 Q50 20 60 6" fill="none" stroke="#7fa6c4" stroke-width="5" stroke-linecap="round"/>
+      ${[[38, 82], [44, 64], [42, 46], [46, 28]].map(([x, y]) => `<ellipse cx="${x - 4}" cy="${y}" rx="3" ry="4" fill="#a9c4d8"/><ellipse cx="${x + 6}" cy="${y - 6}" rx="3" ry="4" fill="#a9c4d8"/>`).join("")}
+      ${spark(80, 20, 7)}`),
+    xknown: sleigh,
+    danger: svg(`<circle cx="50" cy="54" r="38" fill="url(#lgGold)" ${O}/><circle cx="50" cy="54" r="31" fill="#fff8e6" ${O} stroke-width="2.5"/>
+      ${[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(k => { const a = k * Math.PI / 6, r1 = k % 3 ? 27 : 23; return `<path d="M${(50 + r1 * Math.sin(a)).toFixed(1)} ${(54 - r1 * Math.cos(a)).toFixed(1)} L${(50 + 29 * Math.sin(a)).toFixed(1)} ${(54 - 29 * Math.cos(a)).toFixed(1)}" stroke="#2b1d0e" stroke-width="${k % 3 ? 1.5 : 3}"/>`; }).join("")}
+      <path d="M50 54 L50 36" stroke="#2b1d0e" stroke-width="5" stroke-linecap="round"/><path d="M50 54 L45 28" stroke="#c4162a" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="50" cy="54" r="3.5" fill="#2b1d0e"/>
+      <path d="M50 14 Q38 2 28 12 Q38 12 40 20 Q46 14 50 14 Z M50 14 Q62 2 72 12 Q62 12 60 20 Q54 14 50 14 Z" fill="#2e9b4f" ${O} stroke-width="2"/>
+      <circle cx="46" cy="16" r="3.4" fill="#e8483f" stroke="#2b1d0e" stroke-width="1.2"/><circle cx="54" cy="16" r="3.4" fill="#e8483f" stroke="#2b1d0e" stroke-width="1.2"/>`),
+  };
+
   // sea around the island map: shore, surf and sea life (water squares are fixed)
   const SHORE = {
     island: { shallow: "#7fd3e6", foam: "#f4fbff", rim: "#d9b56a" },
@@ -386,19 +516,41 @@
   const barrel = `<g transform="translate(52 610)"><path d="M-30 30 Q-34 10 -18 6 Q-6 2 -2 16 Q2 30 -30 30 Z M4 34 Q4 18 18 18 Q30 20 30 34 Z" fill="#8f897d" ${O} stroke-width="2.5"/>
       <g transform="rotate(-18)"><rect x="-14" y="-36" width="28" height="34" rx="9" fill="url(#lgWood)" ${O} stroke-width="2.5"/><path d="M-14 -26 H14 M-14 -12 H14" stroke="#5e3a18" stroke-width="2.5"/></g>
       <path d="M-40 36 Q0 28 40 36" fill="none" stroke="#fff" stroke-width="2.4" opacity=".7"/></g>`;
+  const moon = (x, y) => `<circle cx="${x}" cy="${y}" r="26" fill="#fff2c4"/><circle cx="${x + 12}" cy="${y - 8}" r="24" style="fill:var(--sea)"/>`;
+  const dragonSea = `<g transform="translate(96 58)">
+      <path d="M-4 0 L6 -40 L16 -16 L32 -32 L28 2 Z" fill="#7a2020" ${O} stroke-width="2.5"/>
+      <path d="M-44 8 Q-12 -6 20 2 Q34 6 44 -2 L52 2 Q42 14 22 13 Q-10 18 -44 8 Z" fill="#a52a20" ${O} stroke-width="2.5"/>
+      <path d="M-44 8 Q-58 10 -66 22 L-58 18" fill="none" ${O} stroke-width="2.5"/><path d="M-66 22 l-4 -8 8 2 Z" fill="#a52a20" ${O} stroke-width="1.5"/>
+      <path d="M-12 2 L-34 -32 L-22 -10 L-46 -20 L-28 6 Z" fill="#8e2a2a" ${O} stroke-width="2.5"/>
+      <circle cx="44" cy="2" r="1.6" fill="#ffd34d"/><path d="M52 4 q8 0 12 -6" stroke="#ffb02e" stroke-width="3" fill="none" stroke-linecap="round"/></g>
+    ${moon(640, 58)}
+    ${[[600, 40], [676, 100], [560, 26]].map(([x, y]) => `<path d="M${x - 6} ${y} q3 -4 6 0 q3 -4 6 0" stroke="#2b1d0e" stroke-width="2" fill="none"/>`).join("")}
+    <g transform="translate(52 620)"><path d="M-34 34 L-24 -10 L-14 34 Z M-12 34 L0 -28 L12 34 Z M14 34 L24 0 L34 34 Z" fill="#7c5cc4" ${O} stroke-width="2.5"/><path d="M0 -28 L4 34 H12 Z M-24 -10 L-20 34 H-14 Z" fill="#a98ae6" opacity=".7"/></g>
+    ${compass}`;
+  const xmasSea = `<g transform="translate(100 60)">
+      ${[-58, -46, -34].map((x, k) => `<circle cx="${x}" cy="${-4 + k * 3}" r="1.6" fill="#ffe27a"/>`).join("")}
+      <g transform="translate(-14 -6) scale(.42)">${sleigh.replace(/<\/?svg[^>]*>/g, "")}</g>
+      <path d="M22 4 H40" stroke="#c9a06a" stroke-width="1.6"/>
+      <g transform="translate(52 0)"><ellipse rx="13" ry="6" fill="#9c6a30" ${O} stroke-width="2"/><circle cx="14" cy="-8" r="5.5" fill="#9c6a30" ${O} stroke-width="2"/><circle cx="19" cy="-8" r="2" fill="#e8483f"/>
+        <path d="M12 -13 l-3 -9 M12 -18 l-6 -2 M15 -13 l3 -9 M17 -19 l5 -2" stroke="#6b3f1d" stroke-width="2" stroke-linecap="round"/>
+        <path d="M-8 5 l-5 7 M-2 5 l-2 8 M6 5 l3 8 M10 4 l6 6" stroke="#2b1d0e" stroke-width="2" stroke-linecap="round"/></g></g>
+    ${moon(640, 58)}${[[580, 30], [690, 120], [540, 70]].map(([x, y]) => `<path d="${star5(x, y, 6, 2.5)}" fill="#ffe27a"/>`).join("")}
+    <g transform="translate(54 628)"><path d="M-40 34 L-28 -6 L-10 -18 L8 -4 L22 -22 L40 34 Z" fill="#eaf6ff" ${O} stroke-width="2.5"/><path d="M-10 -18 L0 34 H-14 Z M22 -22 L26 34 H16 Z" fill="#bcdcf2"/>
+      <g transform="translate(-4 4)"><ellipse rx="7" ry="10" fill="#222"/><ellipse cy="2" rx="4.5" ry="7" fill="#fff"/><circle cy="-10" r="5" fill="#222"/><path d="M3 -10 l5 1.5 -5 1.5 Z" fill="#ffb02e"/><circle cx="1.5" cy="-11" r="1" fill="#fff"/></g></g>
+    ${compass}`;
   function sea(theme, water) {
     const sh = SHORE[theme]; if (!on || !sh) return "";
     const land = Array.from({ length: 49 }, (_, i) => i).filter(i => !water.includes(i));
     const blob = (pad, rx, fill, op) => `<g fill="${fill}"${op ? ` opacity="${op}"` : ""}>${land.map(i => { const r = i / 7 | 0, c = i % 7; return `<rect x="${c * 100 - pad}" y="${r * 100 - pad}" width="${100 + pad * 2}" height="${100 + pad * 2}" rx="${rx}"/>`; }).join("")}</g>`;
     const waves = Array.from({ length: 70 }, (_, k) => { const x = (k * 137) % 700, y = (k * 89) % 700; return `<path d="M${x} ${y} q8 -7 16 0 q8 -7 16 0" fill="none" stroke="#fff" stroke-opacity=".22" stroke-width="2.2" stroke-linecap="round"/>`; }).join("");
-    const deco = theme === "island" ? ship + serpent + compass + barrel : theme === "xmas" ? compass : "";
+    const deco = theme === "island" ? ship + serpent + compass + barrel : theme === "dragon" ? dragonSea : theme === "xmas" ? xmasSea : "";
     return `<svg class="sea" viewBox="-9 -9 718 718" preserveAspectRatio="none" aria-hidden="true">
       <rect x="-9" y="-9" width="718" height="718" style="fill:var(--sea)"/>
       <rect x="-9" y="-9" width="718" height="718" fill="url(#rgSea)"/>${waves}
       ${blob(30, 56, sh.shallow, theme === "island" ? ".45" : "")}${blob(13, 38, sh.foam, ".95")}${blob(6, 28, sh.rim)}${deco}</svg>`;
   }
 
-  const ICONS = { kingdom: K, city: C, space: SP, northpole: N, island: I };
+  const ICONS = { kingdom: K, city: C, space: SP, northpole: N, island: I, dragon: D, xmas: X };
   const SCENES = { kingdom: kingdomScene, city: cityScene, space: spaceScene, northpole: northScene };
   const CARD = { kingdom: { "🔮": K.chance, "📜": K.quest }, city: { "🍀": C.chance, "⭐": C.quest }, space: { "🌠": SP.chance, "🛰️": SP.quest }, northpole: { "🎉": N.chance, "🧝": N.quest } };
 
