@@ -64,7 +64,11 @@ For children (or everyone, if chosen), the helper:
 
 ### 🎨 Storybook look
 The TV has a **🎨 Storybook / Classic** button, in the lobby and next to Pause during a game. It switches the graphics and remembers your choice on that device.
-- **Storybook:** hand-drawn art for Fantasy Kingdom (castle gate, dungeon, village fair, key, crystal ball, quest scroll, signposts, cottages and castles), a kingdom landscape in the middle of the board, a parchment finish, a wooden board frame, gold-rimmed pieces and red-pip dice. The other themes get the frame, pieces and dice.
+- **Storybook:** every theme has its own hand-drawn art for the corners, card spaces, travel spaces and buildings, plus a scene in the middle of the board. All themes also get a textured finish, a wooden board frame, rimmed pieces and new dice.
+  - 🏰 **Fantasy Kingdom:** castle gate, dungeon, fair tent, iron key, crystal ball, quest scroll, signposts, cottages and castles. The scene is countryside with a castle on the hill.
+  - 🏙️ **City Streets:** chequered flag, police helmet, park bench, four-leaf clover, gold star, train, brick houses and hotels. The scene is a skyline, a park and a road with a red bus and a taxi.
+  - 🚀 **Space Colony:** rocket, black hole, space café, vortex, shooting star, satellite, warp gates, domes and starbases. The scene is a moon, a ringed planet and a rocket on the planet's surface. The dice glow.
+  - 🎄 **North Pole:** Christmas tree with presents, stocking full of coal, fireplace, naughty list, cracker, elf hat, sleigh, elf huts and gingerbread grottos. The scene is snowy hills, pine trees, Santa's workshop and a snowman.
 - **Classic:** the original emoji look.
 
 ### Host controls
