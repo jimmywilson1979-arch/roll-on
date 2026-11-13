@@ -16,6 +16,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="adv-engine.js?v=1"></script>
+<script src="art.js?v=2"></script>
 <style>
 :root{--sea:#1678b8;--sea2:#0c4f80;--land:#f0d58c;--land2:#d9b865;--fog:#3f8f6a;--fog2:#2a6b4d;--ink:#3a2a10;--accent:#ffcf3f;--fg:#fff;--muted:#cfe3f2;--panel:rgba(0,0,0,.3);--line:rgba(255,255,255,.16);--good:#3ddc84;--bad:#ff5d5d;
   --title:"Pirata One","Fredoka",serif;--body:"Nunito",system-ui,sans-serif;color-scheme:dark}
@@ -179,6 +180,27 @@ input{font:inherit;color:var(--fg);background:rgba(0,0,0,.3);border:2px solid va
 details.rules summary{font-weight:900;cursor:pointer}
 details.rules li{margin:.25em 0}
 .sheet{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:20;display:flex;align-items:flex-end}
+/* ---- 🎨 Storybook look (html.fx, from art.js). Classic = without .fx ---- */
+.art{display:block}
+.tile .ic .art{width:1.45em;height:1.45em;margin:0 auto}
+.pieces span .art,.danger .art{width:1em;height:1em;display:inline-block;vertical-align:middle}
+.sea{position:absolute;inset:0;width:100%;height:100%;display:block;border-radius:calc(2*var(--vh,1vh))}
+.fx .map{background:none;box-shadow:none}
+.fx .bwrap{border-radius:calc(2*var(--vh,1vh));box-shadow:0 0 0 calc(.4*var(--vh,1vh)) #d9b45a,0 0 0 calc(1.1*var(--vh,1vh)) #5a3714,0 0 0 calc(1.3*var(--vh,1vh)) #241405,0 calc(2*var(--vh,1vh)) calc(6*var(--vh,1vh)) rgba(0,0,0,.6)}
+.fx .tile.land{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .24 0 0 0 0 .08 0 0 0 .16 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),radial-gradient(ellipse at 50% 35%,rgba(255,255,255,.3),transparent 65%),linear-gradient(160deg,var(--land),var(--land2));box-shadow:inset 0 0 0 calc(.25*var(--vh,1vh)) rgba(255,255,255,.4),inset 0 0 calc(1.4*var(--vh,1vh)) rgba(110,70,20,.22),0 calc(.5*var(--vh,1vh)) 0 rgba(0,0,0,.18)}
+.fx .tile.fog{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .24 0 0 0 0 .08 0 0 0 .16 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),linear-gradient(160deg,var(--fog),var(--fog2));color:rgba(255,255,255,.75);text-shadow:0 .3vh .6vh rgba(0,0,0,.4);font-family:var(--title)}
+.fx .th-island .tile.fog{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cg fill='%2357a96f' stroke='%231f5c3a' stroke-width='1'%3E%3Cpath d='M6 20q12-14 24 0q-12 10-24 0z'/%3E%3Cpath d='M44 50q12-14 24 0q-12 10-24 0z' transform='rotate(30 56 50)'/%3E%3Cpath d='M50 10q10-10 20 0q-10 8-20 0z' transform='rotate(-25 60 10)'/%3E%3Cpath d='M6 58q10-12 22 0q-11 9-22 0z' transform='rotate(-40 17 58)'/%3E%3Cpath d='M28 72q8-9 16 0q-8 7-16 0z' transform='rotate(15 36 72)'/%3E%3C/g%3E%3Cg fill='%2378c48a' stroke='%231f5c3a' stroke-width='.8'%3E%3Cpath d='M28 36q9-10 18 0q-9 7-18 0z' transform='rotate(50 37 36)'/%3E%3Cpath d='M60 74q8-9 16 0q-8 7-16 0z'/%3E%3Cpath d='M64 26q7-8 14 0q-7 6-14 0z' transform='rotate(-60 71 26)'/%3E%3C/g%3E%3C/svg%3E"),linear-gradient(160deg,#3f8f6a,#24603f);background-size:calc(7*var(--vh,1vh)) calc(7*var(--vh,1vh)),auto;color:#f4e6c8}
+.fx .th-island .tile.fog::after{background:radial-gradient(circle at 50% 50%,rgba(0,0,0,.25) 0 26%,transparent 27%)}
+.fx .tile.fog .art{width:5.4vh;height:5.4vh}
+.fx .tile.x{animation:glow 1s ease-in-out infinite alternate}
+.fx .tok,.fx .tokdot{background-image:radial-gradient(circle at 32% 26%,rgba(255,255,255,.75),rgba(255,255,255,0) 42%),radial-gradient(circle,rgba(0,0,0,0) 55%,rgba(0,0,0,.35))!important;box-shadow:0 0 0 calc(.22*var(--vh,1vh)) #fff3c4,0 0 0 calc(.48*var(--vh,1vh)) #b8862a,0 0 0 calc(.6*var(--vh,1vh)) #4e300a,0 calc(.7*var(--vh,1vh)) calc(1.2*var(--vh,1vh)) rgba(0,0,0,.55);text-shadow:0 .15vh .25vh rgba(0,0,0,.4)}
+.fx .tok.cur{box-shadow:0 0 0 calc(.22*var(--vh,1vh)) #fff3c4,0 0 0 calc(.48*var(--vh,1vh)) #b8862a,0 0 0 calc(.6*var(--vh,1vh)) #4e300a,0 0 calc(1.6*var(--vh,1vh)) calc(.6*var(--vh,1vh)) rgba(255,214,90,.75),0 calc(.9*var(--vh,1vh)) calc(1.4*var(--vh,1vh)) rgba(0,0,0,.55)}
+.fx .die{background:linear-gradient(145deg,#fffdf6,#efe3c8);box-shadow:inset 0 .35vh 0 rgba(255,255,255,.9),inset 0 -.6vh 0 rgba(150,115,60,.28),0 .8vh calc(1.6*var(--vh,1vh)) rgba(0,0,0,.35)}
+.fx .die i{background:radial-gradient(circle at 35% 32%,#555,#111)}
+.fx .th-island .die i{background:radial-gradient(circle at 35% 32%,#d9493a,#5c0e08)}
+.fx .th-island .shead .ttl,.fx .th-island .lobbybox h1{color:#ffe08a;text-shadow:0 .35vh 0 #7a4a10,0 .7vh 1vh rgba(0,0,0,.4)}
+.fx .th-island .bigover .card{background:linear-gradient(#fcf3da,#ecd8a6);color:#3a2a10;border-color:#b8862a}
+.fx .th-island .bigover .card .muted{color:#6b5530}
 .sheet>div{background:var(--sea2);border-top:2px solid var(--line);border-radius:22px 22px 0 0;width:100%;max-width:560px;margin:0 auto;padding:1.1em 1em 2em;display:flex;flex-direction:column;gap:.7em}
 </style>
 </head>
@@ -339,7 +361,7 @@ async function tvMain() {
       if (!t.rev) { el.className = "tile fog"; el.innerHTML = "?"; return; }
       const was = el.classList.contains("fog");
       el.className = "tile land" + (t.used && ["item", "chal", "map", "cave", "rock", "look"].includes(t.k) ? " used" : "") + (isX ? " x" : "") + (was && S.phase === "play" ? " flip" : "");
-      el.innerHTML = `<div class="ic">${A.tileIcon(S, i)}</div><div class="nm">${esc(isX ? A.th(S).x : A.tileName(S, i))}</div>`;
+      el.innerHTML = `<div class="ic">${art(t.k, A.tileIcon(S, i))}</div><div class="nm">${esc(isX ? A.th(S).x : A.tileName(S, i))}</div>`;
     });
   }
   let lastTok = "";
@@ -360,8 +382,8 @@ async function tvMain() {
   function sideHTML() {
     const T = A.th(S);
     const track = Array.from({ length: S.dangerMax }, (_, k) => `<i class="${k < S.danger ? "on" : k === S.dangerMax - 1 ? "last" : ""}"></i>`).join("");
-    return `<div class="panel"><div class="danger"><span style="font-size:calc(3.4*var(--vh,1vh))">${T.dangerIcon}</span><div class="track">${track}</div><span class="dt">${S.dangerMax - S.danger} left</span></div>
-      <div class="pieces" style="margin-top:calc(1*var(--vh,1vh))">${[0, 1, 2, 3].map(k => `<span class="${k < S.pieces ? "on" : ""}">${T.pieceIcon}</span>`).join("")}<span style="opacity:1;filter:none;font-size:calc(2*var(--vh,1vh))">${S.xKnown ? `${T.xIcon} ${esc(T.x)} found! Get there and DIG!` : `${S.pieces} of 4 ${esc(T.piece)}s`}</span></div></div>
+    return `<div class="panel"><div class="danger"><span style="font-size:calc(3.4*var(--vh,1vh))">${art("danger", T.dangerIcon)}</span><div class="track">${track}</div><span class="dt">${S.dangerMax - S.danger} left</span></div>
+      <div class="pieces" style="margin-top:calc(1*var(--vh,1vh))">${[0, 1, 2, 3].map(k => `<span class="${k < S.pieces ? "on" : ""}">${art("map", T.pieceIcon)}</span>`).join("")}<span style="opacity:1;filter:none;font-size:calc(2*var(--vh,1vh))">${S.xKnown ? `${T.xIcon} ${esc(T.x)} found! Get there and DIG!` : `${S.pieces} of 4 ${esc(T.piece)}s`}</span></div></div>
       <div class="plist">${S.order.map(id => { const p = S.players[id], h = A.hero(S, p); return `<div class="prow ${id === S.turnPid ? "turn" : ""}"><span class="tokdot" style="background:${p.color}">${h[0]}</span><div class="pn">${esc(p.name)}<small>${esc(h[1])}${p.bot ? " · 🤖" : ""}${p.kid ? " · 🧒" : ""}${p.stuck ? " · 😵 stuck!" : ""}${alive(p) ? "" : " · 📵"}</small></div><span class="bag">${p.items.map(it => A.ITEMS[it][0]).join("")}</span></div>`; }).join("")}</div>`;
   }
   function eventHTML() {
@@ -381,7 +403,7 @@ async function tvMain() {
   function build() {
     setTheme(S); tCache = []; lastTok = "";
     const T = A.th(S);
-    const mapHTML = `<div class="map" id="map">${Array.from({ length: 49 }, (_, i) => tileHTML(i)).join("")}</div><div class="toks" id="toks"></div>`;
+    const mapHTML = `${window.ART ? ART.sea(T.key, [...A.WATER]) : ""}<div class="map" id="map">${Array.from({ length: 49 }, (_, i) => tileHTML(i)).join("")}</div><div class="toks" id="toks"></div>`;
     if (S.phase === "lobby") {
       const n = S.order.length, nb = A.botCount(S), ready = n >= 1;
       app.innerHTML = `<div class="tv"><div class="bwrap">${mapHTML}<div class="mapover"><div class="lobbybox"><h1>${esc(T.title)}</h1><div class="qrbox" id="qr"></div>
@@ -392,22 +414,27 @@ async function tvMain() {
           <div class="panel" id="sets">${setsHTML()}</div>
           <button class="btn gold big" id="start" ${ready ? "" : "disabled"}>Start the adventure</button>
           ${canFull() ? `<button class="btn" id="full">⛶ Full screen</button>` : ""}
+          ${lookBtn()}
           <div class="muted" style="font-size:calc(1.5*var(--vh,1vh))">Everyone picks a hero on their phone. The first to join is the host. ${esc(conn)}</div></div></div>`;
       try { new QRCode($("#qr"), { text: joinUrl, width: 400, height: 400, correctLevel: QRCode.CorrectLevel.M }); } catch (e) { $("#qr").textContent = joinUrl; }
       $("#start").onclick = () => hostAct({ t: "start" }); $("#sets").onclick = setClick;
       // lobby: all fog
-      Array.from({ length: 49 }, (_, i) => i).filter(i => !A.WATER.has(i)).forEach(i => { const el = $("#t" + i); el.className = "tile fog"; el.textContent = i === A.CAMP ? "⛺" : "?"; });
+      Array.from({ length: 49 }, (_, i) => i).filter(i => !A.WATER.has(i)).forEach(i => { const el = $("#t" + i); el.className = "tile fog"; if (i === A.CAMP) el.innerHTML = art("camp", A.th(S).tiles.camp[0]); else el.textContent = "?"; });
     } else {
       app.innerHTML = `<div class="tv"><div class="bwrap">${mapHTML}<div id="over"></div></div>
         <div class="side"><div class="shead"><span class="ttl">${esc(T.title)}</span><div class="code">Join code<b>${room}</b></div></div>
           <div id="sd"></div><div class="panel" id="ev"></div><div class="feed" id="feed"></div>
-          <div class="tvctl"><button class="btn" id="pause">⏸️ Pause</button><button class="btn" id="nudge">⏭ Move it along</button><button class="btn" id="snd">${SFX.on ? "🔊" : "🔇"}</button>${canFull() ? `<button class="btn" id="full">⛶</button>` : ""}<button class="btn" id="quit">🏳️ Give up</button><span class="muted" style="font-size:calc(1.4*var(--vh,1vh))">${esc(conn)}</span></div></div></div>`;
+          <div class="tvctl"><button class="btn" id="pause">⏸️ Pause</button><button class="btn" id="nudge">⏭ Move it along</button><button class="btn" id="snd">${SFX.on ? "🔊" : "🔇"}</button>${canFull() ? `<button class="btn" id="full">⛶</button>` : ""}${lookBtn()}<button class="btn" id="quit">🏳️ Give up</button><span class="muted" style="font-size:calc(1.4*var(--vh,1vh))">${esc(conn)}</span></div></div></div>`;
       $("#pause").onclick = () => hostAct({ t: "pause" }); $("#nudge").onclick = () => hostAct({ t: "nudge" });
       $("#snd").onclick = e => { e.target.textContent = SFX.toggle() ? "🔊" : "🔇"; };
       $("#quit").onclick = () => { if (confirm("Give up this adventure?")) hostAct({ t: "endnow" }); };
     }
     const f = $("#full"); if (f) f.onclick = goFull;
+    const lk = $("#look"); if (lk) lk.onclick = () => { ART.toggle(); lastBuild = ""; render(); };
   }
+  const lookBtn = () => window.ART ? `<button class="btn" id="look" title="Switch between the Storybook and Classic graphics">🎨 ${ART.on ? "Storybook" : "Classic"}</button>` : "";
+  // 🎨 Storybook art (art.js) when the look is on, otherwise the emoji
+  const art = (slot, fallback) => (window.ART && ART.icon(A.th(S).key, slot)) || fallback;
   function setsHTML() {
     return A.SETTINGS().map(([k, label, vals]) => `<div class="setrow"><b>${label}</b>${vals.map(([x, l]) => `<button class="chip ${S.settings[k] === x ? "on" : ""}" data-set="${k}" data-val="${x}">${esc(l)}</button>`).join("")}</div>`).join("");
   }

@@ -119,12 +119,13 @@ Everyone plays as one team against the board. Games take 20–30 minutes, and th
 - **The danger** moves 1 step closer each round. Bigger teams get fewer rounds, and the Easy, Normal and Hard settings change how many.
 - **Team Finale:** once all 4 pieces are found, the target appears on the map. Get someone there and press DIG. Then everyone taps on their phone for 10 seconds, and the team total must beat the target.
 - **One-player mode:** computer teammates join automatically when only one person has joined.
+- **🎨 Storybook look:** the same 🎨 button as Fortunes, in the lobby and next to Pause. Treasure Island becomes a real island: sandy shore and surf, a sea with a pirate ship, a sea serpent, a floating barrel and a compass rose, jungle over the unexplored squares, and hand-drawn art for every square (tent, palms, treasure chests, parrot, map pieces, quicksand, snake, cave, rockfall, lookout tower, the red X and the storm cloud). Dragon's Mountain and Save Christmas get the island shape, frame, textures, pieces and dice, with their own art still to come.
 
 ## Files
 - `index.html`: TV and phone screens, plus the live connection (Supabase Realtime broadcast, nothing stored).
 - `engine.js`: all the rules. It has no screen code, so it can be tested on its own.
 - `themes.js`: themes, cards and quest tasks. Add a theme here.
-- `art.js`: the Storybook art (drawn in code as SVG, so there are no image files) and the 🎨 look switch. Add art for another theme here.
+- `art.js`: the Storybook art for both games (drawn in code as SVG, so there are no image files) and the 🎨 look switch. Add art for another theme or adventure here.
 - `adventure.html` and `adv-engine.js`: the team adventure (screens, and rules plus computer teammates).
 
 ## Coming next
