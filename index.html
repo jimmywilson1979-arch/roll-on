@@ -18,6 +18,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="themes.js?v=3"></script>
 <script src="engine.js?v=3"></script>
+<script src="art.js?v=1"></script>
 <style>
 :root{
   --felt:#16351f; --felt2:#0b1f12; --board:#f1e4c0; --board2:#e6d3a2; --ink:#2b1d0e; --accent:#e0b23e; --accent-ink:#2a1b00;
@@ -186,6 +187,34 @@ body.th-space .stars{position:fixed;inset:0;pointer-events:none;background-image
 .pdice{display:flex;gap:1em;justify-content:center;margin:.4em 0}
 .pdice .die{width:5.2rem;height:5.2rem;border-radius:1rem;padding:.75rem}
 .pdice .die i{width:1.05rem;height:1.05rem}
+
+/* ---------- 🎨 Storybook look (html.fx). Classic look = without .fx ---------- */
+.art{display:block}
+.sq .ic .art{width:1.35em;height:1.35em}
+.sq.corner .ic .art{width:1.5em;height:1.5em}
+.sq .band .art{width:1.15em;height:1.15em;flex:none}
+.bigcard .ci .art{width:1.4em;height:1.4em;margin:0 auto}
+.fx body{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .22 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),radial-gradient(ellipse at 50% 40%,var(--felt),var(--felt2) 75%)}
+.fx .board{box-shadow:0 0 0 calc(.4*var(--vh,1vh)) #d9b45a,0 0 0 calc(1.1*var(--vh,1vh)) #5a3714,0 0 0 calc(1.3*var(--vh,1vh)) #241405,0 calc(2*var(--vh,1vh)) calc(6*var(--vh,1vh)) rgba(0,0,0,.6)}
+.fx .sq,.fx .center{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .24 0 0 0 0 .08 0 0 0 .16 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.fx .sq{box-shadow:inset 0 0 calc(1.1*var(--vh,1vh)) rgba(110,70,20,.18)}
+.fx .sq.owned{box-shadow:inset 0 0 0 .45vh var(--oc),inset 0 0 calc(1.1*var(--vh,1vh)) rgba(110,70,20,.18)}
+.fx .center{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .24 0 0 0 0 .08 0 0 0 .16 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),radial-gradient(ellipse at 50% 28%,rgba(255,255,255,.35),transparent 60%),linear-gradient(160deg,var(--board),var(--board2));box-shadow:inset 0 0 calc(4*var(--vh,1vh)) rgba(110,70,20,.25)}
+.fx .sq .band{background-image:linear-gradient(rgba(255,255,255,.38),rgba(255,255,255,0) 50%,rgba(0,0,0,.18))!important;box-shadow:inset 0 0 0 .15vh rgba(0,0,0,.15)}
+.scene{position:absolute;left:0;right:0;bottom:0;height:42%;pointer-events:none;-webkit-mask-image:linear-gradient(transparent,#000 32%);mask-image:linear-gradient(transparent,#000 32%)}
+.scene .art{width:100%;height:100%}
+.fx .center>*:not(.scene){position:relative;z-index:1}
+.fx .center .msg,.fx .center .sub{text-shadow:0 0 .4vh var(--board),0 0 1vh var(--board),0 0 1.6vh var(--board)}
+.fx .tok,.fx .tokdot{background-image:radial-gradient(circle at 32% 26%,rgba(255,255,255,.75),rgba(255,255,255,0) 42%),radial-gradient(circle,rgba(0,0,0,0) 55%,rgba(0,0,0,.35))!important;box-shadow:0 0 0 calc(.22*var(--vh,1vh)) #fff3c4,0 0 0 calc(.48*var(--vh,1vh)) #b8862a,0 0 0 calc(.6*var(--vh,1vh)) #4e300a,0 calc(.7*var(--vh,1vh)) calc(1.2*var(--vh,1vh)) rgba(0,0,0,.55);text-shadow:0 .15vh .25vh rgba(0,0,0,.4)}
+.fx .tok.cur{box-shadow:0 0 0 calc(.22*var(--vh,1vh)) #fff3c4,0 0 0 calc(.48*var(--vh,1vh)) #b8862a,0 0 0 calc(.6*var(--vh,1vh)) #4e300a,0 0 calc(1.6*var(--vh,1vh)) calc(.6*var(--vh,1vh)) rgba(255,214,90,.75),0 calc(.9*var(--vh,1vh)) calc(1.4*var(--vh,1vh)) rgba(0,0,0,.55)}
+.fx .die{background:linear-gradient(145deg,#fffdf6,#efe3c8);border-color:#cdb98e;box-shadow:inset 0 .35vh 0 rgba(255,255,255,.9),inset 0 -.6vh 0 rgba(150,115,60,.28),0 .8vh calc(1.6*var(--vh,1vh)) rgba(0,0,0,.35)}
+.fx .die i{background:radial-gradient(circle at 35% 32%,#555,#111)}
+.fx .th-kingdom .die i{background:radial-gradient(circle at 35% 32%,#d9493a,#5c0e08)}
+.fx .th-kingdom .logo{background:linear-gradient(180deg,#c8952f,#8a5a14 55%,#55340a);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none;filter:drop-shadow(0 .25vh 0 rgba(255,246,214,.9)) drop-shadow(0 .5vh .6vh rgba(80,50,10,.25))}
+.fx .th-kingdom .logo::after{content:"";display:block;width:70%;height:calc(1.8*var(--vh,1vh));margin:calc(.9*var(--vh,1vh)) auto 0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 16'%3E%3Cpath d='M4 8H84M116 8H196' stroke='%238a5a14' stroke-width='2'/%3E%3Cpath d='M100 1l7 7-7 7-7-7z' fill='%23c8952f' stroke='%238a5a14' stroke-width='1.5'/%3E%3Ccircle cx='88' cy='8' r='2.5' fill='%238a5a14'/%3E%3Ccircle cx='112' cy='8' r='2.5' fill='%238a5a14'/%3E%3C/svg%3E") center/contain no-repeat}
+.fx .th-kingdom .bigcard{background:linear-gradient(#fcf3da,#ecd8a6);border-color:#b8862a;box-shadow:inset 0 0 0 .5vh #fcf3da,inset 0 0 0 .7vh #c8952f,0 calc(1.2*var(--vh,1vh)) calc(3*var(--vh,1vh)) rgba(0,0,0,.35)}
+.fx .prow{background-image:linear-gradient(180deg,rgba(255,255,255,.07),rgba(0,0,0,.18))}
+.fx .th-kingdom .prow.turn{box-shadow:0 0 calc(2*var(--vh,1vh)) rgba(224,178,62,.35)}
 .shake{animation:shk 1.2s ease-in-out infinite}
 @keyframes shk{0%,100%{transform:rotate(0)}10%{transform:rotate(-14deg)}20%{transform:rotate(12deg)}30%{transform:rotate(-8deg)}40%{transform:rotate(0)}}
 .row2{display:flex;gap:.6em}
@@ -244,6 +273,9 @@ const code4 = () => Array.from({ length: 4 }, () => "BCDFGHJKLMNPQRSTVWXZ"[Math.
 const vib = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) { } };
 const fmtN = n => Number(n).toLocaleString("en-GB");
 const tok = (S, p) => E.theme(S).tokens[p.ci % 8];
+// 🎨 Storybook art (art.js) when the look is on, otherwise the emoji
+const art = (theme, slot, fallback) => (window.ART && ART.icon(theme, slot)) || fallback;
+const cardArt = (theme, emoji) => (window.ART && ART.card(theme, emoji)) || emoji;
 const ordinal = n => n + (["th", "st", "nd", "rd"][(n % 100 - 20) % 10] || ["th", "st", "nd", "rd"][n % 100] || "th");
 const PIPS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
 const dieHTML = (n, cls) => `<div class="die ${cls || ""}">${Array.from({ length: 9 }, (_, i) => `<i class="${PIPS[n].includes(i) ? "on" : ""}"></i>`).join("")}</div>`;
@@ -417,17 +449,17 @@ async function tvMain() {
     const b = BOARD[i], t = E.theme(S), o = S.own[i];
     if (b.t === "start" || b.t === "jail" || b.t === "free" || b.t === "gojail") {
       const extra = b.t === "start" ? `<div class="pr">Collect ${E.money(S, E.PASS)}</div>` : b.t === "jail" ? `<div class="pr">Just visiting</div>` : "";
-      return `<div class="tx"><div class="ic">${t.icons[b.t]}</div><div class="nm">${esc(E.sqName(S, i))}</div>${extra}</div>`;
+      return `<div class="tx"><div class="ic">${art(t.key, b.t, t.icons[b.t])}</div><div class="nm">${esc(E.sqName(S, i))}</div>${extra}</div>`;
     }
-    if (b.t === "chance" || b.t === "quest") { const c = b.t === "chance" ? t.chance : t.quest; return `<div class="tx"><div class="ic">${c.icon}</div><div class="nm">${esc(c.name)}</div></div>`; }
+    if (b.t === "chance" || b.t === "quest") { const c = b.t === "chance" ? t.chance : t.quest; return `<div class="tx"><div class="ic">${art(t.key, b.t, c.icon)}</div><div class="nm">${esc(c.name)}</div></div>`; }
     const owner = o && S.players[o.o];
-    const band = b.t === "prop" ? `<div class="band" style="background:${GROUPS[b.g].c}">${o && o.h ? (o.h === 5 ? t.hotel.i : t.house.i.repeat(o.h)) : ""}</div>` : "";
+    const band = b.t === "prop" ? `<div class="band" style="background:${GROUPS[b.g].c}">${o && o.h ? (o.h === 5 ? art(t.key, "hotel", t.hotel.i) : art(t.key, "house", t.house.i).repeat(o.h)) : ""}</div>` : "";
     const price = owner ? (o.m ? "" : `Rent ${E.money(S, E.rentOf(S, i))}`) : E.money(S, b.price);
-    return `${band}<div class="tx">${b.t === "station" ? `<div class="ic" style="font-size:calc(2.4*var(--vh,1vh))">${t.icons.station}</div>` : ""}<div class="nm">${esc(E.sqName(S, i))}</div><div class="pr">${price}</div></div>${owner ? `<span class="own">${tok(S, owner)}</span>` : ""}`;
+    return `${band}<div class="tx">${b.t === "station" ? `<div class="ic" style="font-size:calc(2.4*var(--vh,1vh))">${art(t.key, "station", t.icons.station)}</div>` : ""}<div class="nm">${esc(E.sqName(S, i))}</div><div class="pr">${price}</div></div>${owner ? `<span class="own">${tok(S, owner)}</span>` : ""}`;
   }
   function boardHTML(centre) {
     return `<div class="board" id="board">${BOARD.map((b, i) => { const [r, c] = pos(i); return `<div class="sq ${side(i)}" id="sq${i}" style="grid-row:${r};grid-column:${c}"></div>`; }).join("")}
-      <div class="center" id="center">${centre}</div></div><div class="toks" id="toks"></div><div class="flyers" id="flyers"></div>`;
+      <div class="center" id="center">${window.ART ? ART.scene(S.settings.theme) : ""}${centre}</div></div><div class="toks" id="toks"></div><div class="flyers" id="flyers"></div>`;
   }
   let sqCache = [];
   function updBoard() {
@@ -488,9 +520,9 @@ async function tvMain() {
       case "moving": return `${dice}<div class="msg">${tok(S, cp)} ${cn} rolled ${S.dice[0] + S.dice[1]}${S.dice[0] === S.dice[1] ? " · a double!" : ""}</div>`;
       case "buy": return `<div style="display:flex;gap:calc(3*var(--vh,1vh));align-items:center">${deedHTML(S, S.offer, "deed")}<div style="max-width:calc(24*var(--vh,1vh))"><div class="msg">${tok(S, cp)} ${cn}</div><div class="sub">Buy it for ${E.money(S, BOARD[S.offer].price)}, or send it to auction?</div></div></div>`;
       case "auction": { const a = S.auction, al = E.alive(S); return `<div style="display:flex;gap:calc(3*var(--vh,1vh));align-items:center">${deedHTML(S, a.sq, "deed")}<div style="max-width:calc(26*var(--vh,1vh))"><div class="msg">🔨 AUCTION!</div><div class="sub">Everyone bid secretly on your phone. Highest bid wins.</div><div class="bidders" id="bidders">${al.map(id => `<span class="${a.bids[id] ? "in" : ""}" title="${esc(S.players[id].name)}">${tok(S, S.players[id])}</span>`).join("")}</div></div></div><div class="timerbar"><i id="tb"></i></div>`; }
-      case "card": { const c = S.card; return `<div class="bigcard"><div class="ci">${c.icon}</div><h4>${esc(c.title)}</h4><p>${esc(c.txt)}</p></div><div class="sub">${cn}, tap OK on your phone.</div>`; }
+      case "card": { const c = S.card; return `<div class="bigcard"><div class="ci">${cardArt(t.key, c.icon)}</div><h4>${esc(c.title)}</h4><p>${esc(c.txt)}</p></div><div class="sub">${cn}, tap OK on your phone.</div>`; }
       case "quest": {
-        const q = S.quest, title = `<div class="ci">${q.icon}</div><h4>${esc(q.title)} for ${cn} · win ${E.money(S, q.reward)}</h4>`;
+        const q = S.quest, title = `<div class="ci">${cardArt(t.key, q.icon)}</div><h4>${esc(q.title)} for ${cn} · win ${E.money(S, q.reward)}</h4>`;
         if (q.t === "secret") return `<div class="bigcard">${title}<p>🤫 ${esc(q.cat)}…<br>Their phone says what. <b>Shout out your guesses!</b></p></div><div class="timerbar"><i id="tb"></i></div><div class="sub">${cn} taps ✅ when someone guesses it.</div>`;
         const v = E.voters(S); return `<div class="bigcard">${title}<p>${esc(q.txt)}</p></div><div class="timerbar"><i id="tb"></i></div><div class="sub">Everyone else: vote 👍 or 👎 on your phone</div><div class="bidders">${v.map(id => `<span class="${q.votes[id] != null ? "in" : ""}">${tok(S, S.players[id])}</span>`).join("")}</div>`;
       }
@@ -539,6 +571,7 @@ async function tvMain() {
           <div class="panel" id="sets">${setsHTML()}</div>
           <button class="btn gold big" id="start" ${ready ? "" : "disabled"}>Start the game</button>
           ${canFull() ? `<button class="btn" id="full">⛶ Full screen (hides the browser bars)</button>` : ""}
+          ${lookBtn()}
           <div class="muted" style="font-size:calc(1.6*var(--vh,1vh))">The first player to join is the host and can also start and change settings from their phone. ${esc(conn)}</div></div></div>`;
       try { new QRCode($("#qr"), { text: joinUrl, width: 400, height: 400, correctLevel: QRCode.CorrectLevel.M }); } catch (e) { $("#qr").textContent = joinUrl; }
       $("#start").onclick = () => hostAct({ t: "start" });
@@ -547,7 +580,7 @@ async function tvMain() {
       app.innerHTML = `<div class="tv"><div class="bwrap">${boardHTML(`${logo}<div class="stage" id="stage"></div>`)}<div id="pz"></div></div>
         <div class="side"><div class="shead"><span class="ttl">${esc(t.title)}</span><div class="code">Join code<b>${room}</b></div></div>
           <div class="info" id="timeinfo"></div><div class="plist" id="plist"></div><div class="feed" id="feed"></div>
-          <div class="tvctl"><button class="btn" id="pause">⏸️ Pause</button><button class="btn" id="nudge" title="Moves a stuck turn along">⏭ Move it along</button><button class="btn" id="snd">${SFX.on ? "🔊" : "🔇"}</button>${canFull() ? `<button class="btn" id="full" title="Full screen">⛶</button>` : ""}<button class="btn" id="endnow">🏁 Finish game</button><span class="muted" style="font-size:calc(1.4*var(--vh,1vh));align-self:center">${esc(conn)}</span></div></div></div>`;
+          <div class="tvctl"><button class="btn" id="pause">⏸️ Pause</button><button class="btn" id="nudge" title="Moves a stuck turn along">⏭ Move it along</button><button class="btn" id="snd">${SFX.on ? "🔊" : "🔇"}</button>${canFull() ? `<button class="btn" id="full" title="Full screen">⛶</button>` : ""}${lookBtn()}<button class="btn" id="endnow">🏁 Finish game</button><span class="muted" style="font-size:calc(1.4*var(--vh,1vh));align-self:center">${esc(conn)}</span></div></div></div>`;
       $("#pause").onclick = () => hostAct({ t: "pause" });
       $("#nudge").onclick = () => hostAct({ t: "nudge" });
       $("#snd").onclick = e => { e.target.textContent = SFX.toggle() ? "🔊" : "🔇"; };
@@ -565,7 +598,8 @@ async function tvMain() {
     }
     wireFull();
   }
-  function wireFull() { const f = $("#full"); if (f) f.onclick = goFull; }
+  function wireFull() { const f = $("#full"); if (f) f.onclick = goFull; const lk = $("#look"); if (lk) lk.onclick = () => { ART.toggle(); lastBuild = ""; render(); }; }
+  const lookBtn = () => window.ART ? `<button class="btn" id="look" title="Switch between the Storybook and Classic graphics">🎨 ${ART.on ? "Storybook" : "Classic"}</button>` : "";
   function setsHTML() {
     const st = S.settings;
     return E.SETTINGS().map(([k, label, vals]) => {

@@ -62,6 +62,11 @@ For children (or everyone, if chosen), the helper:
 - gives a jail tip
 - offers a **Sort it for me** button when money is owed.
 
+### 🎨 Storybook look
+The TV has a **🎨 Storybook / Classic** button, in the lobby and next to Pause during a game. It switches the graphics and remembers your choice on that device.
+- **Storybook:** hand-drawn art for Fantasy Kingdom (castle gate, dungeon, village fair, key, crystal ball, quest scroll, signposts, cottages and castles), a kingdom landscape in the middle of the board, a parchment finish, a wooden board frame, gold-rimmed pieces and red-pip dice. The other themes get the frame, pieces and dice.
+- **Classic:** the original emoji look.
+
 ### Host controls
 On the TV, or under ⚙️ on the host's phone:
 - **Pause**
@@ -115,6 +120,7 @@ Everyone plays as one team against the board. Games take 20–30 minutes, and th
 - `index.html`: TV and phone screens, plus the live connection (Supabase Realtime broadcast, nothing stored).
 - `engine.js`: all the rules. It has no screen code, so it can be tested on its own.
 - `themes.js`: themes, cards and quest tasks. Add a theme here.
+- `art.js`: the Storybook art (drawn in code as SVG, so there are no image files) and the 🎨 look switch. Add art for another theme here.
 - `adventure.html` and `adv-engine.js`: the team adventure (screens, and rules plus computer teammates).
 
 ## Coming next
