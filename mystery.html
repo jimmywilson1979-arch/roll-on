@@ -190,6 +190,9 @@ input{font:inherit;color:var(--fg);background:rgba(0,0,0,.3);border:2px solid va
 .shake{animation:shk 1.2s ease-in-out infinite}@keyframes shk{0%,100%{transform:rotate(0)}10%{transform:rotate(-14deg)}20%{transform:rotate(12deg)}30%{transform:rotate(-8deg)}40%{transform:rotate(0)}}
 details.rules summary{font-weight:900;cursor:pointer}details.rules li{margin:.25em 0}
 .sheet{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:20;display:flex;align-items:flex-end}
+.vsheet{align-items:center}.vsheet>div{border-radius:22px;max-width:640px;font-size:calc(2.2*var(--u,1vh))}
+.vsheet select{width:100%;font-size:1em;padding:.5em;border-radius:12px;margin-top:.3em}.vsheet input[type=range]{width:100%}
+.vrow{display:flex;gap:.6em;align-items:center;font-weight:800}.vrow input{width:auto}
 .sheet>div{background:var(--bg2);border-top:2px solid var(--line);border-radius:22px 22px 0 0;width:100%;max-width:560px;margin:0 auto;padding:1.1em 1em 2em;display:flex;flex-direction:column;gap:.7em}
 </style>
 </head>
@@ -269,8 +272,12 @@ const SFX = (() => {
 })();
 // The TV narrator: says what is happening out loud, so everyone keeps watching between turns.
 const NARR = (() => {
-  let on = ls.get("mys_narr", true), q = [], busy = false, voice = null, capT = null;
-  const pick = () => { try { const vs = speechSynthesis.getVoices(); return vs.find(v => /en-GB/i.test(v.lang) && /libby|sonia|serena|kate|martha|female/i.test(v.name)) || vs.find(v => /en-GB/i.test(v.lang)) || vs.find(v => /^en/i.test(v.lang)) || null; } catch (e) { return null; } };
+  let on = ls.get("mys_narr", true), q = [], busy = false, voice = null, capT = null, rate = ls.get("mys_rate", 1);
+  // nicer-sounding voices first: the "natural"/"neural"/"online" ones are much less robotic
+  const good = v => /natural|neural|online|premium|enhanced|wavenet|google/i.test(v.name);
+  const list = () => { try { const vs = speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang)); const sc = v => (/en-GB/i.test(v.lang) ? 0 : 2) + (good(v) ? 0 : 1); return vs.sort((a, b) => sc(a) - sc(b) || a.name.localeCompare(b.name)); } catch (e) { return []; } };
+  const pick = () => { const vs = list(), want = ls.get("mys_voice", ""); return vs.find(v => v.name === want) || vs.find(v => /en-GB/i.test(v.lang) && good(v) && /sonia|libby|maisie|serena|kate|female/i.test(v.name)) || vs[0] || null; };
+  try { speechSynthesis.addEventListener("voiceschanged", () => { voice = null; }); } catch (e) { }
   function cap(t) { const c = document.getElementById("cap"); if (!c) return; c.textContent = "🗣️ " + t; c.classList.add("show"); clearTimeout(capT); capT = setTimeout(() => c.classList.remove("show"), 2500 + t.length * 60); }
   function next() {
     if (busy) return;
@@ -281,8 +288,8 @@ const NARR = (() => {
     busy = true; let done = false;
     const fin = () => { if (done) return; done = true; busy = false; setTimeout(next, 180); };
     try {
-      const u = new SpeechSynthesisUtterance(x.t); u.lang = "en-GB"; u.rate = 1; u.pitch = x.p >= 2 ? 1.05 : 1;
-      voice = voice || pick(); if (voice) u.voice = voice;
+      const u = new SpeechSynthesisUtterance(x.t); u.lang = "en-GB"; u.rate = rate; u.pitch = x.p >= 2 ? 1.05 : 1;
+      voice = voice || pick(); if (voice) { u.voice = voice; u.lang = voice.lang; }
       u.onend = fin; u.onerror = fin; speechSynthesis.speak(u);
       setTimeout(fin, 1800 + x.t.length * 85);
     } catch (e) { fin(); }
@@ -293,6 +300,10 @@ const NARR = (() => {
     // p: 0 = chatter (dropped first), 1 = normal, 2 = important (clears the chatter)
     line(t, p) { p = p || 1; if (p >= 2) q = q.filter(x => x.p >= 2); q.push({ t, p, at: Date.now() }); while (q.length > 3) { const i = q.findIndex(x => x.p < 2); q.splice(i >= 0 ? i : 0, 1); } next(); },
     clear() { q = []; },
+    voices: list, get voice() { const v = voice || pick(); return v ? v.name : ""; }, good,
+    setVoice(name) { ls.set("mys_voice", name); voice = null; },
+    get rate() { return rate; }, setRate(r) { rate = r; ls.set("mys_rate", r); },
+    test(t) { q = []; busy = false; try { speechSynthesis.cancel(); } catch (e) { } const was = on; on = true; this.line(t || "Hello detectives! Someone has eaten the birthday cake. Who could it be?", 2); on = was; },
   };
 })();
 const pickOne = a => a[Math.random() * a.length | 0];
@@ -453,12 +464,29 @@ async function tvMain() {
         <div class="tvctl"><button class="btn" id="pause">⏸️ Pause</button><button class="btn" id="nudge">⏭ Move it along</button><button class="btn" id="snd" title="Sound effects">${SFX.on ? "🔊" : "🔇"}</button><button class="btn" id="narr" title="Narrator: reads out what is happening">${NARR.on ? "🗣️ Narrator" : "🤐 Narrator"}</button>${canFull() ? `<button class="btn" id="full">⛶</button>` : ""}${lookBtn()}<button class="btn" id="quit">🏳️ Reveal answer</button><span class="muted" style="font-size:calc(1.4*var(--u,1vh))">${esc(conn)}</span></div></div></div>`;
       $("#pause").onclick = () => hostAct({ t: "pause" }); $("#nudge").onclick = () => hostAct({ t: "nudge" });
       $("#snd").onclick = e => { e.target.textContent = SFX.toggle() ? "🔊" : "🔇"; };
-      $("#narr").onclick = e => { const o = NARR.toggle(); e.target.textContent = o ? "🗣️ Narrator" : "🤐 Narrator"; if (o) NARR.line("Hello detectives. I'll tell you what everyone is up to.", 2); };
+      $("#narr").onclick = () => narrSheet();
       $("#wake").onclick = () => { SFX.unlock(); $("#wake").hidden = true; if (NARR.on) NARR.line("Narrator ready. Let's find that cake thief!", 2); };
       $("#quit").onclick = () => { if (confirm("Give up and reveal the answer?")) hostAct({ t: "endnow" }); };
     }
     const f = $("#full"); if (f) f.onclick = goFull;
     const lk = $("#look"); if (lk) lk.onclick = () => { ART.toggle(); lastBuild = ""; render(); };
+  }
+  function narrSheet() {
+    SFX.unlock();
+    const vs = NARR.voices(), cur = NARR.voice, d = document.createElement("div"); d.className = "sheet vsheet";
+    d.innerHTML = `<div><h2 style="margin:0">🗣️ Narrator</h2>
+      <label class="vrow"><input type="checkbox" id="von" ${NARR.on ? "checked" : ""}> Read everything out loud</label>
+      ${vs.length ? `<label>Voice <span class="muted">(⭐ = better quality)</span><select id="vsel">${vs.map(v => `<option value="${esc(v.name)}" ${v.name === cur ? "selected" : ""}>${NARR.good(v) ? "⭐ " : ""}${esc(v.name)} · ${esc(v.lang)}</option>`).join("")}</select></label>` : `<p class="muted">This device hasn't given us any voices yet. Close this and try again in a moment.</p>`}
+      <label>Speed <input type="range" id="vrate" min="0.7" max="1.3" step="0.05" value="${NARR.rate}"></label>
+      <p class="muted" style="margin:0;font-size:.85em">${vs.length} English voice${vs.length === 1 ? "" : "s"} on this device. The list comes from the device itself, so a tablet, a TV box and a laptop will each show different ones.</p>
+      <div style="display:flex;gap:.6em"><button class="btn" id="vtest">▶️ Test voice</button><button class="btn gold" id="vok">Done</button></div></div>`;
+    document.body.appendChild(d);
+    const sel = d.querySelector("#vsel");
+    if (sel) sel.onchange = () => { NARR.setVoice(sel.value); NARR.test(); };
+    d.querySelector("#vrate").oninput = e => NARR.setRate(+e.target.value);
+    d.querySelector("#vtest").onclick = () => NARR.test();
+    d.querySelector("#von").onchange = e => { if (e.target.checked !== NARR.on) NARR.toggle(); $("#narr").textContent = NARR.on ? "🗣️ Narrator" : "🤐 Narrator"; };
+    const close = () => d.remove(); d.querySelector("#vok").onclick = close; d.onclick = e => { if (e.target === d) close(); };
   }
   const woke = () => !navigator.userActivation || navigator.userActivation.hasBeenActive;
   const lookBtn = () => window.ART ? `<button class="btn" id="look" title="Switch between the Storybook and Classic graphics">🎨 ${ART.on ? "Storybook" : "Classic"}</button>` : "";
