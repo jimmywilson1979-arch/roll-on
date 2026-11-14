@@ -16,7 +16,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="art.js?v=3"></script>
-<script src="mys-engine.js?v=3"></script>
+<script src="mys-engine.js?v=4"></script>
 <script src="mys-art.js?v=3"></script>
 <style>
 :root{--bg:#2a1840;--bg2:#120a20;--paper:#fbf3e0;--paper2:#efe0bd;--ink:#2b1d12;--accent:#ffc94a;--fg:#fff;--muted:#cdbfe6;--panel:rgba(0,0,0,.3);--line:rgba(255,255,255,.16);--good:#3ddc84;--bad:#ff5d5d;--title:"Special Elite","Courier New",monospace;--body:"Nunito",system-ui,sans-serif;color-scheme:dark}
@@ -86,6 +86,14 @@ input{font:inherit;color:var(--fg);background:rgba(0,0,0,.3);border:2px solid va
 .prow.turn{border-color:var(--accent);background:rgba(255,255,255,.14)}
 .prow .pn{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .prow .pn small{display:block;font-size:.72em;color:var(--muted)}
+.race{font-weight:900;font-size:calc(1.6*var(--u,1vh));opacity:.85;margin:calc(.6*var(--u,1vh)) 0 calc(-.2*var(--u,1vh))}
+.meter{height:calc(.9*var(--u,1vh));border-radius:99px;background:rgba(255,255,255,.15);margin-top:calc(.5*var(--u,1vh));overflow:hidden}
+.meter i{display:block;height:100%;border-radius:99px;transition:width .8s ease}
+.meter.hot{box-shadow:0 0 calc(1*var(--u,1vh)) #ffb347}
+.cap{position:absolute;left:50%;top:calc(1.5*var(--u,1vh));transform:translate(-50%,-150%);max-width:88%;z-index:30;background:rgba(20,10,4,.86);color:#fff6e0;border:calc(.25*var(--u,1vh)) solid rgba(255,220,160,.45);border-radius:calc(1.6*var(--u,1vh));padding:calc(1*var(--u,1vh)) calc(2*var(--u,1vh));font-weight:800;font-size:calc(2.3*var(--u,1vh));text-align:center;opacity:0;transition:transform .35s ease,opacity .35s;pointer-events:none}
+.cap.show{transform:translate(-50%,0);opacity:1}
+.wake{position:absolute;left:50%;bottom:calc(3*var(--u,1vh));transform:translateX(-50%);z-index:31;font-size:calc(2.4*var(--u,1vh))}
+.wake[hidden]{display:none}
 .prow .dot{width:calc(2.6*var(--u,1vh));height:calc(2.6*var(--u,1vh))}
 .info{display:flex;gap:1vh;flex-wrap:wrap}.info span{background:var(--panel);border:1px solid var(--line);border-radius:99px;padding:calc(.5*var(--u,1vh)) calc(1.3*var(--u,1vh));font-weight:800;font-size:calc(1.8*var(--u,1vh))}
 .feed{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;gap:calc(.6*var(--u,1vh));font-size:calc(1.75*var(--u,1vh));font-weight:700;color:var(--muted);mask-image:linear-gradient(transparent,#000 40%)}
@@ -243,8 +251,51 @@ const SFX = (() => {
     win() { [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => tone(f, i === 6 ? .9 : .18, "triangle", .14, i * .16)); },
     wrong() { tone(200, .3, "sawtooth", .08); tone(150, .5, "sawtooth", .08, .25); },
     turn() { tone(880, .1, "sine", .08); },
+    // a little sound for each room, so you can hear where the detective went
+    room(r) {
+      const a = ctx(); if (!a || !on) return;
+      const noise = (dur, at, f, q, vol, type) => { const t0 = a.currentTime + (at || 0), n = Math.max(1, a.sampleRate * dur | 0), b = a.createBuffer(1, n, a.sampleRate), d = b.getChannelData(0); for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1; const src = a.createBufferSource(), fl = a.createBiquadFilter(), g = a.createGain(); src.buffer = b; fl.type = type || "bandpass"; fl.frequency.value = f; fl.Q.value = q || 1; g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(.001, t0 + dur); src.connect(fl); fl.connect(g); g.connect(a.destination); src.start(t0); };
+      const sweep = (f1, f2, d, type, vol, at) => { const t0 = a.currentTime + (at || 0), o = a.createOscillator(), g = a.createGain(); o.type = type || "sine"; o.frequency.setValueAtTime(f1, t0); o.frequency.exponentialRampToValueAtTime(f2, t0 + d); g.gain.setValueAtTime(.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + d * .2); g.gain.exponentialRampToValueAtTime(.001, t0 + d); o.connect(g); g.connect(a.destination); o.start(t0); o.stop(t0 + d + .02); };
+      switch (r % 6) {
+        case 0: noise(1.3, 0, 5000, .7, .05); tone(2400, .25, "sine", .06, .5); tone(3100, .3, "sine", .05, .75); break; // kitchen: sizzle + clink
+        case 1: for (let i = 0; i < 14; i++) noise(.03 + Math.random() * .05, Math.random() * 1.6, 1500 + Math.random() * 2500, 2, .1 + Math.random() * .1); noise(1.6, 0, 300, .5, .03, "lowpass"); break; // lounge: crackling fire
+        case 2: [0, .22, .5, .62].forEach((t, i) => sweep(2600 + i * 200, 3900, .12, "sine", .07, t)); break; // garden: birds
+        case 3: [1047, 1319, 1568, 1319, 1175, 1568].forEach((f, i) => tone(f, .45, "triangle", .06, i * .22)); break; // bedroom: music box
+        case 4: sweep(140, 260, .7, "sawtooth", .025); noise(.12, .8, 180, 1, .25, "lowpass"); noise(.12, 1.25, 160, 1, .22, "lowpass"); break; // hallway: creak + footsteps
+        case 5: [0, .5, 1, 1.5].forEach((t, i) => tone(i % 2 ? 1300 : 1750, .05, "square", .05, t)); break; // study: tick-tock
+      }
+    },
   };
 })();
+// The TV narrator: says what is happening out loud, so everyone keeps watching between turns.
+const NARR = (() => {
+  let on = ls.get("mys_narr", true), q = [], busy = false, voice = null, capT = null;
+  const pick = () => { try { const vs = speechSynthesis.getVoices(); return vs.find(v => /en-GB/i.test(v.lang) && /libby|sonia|serena|kate|martha|female/i.test(v.name)) || vs.find(v => /en-GB/i.test(v.lang)) || vs.find(v => /^en/i.test(v.lang)) || null; } catch (e) { return null; } };
+  function cap(t) { const c = document.getElementById("cap"); if (!c) return; c.textContent = "🗣️ " + t; c.classList.add("show"); clearTimeout(capT); capT = setTimeout(() => c.classList.remove("show"), 2500 + t.length * 60); }
+  function next() {
+    if (busy) return;
+    const t = Date.now(); q = q.filter(x => t - x.at < (x.p >= 2 ? 15000 : 6000));
+    const x = q.shift(); if (!x) return;
+    cap(x.t);
+    if (!on || !window.speechSynthesis) return setTimeout(next, 30);
+    busy = true; let done = false;
+    const fin = () => { if (done) return; done = true; busy = false; setTimeout(next, 180); };
+    try {
+      const u = new SpeechSynthesisUtterance(x.t); u.lang = "en-GB"; u.rate = 1; u.pitch = x.p >= 2 ? 1.05 : 1;
+      voice = voice || pick(); if (voice) u.voice = voice;
+      u.onend = fin; u.onerror = fin; speechSynthesis.speak(u);
+      setTimeout(fin, 1800 + x.t.length * 85);
+    } catch (e) { fin(); }
+  }
+  return {
+    get on() { return on; },
+    toggle() { on = !on; ls.set("mys_narr", on); q = []; busy = false; try { speechSynthesis.cancel(); } catch (e) { } return on; },
+    // p: 0 = chatter (dropped first), 1 = normal, 2 = important (clears the chatter)
+    line(t, p) { p = p || 1; if (p >= 2) q = q.filter(x => x.p >= 2); q.push({ t, p, at: Date.now() }); while (q.length > 3) { const i = q.findIndex(x => x.p < 2); q.splice(i >= 0 ? i : 0, 1); } next(); },
+    clear() { q = []; },
+  };
+})();
+const pickOne = a => a[Math.random() * a.length | 0];
 
 if (P.has("tv")) tvMain(); else if (P.has("join")) phoneMain(P.get("join")); else home();
 
@@ -380,7 +431,8 @@ async function tvMain() {
     const doing = S.step === "roll" ? (p.bot ? "🤖 thinking…" : "shake your phone to roll") : S.step === "room" ? `rolled ${S.die}, choosing a room` : S.step === "showing" ? `waiting for ${esc(S.players[S.ask.waiting].name)} to show a card` : S.step === "asking" ? "is asking a question" : "is searching";
     return `<div class="info"><span>Round ${S.round}</span>${!S.unlocked && S.locked >= 0 ? `<span>🔒 Study locked</span>` : ""}<span style="display:flex;align-items:center;gap:.5em">🎲 <div class="die tvdie" id="tvd">${pipsHTML(S.die || 1)}</div></span></div>
       <div class="panel" style="font-weight:900;font-size:calc(2.3*var(--u,1vh))"><span class="dot" style="background:${p.color}"></span> ${esc(p.name)}'s turn<br><span class="muted" style="font-size:.8em">${doing}</span></div>
-      <div class="plist">${S.order.map(id => { const q = S.players[id]; return `<div class="prow ${id === S.turnPid ? "turn" : ""}"><span class="dot" style="background:${q.color}"></span><div class="pn">${esc(q.name)}<small>${q.bot ? "🤖 · " : ""}${q.kid ? "🧒 · " : ""}🃏 ${(q.hand || []).length} card${(q.hand || []).length === 1 ? "" : "s"}${q.skip ? ` · 🪑 naughty step (${q.skip})` : ""}${alive(q) ? "" : " · 📵"}</small></div></div>`; }).join("")}</div>`;
+      <div class="race">🕵️ Who's closest to solving it?</div>
+      <div class="plist">${S.order.map(id => { const q = S.players[id], pg = M.progress(S, q), hot = pg >= 1 ? "🎯" : pg >= .75 ? "🔥" : ""; return `<div class="prow ${id === S.turnPid ? "turn" : ""}"><span class="dot" style="background:${q.color}"></span><div class="pn">${esc(q.name)} ${hot}<small>${q.bot ? "🤖 · " : ""}${q.kid ? "🧒 · " : ""}🃏 ${(q.hand || []).length} card${(q.hand || []).length === 1 ? "" : "s"}${q.skip ? ` · 🪑 naughty step (${q.skip})` : ""}${alive(q) ? "" : " · 📵"}</small><div class="meter ${hot ? "hot" : ""}"><i style="width:${Math.round(pg * 100)}%;background:${q.color}"></i></div></div></div>`; }).join("")}</div>`;
   }
   function build() {
     const s = st();
@@ -396,16 +448,19 @@ async function tvMain() {
       $("#start").onclick = () => hostAct({ t: "start" });
       $("#sets").onclick = e => { const b = e.target.closest("[data-set]"); if (!b) return; const v = b.dataset.val; hostAct({ t: "set", k: b.dataset.set, v: isNaN(v) ? v : Number(v) }); };
     } else {
-      app.innerHTML = `<div class="tv"><div class="bwrap">${houseHTML()}<div id="scene"></div><div id="over"></div></div>
+      app.innerHTML = `<div class="tv"><div class="bwrap">${houseHTML()}<div id="scene"></div><div id="over"></div><div id="cap" class="cap"></div><button class="btn gold wake" id="wake" ${woke() ? "hidden" : ""}>🔊 Tap here to turn on the narrator and sounds</button></div>
         <div class="side"><div class="shead"><span class="ttl">${esc(s.title)}</span><div class="code">Join code<b>${room}</b></div></div><div id="sd"></div><div class="feed" id="feed"></div>
-        <div class="tvctl"><button class="btn" id="pause">⏸️ Pause</button><button class="btn" id="nudge">⏭ Move it along</button><button class="btn" id="snd">${SFX.on ? "🔊" : "🔇"}</button>${canFull() ? `<button class="btn" id="full">⛶</button>` : ""}${lookBtn()}<button class="btn" id="quit">🏳️ Reveal answer</button><span class="muted" style="font-size:calc(1.4*var(--u,1vh))">${esc(conn)}</span></div></div></div>`;
+        <div class="tvctl"><button class="btn" id="pause">⏸️ Pause</button><button class="btn" id="nudge">⏭ Move it along</button><button class="btn" id="snd" title="Sound effects">${SFX.on ? "🔊" : "🔇"}</button><button class="btn" id="narr" title="Narrator: reads out what is happening">${NARR.on ? "🗣️ Narrator" : "🤐 Narrator"}</button>${canFull() ? `<button class="btn" id="full">⛶</button>` : ""}${lookBtn()}<button class="btn" id="quit">🏳️ Reveal answer</button><span class="muted" style="font-size:calc(1.4*var(--u,1vh))">${esc(conn)}</span></div></div></div>`;
       $("#pause").onclick = () => hostAct({ t: "pause" }); $("#nudge").onclick = () => hostAct({ t: "nudge" });
       $("#snd").onclick = e => { e.target.textContent = SFX.toggle() ? "🔊" : "🔇"; };
+      $("#narr").onclick = e => { const o = NARR.toggle(); e.target.textContent = o ? "🗣️ Narrator" : "🤐 Narrator"; if (o) NARR.line("Hello detectives. I'll tell you what everyone is up to.", 2); };
+      $("#wake").onclick = () => { SFX.unlock(); $("#wake").hidden = true; if (NARR.on) NARR.line("Narrator ready. Let's find that cake thief!", 2); };
       $("#quit").onclick = () => { if (confirm("Give up and reveal the answer?")) hostAct({ t: "endnow" }); };
     }
     const f = $("#full"); if (f) f.onclick = goFull;
     const lk = $("#look"); if (lk) lk.onclick = () => { ART.toggle(); lastBuild = ""; render(); };
   }
+  const woke = () => !navigator.userActivation || navigator.userActivation.hasBeenActive;
   const lookBtn = () => window.ART ? `<button class="btn" id="look" title="Switch between the Storybook and Classic graphics">🎨 ${ART.on ? "Storybook" : "Classic"}</button>` : "";
   let lastScene = "", lastOver = "";
   function render() {
@@ -418,7 +473,9 @@ async function tvMain() {
     $("#feed").innerHTML = S.log.slice(-7).map(l => `<div>${esc(l)}</div>`).join("");
     live();
     $("#pause").textContent = S.paused ? "▶️ Resume" : "⏸️ Pause";
+    M.pace = NARR.on ? 1.8 : 1;
     (S.fx || []).filter(f => f.n > lastFx).forEach(effect); lastFx = S.fxN;
+    raceNews();
   }
   function live() {
     if (S.phase === "lobby") return;
@@ -428,10 +485,54 @@ async function tvMain() {
     const d = $("#tvd"); if (d) { if (now() < rollingUntil) { d.classList.add("rolling"); d.innerHTML = pipsHTML(1 + Math.random() * 6 | 0); } else if (d.classList.contains("rolling")) { d.classList.remove("rolling"); d.innerHTML = pipsHTML(S.die); } }
   }
   function effect(f) {
-    switch (f.k) { case "clue": case "tip": SFX.clue(); break; case "guess": SFX.sus(); break; case "shown": SFX.show(); break; case "solved": SFX.win(); break; case "wrong": setTimeout(SFX.wrong, 2600); break; case "turn": SFX.turn(); break; }
+    narrate(f);
+    switch (f.k) { case "room": SFX.room(f.r); break; case "clue": case "tip": SFX.clue(); break; case "guess": SFX.sus(); break; case "shown": SFX.show(); break; case "solved": SFX.win(); break; case "wrong": setTimeout(SFX.wrong, 2600); break; case "turn": SFX.turn(); break; }
+  }
+  const nm = id => (S.players[id] || {}).name || "Someone";
+  const cn = c => M.card(S, c).name;
+  function narrate(f) {
+    const st = M.st(S), n = nm(f.pid);
+    switch (f.k) {
+      case "turn":
+        if (!S.rollN && !introSaid) { introSaid = true; NARR.line(st.intro, 2); }
+        NARR.line(pickOne([`Over to ${n}.`, `${n}, it's your turn, detective.`, `All eyes on ${n}…`, `Your turn, ${n}!`, `Next up, detective ${n}.`]), 1); break;
+      case "dice": if (f.d >= 5) NARR.line(pickOne([`A ${f.d}! Two searches and a witness.`, `Ooh, a ${f.d}! Lucky.`]), 0); else if (f.d <= 2) NARR.line(`A ${f.d}. Just one search.`, 0); break;
+      case "room": { const rn = st.where[f.r][1]; NARR.line(pickOne([`${n} creeps into the ${rn}.`, `${n} tiptoes into the ${rn}.`, `${n} sneaks into the ${rn}…`, `Off to the ${rn} goes ${n}.`]), 1); break; }
+      case "search": {
+        const sp = (f.spot || "").toLowerCase();
+        if (f.res === "clue") NARR.line(pickOne([`${n} looks in the ${sp}… and finds a clue!`, `${n} checks the ${sp}. A clue!`, `Aha! Something in the ${sp}!`]), 1);
+        else if (f.res === "key") NARR.line(`${n} found the key! The ${st.where[st.lockedRoom][1]} is open!`, 2);
+        else if (f.res === "mag") NARR.line(`A magnifying glass in the ${sp}! One more search.`, 1);
+        else NARR.line(pickOne([`${n} looks in the ${sp}… nothing.`, `Nothing in the ${sp}. Just fluff.`, `${n} checks the ${sp}. Empty!`, `The ${sp}? Not a crumb.`]), 0);
+        break;
+      }
+      case "clue": if (f.w) NARR.line(pickOne([`${n} has a quiet word with a witness…`, `A witness whispers something to ${n}.`]), 1); break;
+      case "guess": {
+        NARR.line(`${n} asks… was it ${cn(f.s)}, in the ${cn(f.r)}, with the ${cn(f.i)}?`, 2);
+        const re = st.react && st.react[+f.s.slice(1)]; if (re) NARR.line(pickOne(re), 1);
+        break;
+      }
+      case "shown": NARR.line(pickOne([`${nm(f.by)} secretly shows ${nm(f.to)} a card.`, `Hmm… ${nm(f.by)} has one of those. A card is passed in secret.`, `${nm(f.by)} slides a card to ${nm(f.to)}. Shh!`]), 1); break;
+      case "nobody": NARR.line(pickOne(["Nobody can show a card! Very suspicious…", "Silence. Nobody has any of those cards. Interesting…"]), 2); break;
+      case "accuse": NARR.line(`${n} points a finger! ${cn(f.s)}, in the ${cn(f.r)}, with the ${cn(f.i)}!`, 2); NARR.line("Let's see…", 2); break;
+      case "wrong": NARR.line(pickOne([`Wrong! Off to the naughty step, ${n}.`, `Oh no, that's not right! ${n} sits on the naughty step.`]), 2); break;
+      case "solved": { const r = S.result || {}, sol = r.sol || S.sol, rv = sol ? st.reveal(cn(sol.s), cn(sol.r), cn(sol.i)) : ""; NARR.line(r.winner ? `Case closed! ${nm(r.winner)} cracked it! ${rv}` : `The answer is… ${rv}`, 2); break; }
+      case "tip": NARR.line(`Detective's tip! ${M.card(S, f.c).clue}`, 2); break;
+    }
+  }
+  // "who's closest" announcements
+  let introSaid = !!S.rollN, closeSaid = null;
+  function raceNews() {
+    if (S.phase !== "play") { closeSaid = null; introSaid = false; return; }
+    const first = !closeSaid; if (first) closeSaid = {};
+    S.order.forEach(id => {
+      const pg = M.progress(S, S.players[id]), lv = pg >= 1 ? 2 : pg >= .75 ? 1 : 0, was = closeSaid[id] || 0;
+      if (lv > was && !first) NARR.line(lv === 2 ? `${nm(id)} might know the answer…` : pickOne([`${nm(id)} is getting very close!`, `Watch out, ${nm(id)} is hot on the trail!`]), 1);
+      closeSaid[id] = Math.max(was, lv);
+    });
   }
   addEventListener("resize", () => { lastBuild = ""; render(); });
-  addEventListener("click", () => SFX.unlock(), { once: true });
+  addEventListener("click", () => { SFX.unlock(); const w = $("#wake"); if (w) w.hidden = true; });
   render();
   try { link = await connect(room, onMsg, s => { const c = s === "ok" ? (LOCAL ? "Local test mode" : "") : "Connection lost. Reload if phones stop working."; if (c !== conn) { conn = c; lastBuild = ""; render(); } }); }
   catch (e) { conn = "Couldn't connect. Check the internet and reload."; }

@@ -43,6 +43,15 @@
         ["🥢", "Chopsticks", "The chopsticks haven't left the cupboard. Not those!"],
         ["🚜", "Toy Digger", "The toy digger's bucket is full of sand, not cake!"],
       ],
+      // what the narrator says a suspect does when they're named in a question
+      react: [
+        ["Grandma Rose pretends to be fast asleep…", "Grandma Rose peers over her glasses. Hmm."],
+        ["Uncle Bob looks nervous…", "Uncle Bob whistles and looks at the ceiling."],
+        ["Aunt Sue nearly drops her phone!", "Aunt Sue gasps. Me? Never!"],
+        ["Cousin Max hides behind a cushion.", "Cousin Max can't stop giggling…"],
+        ["Rex wags his tail very, very fast.", "Rex licks his lips…"],
+        ["Mr Whiskers licks his paw… suspiciously.", "Mr Whiskers just stares. And stares."],
+      ],
       lockedRoom: 5, key: ["🔑", "the Study key"],
       empty: ["Just dust and fluff.", "Nothing here but an old sock.", "A spider waves at you. Nothing else!", "Empty. Not even a crumb.", "Just a lost button."],
     },
@@ -167,6 +176,7 @@
     else if (sp.c) { found = { t: "clue", c: sp.c }; if (!p.known[sp.c]) p.known[sp.c] = "found"; log(S, `${p.name} searched the ${spotName} and found a clue!`); fx(S, { k: "clue", pid: p.id }); }
     else { found = { t: "empty", txt: st.empty[sp.e] }; log(S, `${p.name} searched the ${spotName}. Nothing there.`); }
     S.found = Object.assign({ pid: p.id, spot: spotName, r: p.room, k, at: M.now() }, found);
+    fx(S, { k: "search", pid: p.id, r: p.room, spot: spotName, res: found.t, more: S.searches });
     return true;
   }
   function witness(S) {
@@ -175,7 +185,7 @@
     if (!pool.length) { S.found = { pid: p.id, t: "empty", txt: "The witness had nothing new to say.", at: M.now() }; return true; }
     const c = pool[R(pool.length)]; p.known[c] = "witness";
     S.found = { pid: p.id, t: "clue", c, witness: true, at: M.now() };
-    log(S, `${p.name} talked to a witness and learned something.`); fx(S, { k: "clue", pid: p.id });
+    log(S, `${p.name} talked to a witness and learned something.`); fx(S, { k: "clue", pid: p.id, w: 1 });
     return true;
   }
   // guess: who + with what, in the room you're in. Going round the table, the first player
@@ -188,7 +198,7 @@
     S.ask = { from: p.id, s, r, i, order, at: 0, results: [], shown: null, waiting: null };
     S.step = "asking";
     const st = M.st(S); log(S, `🤔 ${p.name} asks: was it ${M.card(S, s).name}, in the ${st.where[p.room][1]}, with the ${M.card(S, i).name}?`);
-    fx(S, { k: "guess", pid: p.id });
+    fx(S, { k: "guess", pid: p.id, s, r, i });
     advanceAsk(S);
     return true;
   }
@@ -217,6 +227,7 @@
     S.accuse = { pid: p.id, s, r, i, at: M.now() };
     const right = s === S.sol.s && r === S.sol.r && i === S.sol.i;
     log(S, `☝️ ${p.name} accuses: ${M.card(S, s).name}, in the ${M.card(S, r).name}, with the ${M.card(S, i).name}!`);
+    fx(S, { k: "accuse", pid: p.id, s, r, i });
     if (right) { S.phase = "end"; S.step = null; S.result = { winner: p.id, sol: S.sol }; log(S, `🎉 ${p.name} solved it! ${st.reveal(M.card(S, s).name, M.card(S, r).name, M.card(S, i).name)}`); fx(S, { k: "solved", pid: p.id }); return true; }
     p.skip = 2; p.stats.wrong++; S.accuse.wrong = true;
     // a wrong accusation tells you which part was wrong (one of them), so it isn't wasted
@@ -267,11 +278,13 @@
   M.tick = S => false;
 
   // ---------- computer detectives ----------
+  // how close a detective is: cards ruled out ÷ cards that need ruling out
+  M.progress = (S, p) => { const need = 3 * (S.n || 6) - 3, got = Object.keys(p.known || {}).length; return Math.min(1, got / need); };
   M.unknown = (S, p, k) => M.cards(S).filter(c => c[0] === k && !p.known[c]);
   M.botStep = S => {
     if (S.phase !== "play" || S.paused) return false;
     const n = M.now(); if (S.botWait && n < S.botWait) return false;
-    const wait = ms => { S.botWait = n + ms; return true; };
+    const wait = ms => { S.botWait = n + ms * (M.pace || 1); return true; };
     if (S.step === "showing" && S.ask && S.ask.waiting && S.players[S.ask.waiting].bot) { show(S, S.ask.waiting, S.ask.options[0]); return wait(1200); }
     const p = cur(S); if (!p || !p.bot) return false;
     const us = M.unknown(S, p, "s"), ur = M.unknown(S, p, "r"), ui = M.unknown(S, p, "i");
