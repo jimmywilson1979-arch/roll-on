@@ -29,9 +29,9 @@
       ],
       where: [
         ["🍳", "Kitchen", "The kitchen floor is spotless. The cake wasn't eaten in here.", [["🧊", "Fridge"], ["🔥", "Oven"], ["🗑️", "Bin"]]],
-        ["🛋️", "Lounge", "Not a single crumb on the lounge sofa. It wasn't here!", [["🛋️", "Under the sofa"], ["📚", "Bookshelf"], ["🪴", "Plant pot"]]],
+        ["🛋️", "Lounge", "Not a single crumb on the lounge sofa. It wasn't here!", [["🛋️", "Sofa"], ["📚", "Bookshelf"], ["🪴", "Plant pot"]]],
         ["🌳", "Garden", "The garden ants haven't found any cake. Not out here!", [["🛖", "Shed"], ["🌷", "Flower bed"], ["🏠", "Kennel"]]],
-        ["🛏️", "Bedroom", "The bed is neat and tidy. No cake was eaten in the bedroom.", [["🛏️", "Under the bed"], ["👕", "Wardrobe"], ["🧸", "Toy box"]]],
+        ["🛏️", "Bedroom", "The bed is neat and tidy. No cake was eaten in the bedroom.", [["🛏️", "Bed"], ["👕", "Wardrobe"], ["🧸", "Toy box"]]],
         ["🚪", "Hallway", "The hallway carpet is crumb-free. Not here!", [["🧥", "Coat rack"], ["👟", "Shoe pile"], ["🟫", "Doormat"]]],
         ["📚", "Study", "The study smells of old books, not chocolate. Not here!", [["🖥️", "Desk"], ["🗄️", "Filing cabinet"], ["🌍", "Globe"]]],
       ],

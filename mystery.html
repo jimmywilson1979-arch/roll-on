@@ -15,7 +15,9 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Nunito:wght@600;700;800;900&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="mys-engine.js?v=1"></script>
+<script src="art.js?v=3"></script>
+<script src="mys-engine.js?v=3"></script>
+<script src="mys-art.js?v=3"></script>
 <style>
 :root{--bg:#2a1840;--bg2:#120a20;--paper:#fbf3e0;--paper2:#efe0bd;--ink:#2b1d12;--accent:#ffc94a;--fg:#fff;--muted:#cdbfe6;--panel:rgba(0,0,0,.3);--line:rgba(255,255,255,.16);--good:#3ddc84;--bad:#ff5d5d;--title:"Special Elite","Courier New",monospace;--body:"Nunito",system-ui,sans-serif;color-scheme:dark}
 *{box-sizing:border-box}html,body{margin:0;height:100%}
@@ -97,6 +99,53 @@ input{font:inherit;color:var(--fg);background:rgba(0,0,0,.3);border:2px solid va
 @keyframes fade{from{opacity:0}}
 .qrbox{background:#fff;padding:calc(1.2*var(--u,1vh));border-radius:calc(1.2*var(--u,1vh));display:inline-block}
 .qrbox img,.qrbox canvas{display:block;width:calc(26*var(--u,1vh))!important;height:calc(26*var(--u,1vh))!important}
+/* ---- 🎨 Storybook look: painted pictures (img/mystery, via mys-art.js). Classic = without .fx ---- */
+.art{width:1.15em;height:1.15em;display:inline-block;vertical-align:middle;overflow:visible}
+.pic{width:1.15em;height:1.15em;display:inline-block;vertical-align:middle;object-fit:contain;-webkit-user-drag:none}
+.pic-s,.pic-r{object-fit:cover;border-radius:18%;box-shadow:0 0 0 .08em #fff8e6,0 .06em .14em rgba(0,0,0,.35)}
+.fx body.tvb{background:#3a2414 url(img/mystery/background.jpg) center/cover}
+.fx .side .panel,.fx .side .prow,.fx .info span{background:rgba(30,16,8,.72);border-color:rgba(255,220,160,.22)}
+.fx .feed{background:rgba(30,16,8,.55);border-radius:calc(1.4*var(--u,1vh));padding:calc(1*var(--u,1vh))}
+.fx .house{background:linear-gradient(#7a5232,#5b3a22);box-shadow:0 0 0 calc(.4*var(--u,1vh)) #d9b45a,0 0 0 calc(1*var(--u,1vh)) #3a2414,0 calc(2*var(--u,1vh)) calc(5*var(--u,1vh)) rgba(0,0,0,.6);border-color:#4a2c14}
+.room.photo{padding:0;background-size:cover;background-position:center;box-shadow:inset 0 0 0 calc(.3*var(--u,1vh)) rgba(0,0,0,.35)}
+.room.photo .lbl{position:absolute;left:calc(1*var(--u,1vh));top:calc(1*var(--u,1vh));background:rgba(255,248,230,.92);border-radius:calc(1*var(--u,1vh));padding:calc(.3*var(--u,1vh)) calc(1.2*var(--u,1vh));font-family:var(--title);font-size:calc(2.8*var(--u,1vh));box-shadow:0 calc(.3*var(--u,1vh)) calc(.8*var(--u,1vh)) rgba(0,0,0,.3)}
+.room.photo .lbl small{display:block;font-family:var(--body);font-weight:800;font-size:.55em;opacity:.75}
+.room.photo.here{box-shadow:0 0 0 calc(.6*var(--u,1vh)) var(--accent),0 0 calc(3*var(--u,1vh)) var(--accent)}
+.room.photo.locked::after{background:rgba(20,10,5,.45);inset:0;display:grid;place-items:center;color:#ffd77a;text-shadow:0 .3vh .6vh #000}
+.scene.photo{padding:0;background-size:cover;background-position:center;border-color:#3a2414;overflow:hidden}
+.scene.photo .top,.scene.photo .bot{position:absolute;left:0;right:0;display:flex;flex-direction:column;align-items:center;gap:calc(.6*var(--u,1vh));padding:calc(1.4*var(--u,1vh))}
+.scene.photo .top{top:0;background:linear-gradient(rgba(20,10,5,.75),transparent)}
+.scene.photo .bot{bottom:0;background:linear-gradient(transparent,rgba(20,10,5,.85) 30%);padding-top:calc(5*var(--u,1vh))}
+.scene.photo h2{color:#fff3d6;text-shadow:0 .3vh .8vh #000;font-size:calc(4.2*var(--u,1vh))}
+.scene.photo .say{color:#fff;text-shadow:0 .2vh .6vh #000}
+.scene.photo.dim::before{content:"";position:absolute;inset:0;background:rgba(20,10,5,.62);z-index:0}
+.scene.photo>*{position:relative;z-index:1}.scene.photo .top,.scene.photo .bot,.scene.photo>.hs{position:absolute}
+.scene .info span{color:#fff3d6;background:rgba(30,16,8,.8)}
+.scene.photo .resp span{color:#fff;background:rgba(20,10,5,.6)}
+.hs{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:calc(.4*var(--u,1vh));z-index:2}
+.hs .ring{width:calc(8*var(--u,1vh));height:calc(8*var(--u,1vh));border-radius:50%;border:calc(.6*var(--u,1vh)) solid #ffd77a;box-shadow:0 0 calc(2*var(--u,1vh)) #ffd77a,inset 0 0 calc(1.5*var(--u,1vh)) #ffd77a;animation:glowr 1.1s ease-in-out infinite alternate}
+@keyframes glowr{to{transform:scale(1.12);box-shadow:0 0 calc(3.5*var(--u,1vh)) #ffe9a8,inset 0 0 calc(2*var(--u,1vh)) #ffe9a8}}
+.hs .tag{background:rgba(255,248,230,.95);color:var(--ink);font-weight:900;font-size:calc(1.9*var(--u,1vh));border-radius:99px;padding:calc(.2*var(--u,1vh)) calc(1*var(--u,1vh));display:flex;gap:calc(.4*var(--u,1vh));align-items:center;white-space:nowrap}
+.hs .tag i{width:calc(1.5*var(--u,1vh));height:calc(1.5*var(--u,1vh));border-radius:50%;display:inline-block}
+.hs.done .ring{border-color:rgba(255,255,255,.55);box-shadow:none;animation:none;background:rgba(0,0,0,.25)}
+.hs.now .ring{border-color:#7dff9a;box-shadow:0 0 calc(4*var(--u,1vh)) #7dff9a;animation:pop2 .6s}
+@keyframes pop2{from{transform:scale(1.8)}}
+.fx .ccard{background:linear-gradient(#fffdf6,#f3e5c2);border-color:#5a3714;box-shadow:inset 0 0 0 calc(.5*var(--u,1vh)) #fffdf6,inset 0 0 0 calc(.8*var(--u,1vh)) #c9a34a,0 calc(.8*var(--u,1vh)) calc(2*var(--u,1vh)) rgba(0,0,0,.35)}
+.fx .ccard .ci{font-size:calc(9*var(--u,1vh))}
+.ccard .pic{width:100%;height:auto;aspect-ratio:1;margin:calc(.4*var(--u,1vh)) 0}
+.cback{width:calc(14*var(--u,1vh));aspect-ratio:360/537;border-radius:calc(1.2*var(--u,1vh));background:url(img/mystery/extra-cardback.jpg) center/cover;box-shadow:0 calc(.8*var(--u,1vh)) calc(2*var(--u,1vh)) rgba(0,0,0,.4);animation:wob .5s ease-in-out infinite alternate}
+.cback:nth-child(2){animation-delay:.15s}.cback:nth-child(3){animation-delay:.3s}
+@keyframes wob{to{transform:translateY(calc(-1*var(--u,1vh))) rotate(2deg)}}
+.fx .over .box{background:linear-gradient(#fdf6e3,#eedcae);box-shadow:inset 0 0 0 calc(.6*var(--u,1vh)) #fdf6e3,inset 0 0 0 calc(1*var(--u,1vh)) #c9a34a}
+.fx .pick .pi{font-size:2.6rem}
+.pick .pic-s,.pick .pic-r{width:100%;height:auto;aspect-ratio:1;border-radius:10px}
+.fx .clue{background:linear-gradient(#fffdf6,#f3e5c2);box-shadow:inset 0 0 0 3px #c9a34a}
+.fx .clue .ci{font-size:3.6rem}
+.proom{position:relative;width:100%;aspect-ratio:1;border-radius:16px;background-size:cover;background-position:center;margin:.3em 0 .6em;box-shadow:inset 0 0 0 3px rgba(255,220,160,.4)}
+.proom .hs{font-size:1rem}
+.proom .hs .ring{width:3.4rem;height:3.4rem;border-width:4px}
+.proom .hs .tag{font-size:.85rem;padding:.15em .6em}
+.proom button.hs{background:none;border:0;padding:0}
 /* phone */
 .pw{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh;max-width:560px;margin:0 auto}
 .ptop{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:.6em;padding:.7em .9em;background:rgba(0,0,0,.45);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
@@ -151,6 +200,8 @@ const P = new URLSearchParams(location.search), LOCAL = P.has("local");
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const app = $("#app");
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const ic = (id, fb) => (window.MART && MART.icon(id)) || fb;
+const cardIc = (S, c) => ic(c, M.card(S, c).icon);
 const now = () => Date.now(), uid = () => Math.random().toString(36).slice(2, 10);
 const ls = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { } }, del(k) { try { localStorage.removeItem(k); } catch (e) { } } };
 const code4 = () => Array.from({ length: 4 }, () => "BCDFGHJKLMNPQRSTVWXZ"[Math.random() * 20 | 0]).join("");
@@ -201,7 +252,7 @@ function home() {
   document.body.className = "home-b";
   const phone = matchMedia("(pointer:coarse)").matches && Math.min(innerWidth, innerHeight) < 700;
   const sv = ls.get("mys_save", null), canResume = sv && sv.S && sv.S.phase === "play";
-  app.innerHTML = `<div class="home"><h1><small>ROLL ON</small>Mystery</h1>
+  app.innerHTML = `<div class="home"><div style="font-size:6rem;text-align:center;line-height:1">${ic("cake", "🎂")}</div><h1><small>ROLL ON</small>Mystery</h1>
     <p class="muted" style="text-align:center;margin:0">🎂 Someone ate the birthday cake! Search the house, question witnesses and keep your clues secret on your phone. First to solve WHO, WHERE and WITH WHAT wins.</p>
     ${canResume ? `<button class="btn big gold" id="res">▶ Carry on the saved game (code ${esc(sv.S.room)})</button>` : ""}
     <button class="btn big ${phone || canResume ? "" : "gold"}" id="tvb">📺 This is the TV screen</button>
@@ -268,12 +319,21 @@ async function tvMain() {
       const el = $("#room" + r); if (!el) continue; const w = st().where[r];
       const locked = S.phase === "play" && !M.roomOpen(S, r);
       const ppl = S.phase === "play" ? S.order.filter(id => S.players[id].room === r) : [];
-      const spots = S.phase === "play" ? [0, 1, 2].map(k => S.spots[r + ":" + k].by.length ? "🔍" : w[3][k][0]).join(" ") : w[3].map(x => x[0]).join(" ");
-      el.className = "room" + (locked ? " locked" : "") + (S.phase === "play" && S.players[S.turnPid] && S.players[S.turnPid].room === r && S.step !== "roll" && S.step !== "room" ? " here" : "");
-      el.innerHTML = `<div class="ri">${w[0]}</div><div class="rn">${esc(w[1])}</div><div class="rs">${S.phase === "play" ? [0, 1, 2].filter(k => !S.spots[r + ":" + k].by.length).length + " spots not searched yet" : "3 hiding spots"}</div><div class="spots">${spots}</div><div class="who">${ppl.map(id => `<i style="background:${S.players[id].color}"></i>`).join("")}</div>`;
+      const spots = [0, 1, 2].map(k => S.phase === "play" && S.spots[r + ":" + k].by.length ? ic("mag", "🔍") : ic("spot" + r + ":" + k, w[3][k][0])).join(" ");
+      const ph = window.MART && MART.img("r" + r);
+      if (ph) {
+        el.className = "room photo" + (locked ? " locked" : "") + (S.phase === "play" && S.players[S.turnPid] && S.players[S.turnPid].room === r && S.step !== "roll" && S.step !== "room" ? " here" : "");
+        el.style.backgroundImage = `url(${ph})`;
+        const left = S.phase === "play" ? [0, 1, 2].filter(k => !S.spots[r + ":" + k].by.length).length : 3;
+        el.innerHTML = `<div class="lbl">${esc(w[1])}<small>${S.phase === "play" ? (left ? `${left} spot${left > 1 ? "s" : ""} not searched` : "all searched") : "3 hiding spots"}</small></div><div class="who">${ppl.map(id => `<i style="background:${S.players[id].color}"></i>`).join("")}</div>`;
+        continue;
+      }
+      el.style.backgroundImage = "";
+      el.className = "room rm" + r + (locked ? " locked" : "") + (S.phase === "play" && S.players[S.turnPid] && S.players[S.turnPid].room === r && S.step !== "roll" && S.step !== "room" ? " here" : "");
+      el.innerHTML = `<div class="ri">${ic("r" + r, w[0])}</div><div class="rn">${esc(w[1])}</div><div class="rs">${S.phase === "play" ? [0, 1, 2].filter(k => !S.spots[r + ":" + k].by.length).length + " spots not searched yet" : "3 hiding spots"}</div><div class="spots">${spots}</div><div class="who">${ppl.map(id => `<i style="background:${S.players[id].color}"></i>`).join("")}</div>`;
     }
   }
-  function cardHTML(c, flip, d) { const x = M.card(S, c); return `<div class="ccard ${flip ? "flip" : ""}" style="animation-delay:${d || 0}s"><small>${x.kind === "s" ? "WHO" : x.kind === "r" ? "WHERE" : "WITH WHAT"}</small><div class="ci">${x.icon}</div>${esc(x.name)}</div>`; }
+  function cardHTML(c, flip, d) { const x = M.card(S, c); return `<div class="ccard ${flip ? "flip" : ""}" style="animation-delay:${d || 0}s"><small>${x.kind === "s" ? "WHO" : x.kind === "r" ? "WHERE" : "WITH WHAT"}</small><div class="ci">${cardIc(S, c)}</div>${esc(x.name)}</div>`; }
   function sceneHTML() {
     const p = S.players[S.turnPid]; if (!p || p.room < 0) return "";
     const w = st().where[p.room];
@@ -281,14 +341,21 @@ async function tvMain() {
       const a = S.ask;
       if (a) {
         const resp = a.order.map(id => { const r = a.results.find(x => x.id === id), q = S.players[id]; return `<span><span class="dot" style="background:${q.color}"></span> ${esc(q.name)}: ${r ? r.had ? "🃏 showed a card" : "✖ can't help" : a.waiting === id ? "🤔 choosing…" : "…"}</span>`; }).join("");
-        return `<div class="scene"><h2>🤔 ${esc(p.name)} asks…</h2><div class="trio">${cardHTML(a.s, 1, 0)}${cardHTML(a.r, 1, .2)}${cardHTML(a.i, 1, .4)}</div><div class="say" style="font-size:calc(2.6*var(--u,1vh))">Was it ${esc(M.card(S, a.s).name)}, in the ${esc(M.card(S, a.r).name)}, with the ${esc(M.card(S, a.i).name)}?</div><div class="resp" style="margin-top:calc(2*var(--u,1vh))">${resp}</div>
+        return `<div class="scene rm${p.room} ${window.MART && MART.img("r" + p.room) ? "photo dim" : ""}" style="${window.MART && MART.img("r" + p.room) ? `background-image:url(${MART.img("r" + p.room)});padding:calc(3*var(--u,1vh))` : ""}"><h2>🤔 ${esc(p.name)} asks…</h2><div class="trio">${cardHTML(a.s, 1, 0)}${cardHTML(a.r, 1, .2)}${cardHTML(a.i, 1, .4)}</div><div class="say" style="font-size:calc(2.6*var(--u,1vh))">Was it ${esc(M.card(S, a.s).name)}, in the ${esc(M.card(S, a.r).name)}, with the ${esc(M.card(S, a.i).name)}?</div><div class="resp" style="margin-top:calc(2*var(--u,1vh))">${resp}</div>
           ${a.results.length === a.order.length && !a.results.some(r => r.had) ? `<div class="say" style="margin-top:calc(2*var(--u,1vh))">😮 Nobody could show a card!<small>That's a big clue…</small></div>` : ""}</div>`;
       }
     }
     const f = S.found && S.found.pid === p.id && now() - S.found.at < 15000 ? S.found : null;
     const msg = f ? f.witness ? `👀 ${esc(p.name)} talked to a witness.<small>What they said is on ${esc(p.name)}'s phone.</small>` : f.t === "clue" ? `🔎 ${esc(p.name)} found a clue in the ${esc(f.spot)}!<small>Only ${esc(p.name)} can see it.</small>` : f.t === "key" ? `🔑 The key! The ${esc(st().where[S.locked][1])} is now open.` : f.t === "mag" ? `🔍 A magnifying glass! One more search.` : `${esc(p.name)} searched the ${esc(f.spot || "room")}. Nothing there.` : `${esc(p.name)} is searching…`;
-    return `<div class="scene"><div class="big">${w[0]}</div><h2>The ${esc(w[1])}</h2>
-      <div class="spotrow">${w[3].map((h, k) => { const by = S.spots[p.room + ":" + k].by; return `<div class="${by.includes(p.id) ? "done" : ""}"><div class="hi">${h[0]}</div>${esc(h[1])}<div class="by">${by.map(id => `<i style="background:${S.players[id].color}"></i>`).join("")}</div></div>`; }).join("")}</div>
+    const ph = window.MART && MART.img("r" + p.room);
+    if (ph) {
+      const pos = MART.spots(p.room);
+      return `<div class="scene photo" style="background-image:url(${ph})">
+        ${w[3].map((h, k) => { const by = S.spots[p.room + ":" + k].by, [x, y] = pos[k], now2 = f && f.k === k && f.r === p.room; return `<div class="hs ${by.includes(p.id) ? "done" : ""} ${now2 ? "now" : ""}" style="left:${x}%;top:${(y - 10) / .8}%"><div class="ring"></div><div class="tag">${esc(h[1])}${by.map(id => `<i style="background:${S.players[id].color}"></i>`).join("")}</div></div>`; }).join("")}
+        <div class="bot"><h2>The ${esc(w[1])}</h2><div class="say">${msg}</div><div class="info" style="justify-content:center">${`<span>🔍 ${S.searches} search${S.searches === 1 ? "" : "es"} left</span>`}${S.bonus ? `<span>👀 Witness available</span>` : ""}${p.guessed ? "" : `<span>🤔 Can make a guess</span>`}</div></div></div>`;
+    }
+    return `<div class="scene rm${p.room}"><div class="big">${ic("r" + p.room, w[0])}</div><h2>The ${esc(w[1])}</h2>
+      <div class="spotrow">${w[3].map((h, k) => { const by = S.spots[p.room + ":" + k].by; return `<div class="${by.includes(p.id) ? "done" : ""}"><div class="hi">${ic("spot" + p.room + ":" + k, h[0])}</div>${esc(h[1])}<div class="by">${by.map(id => `<i style="background:${S.players[id].color}"></i>`).join("")}</div></div>`; }).join("")}</div>
       <div class="say">${msg}</div>
       <div class="info" style="margin-top:auto;justify-content:center;color:var(--fg)"><span style="background:#3a2414">🔍 ${S.searches} search${S.searches === 1 ? "" : "es"} left</span>${S.bonus ? `<span style="background:#3a2414">👀 Witness available</span>` : ""}${p.guessed ? "" : `<span style="background:#3a2414">🤔 Can make a guess</span>`}</div></div>`;
   }
@@ -303,7 +370,7 @@ async function tvMain() {
     if (a && now() - a.at < 8000) {
       const q = S.players[a.pid], open = now() - a.at > 2600;
       return `<div class="over"><div class="box"><h2>☝️ ${esc(q.name)} accuses!</h2><div class="trio">${cardHTML(a.s)}${cardHTML(a.r)}${cardHTML(a.i)}</div>
-        <p>${open ? (a.wrong ? `❌ Wrong! ${esc(q.name)} goes on the naughty step for 2 turns.` : "") : "✉️ Opening the secret envelope…"}</p></div></div>`;
+        ${open ? `<p>${a.wrong ? `❌ Wrong! ${esc(q.name)} goes on the naughty step for 2 turns.` : ""}</p>` : `${window.MART && MART.on ? `<div class="trio"><div class="cback"></div><div class="cback"></div><div class="cback"></div></div>` : ""}<p>✉️ Opening the secret envelope…</p>`}</div></div>`;
     }
     if (S.paused) return `<div class="over"><div class="box"><h2>⏸️ Paused</h2></div></div>`;
     return "";
@@ -319,11 +386,11 @@ async function tvMain() {
     const s = st();
     if (S.phase === "lobby") {
       const n = S.order.length, nb = M.botCount(S);
-      app.innerHTML = `<div class="tv"><div class="bwrap">${houseHTML()}<div class="over" style="background:rgba(10,5,20,.55)"><div class="box"><h2>${esc(s.title)}</h2><p style="margin:.3em 0 1em">${esc(s.intro)}</p><div class="qrbox" id="qr"></div><p>Scan to join · code <b style="letter-spacing:.15em">${room}</b></p><p class="muted" style="color:#6b5a7a;margin:0">${!n ? "Waiting for detectives…" : `${n} detective${n > 1 ? "s" : ""}${nb ? ` + ${nb} computer detective${nb > 1 ? "s" : ""} 🤖` : ""}. Ready!`}</p></div></div></div>
+      app.innerHTML = `<div class="tv"><div class="bwrap">${houseHTML()}<div class="over" style="background:rgba(10,5,20,.55)"><div class="box"><div style="font-size:calc(9*var(--u,1vh));line-height:1">${ic("cake", "🎂")}</div><h2>${esc(s.title)}</h2><p style="margin:.3em 0 1em">${esc(s.intro)}</p><div class="qrbox" id="qr"></div><p>Scan to join · code <b style="letter-spacing:.15em">${room}</b></p><p class="muted" style="color:#6b5a7a;margin:0">${!n ? "Waiting for detectives…" : `${n} detective${n > 1 ? "s" : ""}${nb ? ` + ${nb} computer detective${nb > 1 ? "s" : ""} 🤖` : ""}. Ready!`}</p></div></div></div>
         <div class="side lobbyside"><div class="shead"><span class="ttl">Roll On</span><div class="code">Join code<b>${room}</b></div></div>
         <div class="panel"><div class="plist">${S.order.map(id => { const q = S.players[id]; return `<div class="prow"><span class="dot" style="background:${q.color}"></span><div class="pn">${esc(q.name)}<small>${id === S.host ? "⭐ Host · " : ""}${q.kid ? "🧒 Child" : "Grown-up"}</small></div></div>`; }).join("") || `<div class="muted">Waiting for detectives…</div>`}</div></div>
         <div class="panel" id="sets">${M.SETTINGS().map(([k, label, vals]) => `<div class="setrow"><b>${label}</b>${vals.map(([x, l]) => `<button class="chip ${S.settings[k] === x ? "on" : ""}" data-set="${k}" data-val="${x}">${esc(l)}</button>`).join("")}</div>`).join("")}</div>
-        <button class="btn gold big" id="start" ${n ? "" : "disabled"}>Start the mystery</button>${canFull() ? `<button class="btn" id="full">⛶ Full screen</button>` : ""}
+        <button class="btn gold big" id="start" ${n ? "" : "disabled"}>Start the mystery</button><div style="display:flex;gap:1vh">${canFull() ? `<button class="btn" id="full" style="flex:1">⛶ Full screen</button>` : ""}${lookBtn()}</div>
         <div class="muted" style="font-size:calc(1.5*var(--u,1vh))">More stories and the Detective Agency and Sneaky Suspect modes are coming. ${esc(conn)}</div></div></div>`;
       try { new QRCode($("#qr"), { text: joinUrl, width: 400, height: 400, correctLevel: QRCode.CorrectLevel.M }); } catch (e) { $("#qr").textContent = joinUrl; }
       $("#start").onclick = () => hostAct({ t: "start" });
@@ -331,13 +398,15 @@ async function tvMain() {
     } else {
       app.innerHTML = `<div class="tv"><div class="bwrap">${houseHTML()}<div id="scene"></div><div id="over"></div></div>
         <div class="side"><div class="shead"><span class="ttl">${esc(s.title)}</span><div class="code">Join code<b>${room}</b></div></div><div id="sd"></div><div class="feed" id="feed"></div>
-        <div class="tvctl"><button class="btn" id="pause">⏸️ Pause</button><button class="btn" id="nudge">⏭ Move it along</button><button class="btn" id="snd">${SFX.on ? "🔊" : "🔇"}</button>${canFull() ? `<button class="btn" id="full">⛶</button>` : ""}<button class="btn" id="quit">🏳️ Reveal answer</button><span class="muted" style="font-size:calc(1.4*var(--u,1vh))">${esc(conn)}</span></div></div></div>`;
+        <div class="tvctl"><button class="btn" id="pause">⏸️ Pause</button><button class="btn" id="nudge">⏭ Move it along</button><button class="btn" id="snd">${SFX.on ? "🔊" : "🔇"}</button>${canFull() ? `<button class="btn" id="full">⛶</button>` : ""}${lookBtn()}<button class="btn" id="quit">🏳️ Reveal answer</button><span class="muted" style="font-size:calc(1.4*var(--u,1vh))">${esc(conn)}</span></div></div></div>`;
       $("#pause").onclick = () => hostAct({ t: "pause" }); $("#nudge").onclick = () => hostAct({ t: "nudge" });
       $("#snd").onclick = e => { e.target.textContent = SFX.toggle() ? "🔊" : "🔇"; };
       $("#quit").onclick = () => { if (confirm("Give up and reveal the answer?")) hostAct({ t: "endnow" }); };
     }
     const f = $("#full"); if (f) f.onclick = goFull;
+    const lk = $("#look"); if (lk) lk.onclick = () => { ART.toggle(); lastBuild = ""; render(); };
   }
+  const lookBtn = () => window.ART ? `<button class="btn" id="look" title="Switch between the Storybook and Classic graphics">🎨 ${ART.on ? "Storybook" : "Classic"}</button>` : "";
   let lastScene = "", lastOver = "";
   function render() {
     const key = (S.phase === "lobby" ? "lobby" : "game") + "|" + (S.phase === "lobby" ? JSON.stringify([S.order.map(id => [S.players[id].name, S.players[id].kid]), S.settings, conn]) : S.n + conn);
@@ -449,7 +518,7 @@ async function phoneMain(codeRaw) {
     const p = mp(), s = M.st(S);
     if (S.phase === "lobby") return `<div class="card cc"><div class="bigemoji">🕵️</div><h2>You're a detective!</h2><p class="muted" style="margin:0">${p.kid ? "🧒 Child player · clues read aloud" : "Grown-up player"} · <button id="edit" style="text-decoration:underline;color:var(--muted)">change</button></p></div>
       ${S.host === id ? `<div class="card"><h3>⭐ You're the host</h3>${M.SETTINGS().map(([k, label, vals]) => `<div class="setrow"><b>${label}</b>${vals.map(([x, l]) => `<button class="chip ${S.settings[k] === x ? "on" : ""}" data-set="${k}" data-val="${x}">${esc(l)}</button>`).join("")}</div>`).join("")}<button class="btn gold big" id="start" style="margin-top:.6em">Start the mystery</button></div>` : `<div class="card cc">Waiting for ${esc((S.players[S.host] || {}).name || "the host")} to start.</div>`}
-      <div class="card">${RULES}</div><button class="btn" id="leave">Leave</button>`;
+      <div class="card">${RULES}</div>${window.ART ? `<button class="btn" id="plook">🎨 Pictures: ${ART.on ? "Storybook" : "Classic"}</button>` : ""}<button class="btn" id="leave">Leave</button>`;
     if (S.phase === "end") { const sol = S.sol, w = S.result && S.result.winner; return `<div class="card cc hot"><div class="bigemoji">${w === id ? "🏆" : "🎂"}</div><h2>${w === id ? "You solved it!" : w ? `${esc(S.players[w].name)} solved it!` : "Case closed"}</h2><p style="font-weight:800">${esc(s.reveal(M.card(S, sol.s).name, M.card(S, sol.r).name, M.card(S, sol.i).name))}</p><button class="btn" id="sayit">🔊 Read it out</button></div>${S.host === id ? `<button class="btn gold big" id="again">▶ New mystery</button><button class="btn big" id="tolobby">Back to the lobby</button>` : ""}`; }
     if (S.paused) return `<div class="card cc"><div class="bigemoji">⏸️</div><h2>Paused</h2></div>`;
     if (tab === "book") return notebook();
@@ -461,19 +530,20 @@ async function phoneMain(codeRaw) {
     // must show a card?
     if (PV && PV.mustShow) {
       const ms = PV.mustShow;
-      out.push(`<div class="card hot cc"><h2>🃏 ${esc(S.players[ms.from].name)} asks you!</h2><p style="font-weight:800">Was it ${esc(M.card(S, ms.s).name)}, in the ${esc(M.card(S, ms.r).name)}, with the ${esc(M.card(S, ms.i).name)}?</p><p class="muted">You have ${ms.options.length > 1 ? "more than one of these. Pick one to show secretly" : "this one. Show it secretly"}:</p><div class="grid2">${ms.options.map(c => { const x = M.card(S, c); return `<button class="pick" data-show="${c}"><span class="pi">${x.icon}</span>${esc(x.name)}</button>`; }).join("")}</div></div>`);
+      out.push(`<div class="card hot cc"><h2>🃏 ${esc(S.players[ms.from].name)} asks you!</h2><p style="font-weight:800">Was it ${esc(M.card(S, ms.s).name)}, in the ${esc(M.card(S, ms.r).name)}, with the ${esc(M.card(S, ms.i).name)}?</p><p class="muted">You have ${ms.options.length > 1 ? "more than one of these. Pick one to show secretly" : "this one. Show it secretly"}:</p><div class="grid2">${ms.options.map(c => { const x = M.card(S, c); return `<button class="pick" data-show="${c}"><span class="pi">${cardIc(S, c)}</span>${esc(x.name)}</button>`; }).join("")}</div></div>`);
       return out.join("");
     }
     if (myTurn && mode === "guess") return guessPicker(false);
     if (myTurn && mode === "accuse") return guessPicker(true);
     if (myTurn) {
       if (S.step === "roll") out.push(`<div class="card hot cc"><h2>🔎 Your turn, detective!</h2><div class="pdie shake" id="pdie">${dieHTML(S.die || 1)}</div><button class="btn gold big" id="roll">Tap to roll</button><p class="muted" style="margin:.5em 0 0">…or shake your phone!</p></div>`);
-      if (S.step === "room") out.push(`<div class="card hot"><h2 class="cc">You rolled ${S.die}: ${S.searches} search${S.searches > 1 ? "es" : ""}${S.bonus ? " + a witness 👀" : ""}</h2><p class="muted cc" style="margin:.2em 0 .7em">Which room do you want to search?</p><div class="grid2">${M.rooms(S).map(r => { const w = s.where[r], open = M.roomOpen(S, r), left2 = [0, 1, 2].filter(k => !S.spots[r + ":" + k].by.includes(id)).length; return `<button class="pick ${open ? "" : "lock"} ${known()["r" + r] ? "x" : ""}" ${open ? `data-room="${r}"` : ""}><span class="pi">${open ? w[0] : "🔒"}</span>${esc(w[1])}<span class="src">${open ? `${left2} spot${left2 === 1 ? "" : "s"} left for you` : "find the key"}</span></button>`; }).join("")}</div></div>`);
+      if (S.step === "room") out.push(`<div class="card hot"><h2 class="cc">You rolled ${S.die}: ${S.searches} search${S.searches > 1 ? "es" : ""}${S.bonus ? " + a witness 👀" : ""}</h2><p class="muted cc" style="margin:.2em 0 .7em">Which room do you want to search?</p><div class="grid2">${M.rooms(S).map(r => { const w = s.where[r], open = M.roomOpen(S, r), left2 = [0, 1, 2].filter(k => !S.spots[r + ":" + k].by.includes(id)).length; return `<button class="pick ${open ? "" : "lock"} ${known()["r" + r] ? "x" : ""}" ${open ? `data-room="${r}"` : ""}><span class="pi">${open ? ic("r" + r, w[0]) : "🔒"}</span>${esc(w[1])}<span class="src">${open ? `${left2} spot${left2 === 1 ? "" : "s"} left for you` : "find the key"}</span></button>`; }).join("")}</div></div>`);
       if (S.step === "asking" || S.step === "showing") out.push(`<div class="card cc"><div class="bigemoji">🤔</div><h2>Waiting for an answer…</h2><p class="muted">${S.ask && S.ask.waiting ? esc(S.players[S.ask.waiting].name) + " is choosing a card to show you." : ""}</p></div>`);
       if (S.step === "search") {
         const w = s.where[p.room];
         if (f) out.push(foundHTML(f));
-        out.push(`<div class="card hot"><h2 class="cc">${w[0]} The ${esc(w[1])}</h2><p class="muted cc" style="margin:.2em 0 .7em">${S.searches ? `Tap a hiding spot to search (${S.searches} left)` : "No searches left this turn"}</p><div class="grid3">${w[3].map((h, k) => { const done = S.spots[p.room + ":" + k].by.includes(id); return `<button class="pick ${done ? "x" : ""}" ${!done && S.searches ? `data-search="${k}"` : ""}><span class="pi">${h[0]}</span>${esc(h[1])}</button>`; }).join("")}</div>
+        out.push(`<div class="card hot"><h2 class="cc">${w[0]} The ${esc(w[1])}</h2><p class="muted cc" style="margin:.2em 0 .7em">${S.searches ? `Tap a hiding spot to search (${S.searches} left)` : "No searches left this turn"}</p>${window.MART && MART.img("r" + p.room) ? `<div class="proom" style="background-image:url(${MART.img("r" + p.room)})">${w[3].map((h, k) => { const done = S.spots[p.room + ":" + k].by.includes(id), [x, y] = MART.spots(p.room)[k]; return `<button class="hs ${done ? "done" : ""}" ${!done && S.searches ? `data-search="${k}"` : ""} style="left:${x}%;top:${y}%"><span class="ring"></span><span class="tag">${done ? "✖ " : ""}${esc(h[1])}</span></button>`; }).join("")}</div>`
+          : `<div class="grid3">${w[3].map((h, k) => { const done = S.spots[p.room + ":" + k].by.includes(id); return `<button class="pick ${done ? "x" : ""}" ${!done && S.searches ? `data-search="${k}"` : ""}><span class="pi">${ic("spot" + p.room + ":" + k, h[0])}</span>${esc(h[1])}</button>`; }).join("")}</div>`}
           ${S.bonus ? `<button class="btn big" id="witness" style="margin-top:.7em">👀 Talk to a witness</button>` : ""}
           <div class="grid2" style="margin-top:.7em">${p.guessed ? `<button class="btn" disabled>🤔 Guess used</button>` : `<button class="btn gold" id="guess">🤔 Make a guess</button>`}<button class="btn" id="accuse">☝️ Accuse!</button></div>
           <button class="btn big" id="endturn" style="margin-top:.6em">End my turn ➜</button></div>`);
@@ -488,10 +558,10 @@ async function phoneMain(codeRaw) {
     return out.join("");
   }
   function foundHTML(f) {
-    if (f.t === "clue") { const c = M.card(S, f.c), txt = clueText(f); return `<div class="clue"><span class="ci">${c.icon}</span><span>${esc(txt)}<br><small style="opacity:.7">✖ ${esc(c.name)} crossed off your notebook</small></span><button class="say" data-say="${esc(txt)}">🔊</button></div>`; }
-    if (f.t === "key") return `<div class="clue"><span class="ci">🔑</span><span>You found the key! The ${esc(M.st(S).where[S.locked][1])} is open now.</span></div>`;
-    if (f.t === "mag") return `<div class="clue"><span class="ci">🔍</span><span>A magnifying glass! You get one more search.</span></div>`;
-    return `<div class="clue"><span class="ci">🕸️</span><span>${esc(f.txt || "Nothing here.")}</span><button class="say" data-say="${esc(f.txt || "Nothing here.")}">🔊</button></div>`;
+    if (f.t === "clue") { const c = M.card(S, f.c), txt = clueText(f); return `<div class="clue"><span class="ci">${cardIc(S, f.c)}</span><span>${esc(txt)}<br><small style="opacity:.7">✖ ${esc(c.name)} crossed off your notebook</small></span><button class="say" data-say="${esc(txt)}">🔊</button></div>`; }
+    if (f.t === "key") return `<div class="clue"><span class="ci">${ic("key", "🔑")}</span><span>You found the key! The ${esc(M.st(S).where[S.locked][1])} is open now.</span></div>`;
+    if (f.t === "mag") return `<div class="clue"><span class="ci">${ic("mag", "🔍")}</span><span>A magnifying glass! You get one more search.</span></div>`;
+    return `<div class="clue"><span class="ci">${ic("dust", "🕸️")}</span><span>${esc(f.txt || "Nothing here.")}</span><button class="say" data-say="${esc(f.txt || "Nothing here.")}">🔊</button></div>`;
   }
   function helpHTML() {
     const s = left("s"), r = left("r"), i = left("i");
@@ -501,7 +571,7 @@ async function phoneMain(codeRaw) {
     return `<p style="margin:.6em 0 0;font-weight:700">💡 ${esc(tip)}</p>`;
   }
   function guessPicker(isAcc) {
-    const p = mp(), s = M.st(S), list = (k, sel) => M.cards(S).filter(c => c[0] === k).map(c => { const x = M.card(S, c); return `<button class="pick ${sel === c ? "on" : ""} ${known()[c] ? "x" : ""}" data-p${k}="${c}"><span class="pi">${x.icon}</span>${esc(x.name)}</button>`; }).join("");
+    const p = mp(), s = M.st(S), list = (k, sel) => M.cards(S).filter(c => c[0] === k).map(c => { const x = M.card(S, c); return `<button class="pick ${sel === c ? "on" : ""} ${known()[c] ? "x" : ""}" data-p${k}="${c}"><span class="pi">${cardIc(S, c)}</span>${esc(x.name)}</button>`; }).join("");
     const room = "r" + p.room, ready = pickS && pickI && (!isAcc || pickR);
     return `<div class="card hot"><h2 class="cc">${isAcc ? "☝️ Accuse!" : "🤔 Make a guess"}</h2><p class="muted cc" style="margin:.2em 0 .6em">${isAcc ? "If you're right, you win. If you're wrong, it's the naughty step for 2 turns!" : `In the ${esc(s.where[p.room][1])}. Pick who and with what. Crossed-out ones are already ruled out.`}</p>
       <h3>👤 Who?</h3><div class="grid3">${list("s", pickS)}</div>
@@ -511,8 +581,8 @@ async function phoneMain(codeRaw) {
   }
   function notebook() {
     const s = M.st(S), k = known();
-    const sec = (kind, title) => `<h3>${title}</h3><div class="grid3">${M.cards(S).filter(c => c[0] === kind).map(c => { const x = M.card(S, c), v = k[c]; return `<button class="pick ${v ? "x" : ""} ${marks[c] && !v ? "mark" : ""}" data-mark="${c}"><span class="pi">${x.icon}</span>${esc(x.name)}<span class="src">${v ? esc(srcText(v)) : "still possible"}</span></button>`; }).join("")}</div>`;
-    const clues = Object.keys(k).map(c => { const x = M.card(S, c); return `<div class="clue" style="margin-top:.5em"><span class="ci" style="font-size:2rem">${x.icon}</span><span style="font-size:.95rem">${esc(x.clue)}<br><small style="opacity:.65">${esc(srcText(k[c]))}</small></span><button class="say" data-say="${esc(x.clue)}">🔊</button></div>`; }).join("");
+    const sec = (kind, title) => `<h3>${title}</h3><div class="grid3">${M.cards(S).filter(c => c[0] === kind).map(c => { const x = M.card(S, c), v = k[c]; return `<button class="pick ${v ? "x" : ""} ${marks[c] && !v ? "mark" : ""}" data-mark="${c}"><span class="pi">${cardIc(S, c)}</span>${esc(x.name)}<span class="src">${v ? esc(srcText(v)) : "still possible"}</span></button>`; }).join("")}</div>`;
+    const clues = Object.keys(k).map(c => { const x = M.card(S, c); return `<div class="clue" style="margin-top:.5em"><span class="ci" style="font-size:2.2rem">${cardIc(S, c)}</span><span style="font-size:.95rem">${esc(x.clue)}<br><small style="opacity:.65">${esc(srcText(k[c]))}</small></span><button class="say" data-say="${esc(x.clue)}">🔊</button></div>`; }).join("");
     return `<div class="card nb">${counts()}<p class="muted cc" style="font-size:.85rem;margin:.5em 0 0">✖ = ruled out. Tap a card to give it your own ⭐ "I suspect this" mark.</p>${sec("s", "👤 Who?")}${sec("r", "🏠 Where?")}${sec("i", "🍴 With what?")}</div>
       <div class="card"><h3>🗂️ My clues (${Object.keys(k).length})</h3>${clues || `<span class="muted">No clues yet. Go searching!</span>`}</div>`;
   }
@@ -524,6 +594,7 @@ async function phoneMain(codeRaw) {
     on("#edit", () => { lastKey = ""; me = null; joinForm(); me = ls.get(KME, null); });
     on("#leave", () => { send({ t: "leave" }); ls.del(KME); me = null; lastKey = ""; render(); });
     on("#roll", () => { askMotion(); doRoll(); });
+    on("#plook", () => { ART.toggle(); lastKey = ""; render(); });
     $$("[data-room]").forEach(b => b.onclick = () => act({ t: "room", r: +b.dataset.room }));
     $$("[data-search]").forEach(b => b.onclick = () => act({ t: "search", k: +b.dataset.search }));
     on("#witness", () => act({ t: "witness" }));

@@ -141,6 +141,7 @@ The game secretly picks **who** ate the birthday cake, **where**, and **with wha
 - **Detective's tips:** from round 7, an innocent card is revealed to everyone every 3 rounds, so the game never drags.
 - **For the whole family:** every clue has a picture and a 🔊 read-aloud button. A child player gets clues read out automatically, plus extra tips.
 - **Computer detectives:** they join automatically when you play on your own.
+- **Artwork:** painted rooms, suspects and objects are in `img/mystery/`, made with Gemini. The 🎨 button switches between Storybook (the pictures) and Classic (emoji).
 - **Coming next:** the Detective Agency (team) and Sneaky Suspect (traitor) modes, more stories (Stolen Crown, Santa's Sack, Haunted Manor) and family-as-suspects.
 
 ## Files
