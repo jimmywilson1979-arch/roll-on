@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#2a1840">
+<title>Roll On · Mystery</title>
+<meta name="description" content="Family whodunnit on the TV. Search the house, question witnesses, keep your clues secret on your phone.">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Nunito:wght@600;700;800;900&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="mys-engine.js?v=1"></script>
+<style>
+:root{--bg:#2a1840;--bg2:#120a20;--paper:#fbf3e0;--paper2:#efe0bd;--ink:#2b1d12;--accent:#ffc94a;--fg:#fff;--muted:#cdbfe6;--panel:rgba(0,0,0,.3);--line:rgba(255,255,255,.16);--good:#3ddc84;--bad:#ff5d5d;--title:"Special Elite","Courier New",monospace;--body:"Nunito",system-ui,sans-serif;color-scheme:dark}
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{background:radial-gradient(ellipse at 50% 30%,var(--bg),var(--bg2) 80%);color:var(--fg);font-family:var(--body);overflow:hidden;-webkit-tap-highlight-color:transparent}
+body.ph,body.home-b{overflow:auto}
+body.tvb{display:flex;align-items:center;justify-content:center}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+input{font:inherit;color:var(--fg);background:rgba(0,0,0,.3);border:2px solid var(--line);border-radius:12px;padding:.8em .9em;width:100%}
+.muted{color:var(--muted)}.hidden{display:none!important}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.4em;border-radius:14px;padding:.75em 1.1em;font-weight:800;font-size:1rem;background:rgba(255,255,255,.1);border:2px solid var(--line);line-height:1.15;text-align:center}
+.btn.gold{background:var(--accent);color:#2a1b00;border-color:var(--accent)}
+.btn.good{background:var(--good);color:#04210f;border-color:var(--good)}
+.btn.bad{background:var(--bad);color:#2a0000;border-color:var(--bad)}
+.btn.big{font-size:1.15rem;padding:.9em 1.1em;width:100%}
+.btn:disabled{opacity:.4}
+.chip{display:inline-flex;align-items:center;gap:.35em;padding:.42em .75em;border-radius:99px;border:2px solid var(--line);background:rgba(0,0,0,.25);font-weight:800;font-size:.88rem}
+.chip.on{background:var(--accent);color:#2a1b00;border-color:var(--accent)}
+.setrow{display:flex;flex-wrap:wrap;gap:.35em;margin:.3em 0}.setrow b{width:100%;font-size:.8em;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.dot{display:inline-block;width:1em;height:1em;border-radius:50%;box-shadow:0 0 0 2px #fff;flex:none}
+.toast{position:fixed;left:50%;top:14px;transform:translateX(-50%);background:var(--accent);color:#2a1b00;padding:.6em 1.1em;border-radius:99px;font-weight:900;z-index:99;max-width:92vw;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.4)}
+.home{max-width:520px;margin:0 auto;padding:6vh 1.2em 2em;display:flex;flex-direction:column;gap:1em;min-height:100vh}
+.home h1{font-family:var(--title);font-size:clamp(2.4rem,10vw,3.6rem);margin:0;line-height:1;text-align:center}
+.home h1 small{display:block;font-family:var(--body);font-size:.3em;letter-spacing:.3em;color:var(--accent);margin-bottom:.4em}
+/* TV — sizes in --u (1% of the visible height, set by fit()) */
+.tv{display:grid;grid-template-columns:auto 1fr;height:calc(100*var(--u,1vh));width:100vw;gap:calc(1.6*var(--u,1vh));padding:calc(1.6*var(--u,1vh))}
+.bwrap{position:relative;width:var(--bw,120vh);height:var(--bh,94vh)}
+.house{position:absolute;inset:0;display:grid;gap:calc(1*var(--u,1vh));padding:calc(1.4*var(--u,1vh));background:#5b3a22;border-radius:calc(2*var(--u,1vh));border:calc(.6*var(--u,1vh)) solid #3a2414;box-shadow:inset 0 0 0 calc(.5*var(--u,1vh)) #7a5232}
+.room{position:relative;background:linear-gradient(160deg,var(--paper),var(--paper2));color:var(--ink);border-radius:calc(1.2*var(--u,1vh));padding:calc(1.4*var(--u,1vh));display:flex;flex-direction:column;overflow:hidden}
+.room .ri{font-size:calc(6*var(--u,1vh));line-height:1}
+.room .rn{font-family:var(--title);font-size:calc(3*var(--u,1vh));margin-top:calc(.6*var(--u,1vh))}
+.room .rs{font-weight:800;font-size:calc(1.7*var(--u,1vh));opacity:.75;margin-top:calc(.4*var(--u,1vh))}
+.room .who{position:absolute;right:calc(1.2*var(--u,1vh));bottom:calc(1.2*var(--u,1vh));display:flex;gap:calc(.6*var(--u,1vh))}
+.room .who i{width:calc(3.6*var(--u,1vh));height:calc(3.6*var(--u,1vh));border-radius:50%;box-shadow:0 0 0 calc(.3*var(--u,1vh)) #fff,0 calc(.4*var(--u,1vh)) calc(1*var(--u,1vh)) rgba(0,0,0,.4)}
+.room.here{box-shadow:0 0 0 calc(.6*var(--u,1vh)) var(--accent)}
+.room.locked{filter:grayscale(.8) brightness(.7)}
+.room.locked::after{content:"🔒 Locked";position:absolute;inset:auto 0 40% 0;text-align:center;font-family:var(--title);font-size:calc(3.4*var(--u,1vh));color:#7a1010}
+.spots{display:flex;gap:calc(.6*var(--u,1vh));margin-top:auto;font-size:calc(2.6*var(--u,1vh))}
+.scene{position:absolute;inset:0;z-index:5;background:linear-gradient(160deg,var(--paper),var(--paper2));color:var(--ink);border-radius:calc(2*var(--u,1vh));border:calc(.6*var(--u,1vh)) solid #3a2414;display:flex;flex-direction:column;align-items:center;padding:calc(3*var(--u,1vh));animation:zoom .5s;text-align:center}
+@keyframes zoom{from{transform:scale(.4);opacity:0}}
+.scene h2{font-family:var(--title);font-size:calc(6*var(--u,1vh));margin:0;line-height:1}
+.scene .big{font-size:calc(12*var(--u,1vh));line-height:1}
+.spotrow{display:flex;gap:calc(2*var(--u,1vh));margin:calc(3*var(--u,1vh)) 0;justify-content:center;flex-wrap:wrap}
+.spotrow>div{width:calc(22*var(--u,1vh));background:#fff;border-radius:calc(1.6*var(--u,1vh));padding:calc(1.6*var(--u,1vh));border:calc(.4*var(--u,1vh)) dashed #c9a34a;font-weight:900;font-size:calc(2.2*var(--u,1vh))}
+.spotrow>div .hi{font-size:calc(7*var(--u,1vh));line-height:1.1}
+.spotrow>div.done{border-style:solid;border-color:#bbb;opacity:.75}
+.spotrow>div .by{display:flex;gap:calc(.4*var(--u,1vh));justify-content:center;margin-top:calc(.6*var(--u,1vh));min-height:calc(1.8*var(--u,1vh))}
+.spotrow>div .by i{width:calc(1.8*var(--u,1vh));height:calc(1.8*var(--u,1vh));border-radius:50%}
+.say{font-weight:900;font-size:calc(3*var(--u,1vh));line-height:1.25;max-width:90%}
+.say small{display:block;font-weight:700;font-size:.7em;opacity:.75;margin-top:.3em}
+.trio{display:flex;gap:calc(2*var(--u,1vh));justify-content:center;margin:calc(2*var(--u,1vh)) 0}
+.ccard{width:calc(18*var(--u,1vh));background:#fff;color:var(--ink);border-radius:calc(1.4*var(--u,1vh));padding:calc(1.4*var(--u,1vh));border:calc(.4*var(--u,1vh)) solid var(--ink);font-weight:900;font-size:calc(2*var(--u,1vh));box-shadow:0 calc(.8*var(--u,1vh)) calc(2*var(--u,1vh)) rgba(0,0,0,.3)}
+.ccard .ci{font-size:calc(7*var(--u,1vh));line-height:1.1}
+.ccard small{display:block;font-size:.65em;opacity:.6;letter-spacing:.1em}
+.ccard.flip{animation:flip .7s both}
+@keyframes flip{from{transform:rotateY(90deg)}}
+.resp{display:flex;gap:calc(1.2*var(--u,1vh));justify-content:center;flex-wrap:wrap;font-weight:800;font-size:calc(2*var(--u,1vh))}
+.resp span{padding:calc(.6*var(--u,1vh)) calc(1.2*var(--u,1vh));border-radius:99px;background:rgba(0,0,0,.08)}
+.side{display:flex;flex-direction:column;gap:calc(1.3*var(--u,1vh));min-width:0;min-height:0}
+.shead{display:flex;align-items:center;gap:1.4vh}
+.shead .ttl{font-family:var(--title);font-size:calc(4*var(--u,1vh));line-height:1}
+.shead .code{margin-left:auto;text-align:right;font-size:calc(1.6*var(--u,1vh));color:var(--muted);font-weight:800}
+.shead .code b{display:block;font-size:calc(3.6*var(--u,1vh));color:var(--fg);letter-spacing:.12em}
+.panel{background:var(--panel);border:calc(.25*var(--u,1vh)) solid var(--line);border-radius:calc(1.6*var(--u,1vh));padding:calc(1.4*var(--u,1vh))}
+.plist{display:flex;flex-direction:column;gap:calc(.8*var(--u,1vh))}
+.prow{display:flex;align-items:center;gap:calc(1.1*var(--u,1vh));background:var(--panel);border:calc(.25*var(--u,1vh)) solid var(--line);border-radius:calc(1.3*var(--u,1vh));padding:calc(.9*var(--u,1vh)) calc(1.2*var(--u,1vh));font-weight:800;font-size:calc(2*var(--u,1vh))}
+.prow.turn{border-color:var(--accent);background:rgba(255,255,255,.14)}
+.prow .pn{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prow .pn small{display:block;font-size:.72em;color:var(--muted)}
+.prow .dot{width:calc(2.6*var(--u,1vh));height:calc(2.6*var(--u,1vh))}
+.info{display:flex;gap:1vh;flex-wrap:wrap}.info span{background:var(--panel);border:1px solid var(--line);border-radius:99px;padding:calc(.5*var(--u,1vh)) calc(1.3*var(--u,1vh));font-weight:800;font-size:calc(1.8*var(--u,1vh))}
+.feed{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;gap:calc(.6*var(--u,1vh));font-size:calc(1.75*var(--u,1vh));font-weight:700;color:var(--muted);mask-image:linear-gradient(transparent,#000 40%)}
+.feed div:last-child{color:var(--fg)}
+.tvctl{display:flex;gap:calc(.8*var(--u,1vh));flex-wrap:wrap}.tvctl .btn{font-size:calc(1.5*var(--u,1vh));padding:calc(.7*var(--u,1vh)) calc(1.2*var(--u,1vh))}
+.lobbyside{font-size:calc(1.8*var(--u,1vh))}.lobbyside .chip{font-size:calc(1.6*var(--u,1vh))}
+.over{position:absolute;inset:0;z-index:8;display:grid;place-items:center;background:rgba(10,5,20,.7);animation:fade .4s;border-radius:calc(2*var(--u,1vh))}
+.over .box{background:var(--paper);color:var(--ink);border-radius:calc(2*var(--u,1vh));padding:calc(3*var(--u,1vh));text-align:center;max-width:90%;border:calc(.5*var(--u,1vh)) solid var(--accent)}
+.over h2{font-family:var(--title);font-size:calc(5.4*var(--u,1vh));margin:0}
+.over p{font-weight:800;font-size:calc(2.4*var(--u,1vh))}
+@keyframes fade{from{opacity:0}}
+.qrbox{background:#fff;padding:calc(1.2*var(--u,1vh));border-radius:calc(1.2*var(--u,1vh));display:inline-block}
+.qrbox img,.qrbox canvas{display:block;width:calc(26*var(--u,1vh))!important;height:calc(26*var(--u,1vh))!important}
+/* phone */
+.pw{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh;max-width:560px;margin:0 auto}
+.ptop{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:.6em;padding:.7em .9em;background:rgba(0,0,0,.45);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.ptop .nm{font-weight:900;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pmain{flex:1;padding:1em .9em 6.5em;display:flex;flex-direction:column;gap:.9em}
+.ptabs{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;background:rgba(0,0,0,.6);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+.ptabs button{flex:1;padding:.75em .2em .8em;font-weight:800;font-size:.85rem;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:.1em}
+.ptabs button b{font-size:1.4rem}.ptabs button.on{color:var(--fg);background:rgba(255,255,255,.08)}
+.card{background:var(--panel);border:2px solid var(--line);border-radius:18px;padding:1em}
+.card.hot{border-color:var(--accent)}.card.red{border-color:var(--bad)}
+.card h2{margin:0 0 .3em;font-size:1.3rem}.card h3{margin:0 0 .4em;font-size:1.05rem}
+.cc{text-align:center}.bigemoji{font-size:4.2rem;line-height:1.1}
+.clue{background:var(--paper);color:var(--ink);border-radius:16px;padding:.9em 1em;display:flex;gap:.8em;align-items:center;font-weight:800;line-height:1.3}
+.clue .ci{font-size:3rem;line-height:1}
+.clue .say{margin-left:auto;font-size:1.5rem;background:rgba(0,0,0,.08);border-radius:12px;padding:.2em .35em;flex:none}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:.6em}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5em}
+.pick{border:2px solid var(--line);border-radius:14px;padding:.6em .4em;background:rgba(0,0,0,.25);font-weight:800;font-size:.85rem;text-align:center;position:relative}
+.pick .pi{font-size:2rem;display:block;line-height:1.1}
+.pick.on{border-color:var(--accent);background:rgba(255,201,74,.2)}
+.pick.x{opacity:.35}.pick.x::after{content:"✖";position:absolute;right:.3em;top:.1em;color:var(--bad);font-size:1.1rem}
+.pick.lock{opacity:.45}
+.pick .src{display:block;font-size:.68rem;color:var(--muted);font-weight:700}
+.pick.mark::before{content:"⭐";position:absolute;left:.3em;top:.1em}
+.nb h3{margin:.4em 0}
+.count{display:flex;gap:.5em;justify-content:center;flex-wrap:wrap}
+.count span{background:rgba(0,0,0,.25);border-radius:99px;padding:.35em .8em;font-weight:800;font-size:.9rem}
+.pdie{display:flex;justify-content:center;margin:.3em 0}
+.die{width:5.5rem;height:5.5rem;border-radius:1rem;background:#fff;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:.8rem}
+.die i{width:1.1rem;height:1.1rem;border-radius:50%;background:#222;place-self:center;visibility:hidden}.die i.on{visibility:visible}
+.die.rolling{animation:tumble .18s linear infinite}@keyframes tumble{50%{transform:rotate(180deg)}100%{transform:rotate(360deg)}}
+.tvdie{width:calc(4.4*var(--u,1vh));height:calc(4.4*var(--u,1vh));border-radius:calc(.8*var(--u,1vh));padding:calc(.5*var(--u,1vh))}
+.tvdie i{width:calc(.9*var(--u,1vh));height:calc(.9*var(--u,1vh))}
+.shake{animation:shk 1.2s ease-in-out infinite}@keyframes shk{0%,100%{transform:rotate(0)}10%{transform:rotate(-14deg)}20%{transform:rotate(12deg)}30%{transform:rotate(-8deg)}40%{transform:rotate(0)}}
+details.rules summary{font-weight:900;cursor:pointer}details.rules li{margin:.25em 0}
+.sheet{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:20;display:flex;align-items:flex-end}
+.sheet>div{background:var(--bg2);border-top:2px solid var(--line);border-radius:22px 22px 0 0;width:100%;max-width:560px;margin:0 auto;padding:1.1em 1em 2em;display:flex;flex-direction:column;gap:.7em}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// =====================================================================
+// Roll On · Mystery (Classic Whodunnit). Same set-up as the other games:
+// the TV runs it, phones scan to join. Phones only get their own secrets.
+// Add &local=1 (and &slot=N) to test with tabs on one computer.
+// =====================================================================
+const SUPA_URL = "https://uqwlmegbelyqtbegxqlz.supabase.co";
+const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVxd2xtZWdiZWx5cXRiZWd4cWx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3NTYzNzAsImV4cCI6MjEwNzMzMjM3MH0.bSeF8_kwKqSrEj3n8Ku2OeSU8E5nMqJj0hcfgXb8cW0";
+const M = window.Mys;
+const P = new URLSearchParams(location.search), LOCAL = P.has("local");
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const app = $("#app");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const now = () => Date.now(), uid = () => Math.random().toString(36).slice(2, 10);
+const ls = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { } }, del(k) { try { localStorage.removeItem(k); } catch (e) { } } };
+const code4 = () => Array.from({ length: 4 }, () => "BCDFGHJKLMNPQRSTVWXZ"[Math.random() * 20 | 0]).join("");
+const vib = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) { } };
+const PIPS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
+const pipsHTML = n => Array.from({ length: 9 }, (_, i) => `<i class="${PIPS[n].includes(i) ? "on" : ""}"></i>`).join("");
+const dieHTML = (n, cls) => `<div class="die ${cls || ""}">${Array.from({ length: 9 }, (_, i) => `<i class="${PIPS[n].includes(i) ? "on" : ""}"></i>`).join("")}</div>`;
+function toast(t, ms) { const d = document.createElement("div"); d.className = "toast"; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), ms || 2000); }
+function say(text) { try { const u = new SpeechSynthesisUtterance(text); u.lang = "en-GB"; u.rate = .95; const v = speechSynthesis.getVoices().find(v => /en-GB/i.test(v.lang)); if (v) u.voice = v; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (e) { toast("Read-aloud isn't available on this device"); } }
+function fit() {
+  const vv = window.visualViewport, H = vv ? vv.height : innerHeight, W = vv ? vv.width : innerWidth, r = document.documentElement.style;
+  let u = H / 100;
+  if (document.body.classList.contains("tvb")) { const bh = Math.min(H * .968, W * .62 / 1.25), bw = bh * 1.25; u = bh / 96.8; r.setProperty("--bw", bw + "px"); r.setProperty("--bh", bh + "px"); }
+  r.setProperty("--u", u + "px");
+}
+addEventListener("resize", fit); if (window.visualViewport) visualViewport.addEventListener("resize", fit);
+const canFull = () => !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
+function goFull() { const d = document.documentElement; if (document.fullscreenElement || document.webkitFullscreenElement) { (document.exitFullscreen || document.webkitExitFullscreen).call(document); return; } const r = (d.requestFullscreen || d.webkitRequestFullscreen).call(d); if (r && r.catch) r.catch(() => { }); }
+document.addEventListener("fullscreenchange", () => setTimeout(fit, 200));
+
+async function connect(room, onMsg, onStatus) {
+  if (LOCAL) { const bc = new BroadcastChannel("mystery-" + room); bc.onmessage = e => onMsg(e.data); onStatus && onStatus("ok"); return { send: m => bc.postMessage(m) }; }
+  const sb = window.supabase.createClient(SUPA_URL, SUPA_KEY, { realtime: { params: { eventsPerSecond: 40 } } });
+  const ch = sb.channel("mystery-" + room, { config: { broadcast: { self: false } } });
+  ch.on("broadcast", { event: "m" }, ({ payload }) => onMsg(payload));
+  await new Promise((res, rej) => { let done = false; ch.subscribe(st => { if (st === "SUBSCRIBED") { onStatus && onStatus("ok"); if (!done) { done = true; res(); } } else if (["CHANNEL_ERROR", "TIMED_OUT", "CLOSED"].includes(st)) { onStatus && onStatus("lost"); if (!done) { done = true; rej(new Error(st)); } } }); });
+  return { send: m => ch.send({ type: "broadcast", event: "m", payload: m }) };
+}
+const SFX = (() => {
+  let ac = null, on = ls.get("mys_sound", true);
+  const ctx = () => { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { } } if (ac && ac.state === "suspended") ac.resume(); return ac; };
+  const tone = (f, d, type, vol, at) => { const a = ctx(); if (!a || !on) return; const t0 = a.currentTime + (at || 0), o = a.createOscillator(), g = a.createGain(); o.type = type || "sine"; o.frequency.setValueAtTime(f, t0); g.gain.setValueAtTime(vol || .14, t0); g.gain.exponentialRampToValueAtTime(.001, t0 + d); o.connect(g); g.connect(a.destination); o.start(t0); o.stop(t0 + d + .02); };
+  return {
+    get on() { return on; }, toggle() { on = !on; ls.set("mys_sound", on); return on; }, unlock() { ctx(); },
+    dice() { for (let i = 0; i < 7; i++) tone(200 + Math.random() * 300, .04, "square", .05, i * .08); },
+    clue() { tone(523, .1, "triangle", .12); tone(784, .25, "triangle", .12, .1); },
+    sus() { [330, 311, 294, 277].forEach((f, i) => tone(f, .3, "triangle", .1, i * .22)); },
+    show() { tone(660, .12, "sine", .12); tone(440, .2, "sine", .12, .12); },
+    win() { [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => tone(f, i === 6 ? .9 : .18, "triangle", .14, i * .16)); },
+    wrong() { tone(200, .3, "sawtooth", .08); tone(150, .5, "sawtooth", .08, .25); },
+    turn() { tone(880, .1, "sine", .08); },
+  };
+})();
+
+if (P.has("tv")) tvMain(); else if (P.has("join")) phoneMain(P.get("join")); else home();
+
+function home() {
+  document.body.className = "home-b";
+  const phone = matchMedia("(pointer:coarse)").matches && Math.min(innerWidth, innerHeight) < 700;
+  const sv = ls.get("mys_save", null), canResume = sv && sv.S && sv.S.phase === "play";
+  app.innerHTML = `<div class="home"><h1><small>ROLL ON</small>Mystery</h1>
+    <p class="muted" style="text-align:center;margin:0">🎂 Someone ate the birthday cake! Search the house, question witnesses and keep your clues secret on your phone. First to solve WHO, WHERE and WITH WHAT wins.</p>
+    ${canResume ? `<button class="btn big gold" id="res">▶ Carry on the saved game (code ${esc(sv.S.room)})</button>` : ""}
+    <button class="btn big ${phone || canResume ? "" : "gold"}" id="tvb">📺 This is the TV screen</button>
+    <div style="display:flex;gap:.6em"><input id="code" maxlength="4" placeholder="Code" style="text-transform:uppercase;font-size:1.3rem;letter-spacing:.15em"><button class="btn ${phone ? "gold" : ""}" id="jb" style="flex:none">Join</button></div>
+    <a class="btn" href="index.html${LOCAL ? "?local=1" : ""}">← All Roll On games</a></div>`;
+  $("#tvb").onclick = () => { location.search = "?tv" + (LOCAL ? "&local=1" : ""); };
+  if (canResume) $("#res").onclick = () => { location.search = "?tv=" + sv.S.room + (LOCAL ? "&local=1" : ""); };
+  const go = () => { const c = $("#code").value.trim().toUpperCase(); if (c.length === 4) location.search = "?join=" + c + (LOCAL ? "&local=1" : ""); };
+  $("#jb").onclick = go; $("#code").onkeydown = e => { if (e.key === "Enter") go(); };
+}
+const RULES = `<details class="rules"><summary>📖 How to play</summary><ul>
+  <li>The game has secretly picked <b>WHO</b> ate the cake, <b>WHERE</b>, and <b>WITH WHAT</b>.</li>
+  <li>On your turn, <b>shake your phone</b> to roll, then pick a room. The dice decides how many hiding spots you can search (1–2: one, 3–4: two, 5–6: two and a witness).</li>
+  <li>Clues you find only show on <b>your</b> phone. Each one rules something out. Your notebook crosses it off for you.</li>
+  <li>In a room you can make one <b>guess</b>: "Was it Uncle Bob, in this room, with the Fork?" The next player who has one of those cards must secretly show you one.</li>
+  <li>When you're sure, <b>accuse</b>! Right and you win. Wrong and you're on the naughty step for 2 turns (but you learn one thing that was wrong).</li>
+  <li>The Study is locked until someone finds the key. Tap 🔊 on any clue to hear it read out.</li></ul></details>`;
+
+// ======================================================================
+// TV
+// ======================================================================
+async function tvMain() {
+  document.body.className = "tvb"; fit();
+  let room = (P.get("tv") || "").toUpperCase().replace(/[^A-Z]/g, "").slice(0, 4);
+  const sv = ls.get("mys_save", null);
+  let S;
+  if (room && sv && sv.S && sv.S.room === room && sv.S.phase !== "lobby") S = sv.S;
+  else { room = room || code4(); S = M.newState(room); const st = ls.get("mys_settings", null); if (st) Object.assign(S.settings, st); }
+  history.replaceState(null, "", "?tv=" + room + (LOCAL ? "&local=1" : ""));
+  const joinUrl = location.origin + location.pathname + "?join=" + room + (LOCAL ? "&local=1" : "");
+  let link = null, conn = "", lastBuild = "", lastFx = S.fxN || 0, pushT = null, saveT = null, lastRoll = S.rollN || 0, rollingUntil = 0;
+  const send = m => link && link.send(m);
+  const alive = p => p.bot || (p.seen && now() - p.seen < 20000);
+  function sendAll() { send({ t: "state", st: M.pub(S) }); if (S.phase !== "lobby") S.order.forEach(id => { if (!S.players[id].bot) send({ t: "priv", to: id, p: M.priv(S, id) }); }); }
+  function push() {
+    render();
+    clearTimeout(pushT); pushT = setTimeout(sendAll, 40);
+    clearTimeout(saveT); saveT = setTimeout(() => { if (S.phase === "lobby") ls.set("mys_settings", S.settings); ls.set("mys_save", { S, at: now() }); }, 500);
+  }
+  function onMsg(m) {
+    if (!m || !m.t || !m.id || ["state", "priv", "nope", "rejoin"].includes(m.t)) return;
+    const id = String(m.id);
+    if (m.t === "join") { const r = M.join(S, id, m.name, m.kid); if (r !== "ok") send({ t: "nope", to: id, why: r }); else S.players[id].seen = now(); return push(); }
+    const p = S.players[id]; if (!p) { send({ t: "rejoin", to: id }); return; }
+    const was = alive(p); p.seen = now();
+    if (m.t === "hi") { if (!was) push(); else if (S.phase !== "lobby") send({ t: "priv", to: id, p: M.priv(S, id) }); return; }
+    if (m.t === "leave") { M.leaveLobby(S, id); return push(); }
+    if (m.t === "act" && m.a) { const a = Object.assign({}, m.a); delete a.tv; if (M.act(S, id, a)) push(); }
+  }
+  const hostAct = a => { SFX.unlock(); if (M.act(S, S.host || "tv", Object.assign({ tv: true }, a))) push(); };
+  if (LOCAL) { window.__S = () => S; window.__push = () => push(); window.__M = M; }
+  setInterval(() => { if (M.botStep(S)) push(); else live(); }, 250);
+  setInterval(sendAll, 3000);
+
+  const st = () => M.st(S);
+  const cols = () => S.n === 4 || (S.phase === "lobby" && S.settings.size === "small") ? 2 : 3;
+  const nRooms = () => S.phase === "lobby" ? M.SIZES[S.settings.size][0] : S.n;
+  function houseHTML() {
+    const n = nRooms(), c = cols();
+    return `<div class="house" id="house" style="grid-template-columns:repeat(${c},1fr);grid-template-rows:repeat(${Math.ceil(n / c)},1fr)">${Array.from({ length: n }, (_, r) => `<div class="room" id="room${r}"></div>`).join("")}</div>`;
+  }
+  function updHouse() {
+    for (let r = 0; r < nRooms(); r++) {
+      const el = $("#room" + r); if (!el) continue; const w = st().where[r];
+      const locked = S.phase === "play" && !M.roomOpen(S, r);
+      const ppl = S.phase === "play" ? S.order.filter(id => S.players[id].room === r) : [];
+      const spots = S.phase === "play" ? [0, 1, 2].map(k => S.spots[r + ":" + k].by.length ? "🔍" : w[3][k][0]).join(" ") : w[3].map(x => x[0]).join(" ");
+      el.className = "room" + (locked ? " locked" : "") + (S.phase === "play" && S.players[S.turnPid] && S.players[S.turnPid].room === r && S.step !== "roll" && S.step !== "room" ? " here" : "");
+      el.innerHTML = `<div class="ri">${w[0]}</div><div class="rn">${esc(w[1])}</div><div class="rs">${S.phase === "play" ? [0, 1, 2].filter(k => !S.spots[r + ":" + k].by.length).length + " spots not searched yet" : "3 hiding spots"}</div><div class="spots">${spots}</div><div class="who">${ppl.map(id => `<i style="background:${S.players[id].color}"></i>`).join("")}</div>`;
+    }
+  }
+  function cardHTML(c, flip, d) { const x = M.card(S, c); return `<div class="ccard ${flip ? "flip" : ""}" style="animation-delay:${d || 0}s"><small>${x.kind === "s" ? "WHO" : x.kind === "r" ? "WHERE" : "WITH WHAT"}</small><div class="ci">${x.icon}</div>${esc(x.name)}</div>`; }
+  function sceneHTML() {
+    const p = S.players[S.turnPid]; if (!p || p.room < 0) return "";
+    const w = st().where[p.room];
+    if (S.step === "asking" || S.step === "showing" || (S.ask && S.ask.from === p.id && S.step === "search" && now() - (S.ask.doneAt || 0) < 7000)) {
+      const a = S.ask;
+      if (a) {
+        const resp = a.order.map(id => { const r = a.results.find(x => x.id === id), q = S.players[id]; return `<span><span class="dot" style="background:${q.color}"></span> ${esc(q.name)}: ${r ? r.had ? "🃏 showed a card" : "✖ can't help" : a.waiting === id ? "🤔 choosing…" : "…"}</span>`; }).join("");
+        return `<div class="scene"><h2>🤔 ${esc(p.name)} asks…</h2><div class="trio">${cardHTML(a.s, 1, 0)}${cardHTML(a.r, 1, .2)}${cardHTML(a.i, 1, .4)}</div><div class="say" style="font-size:calc(2.6*var(--u,1vh))">Was it ${esc(M.card(S, a.s).name)}, in the ${esc(M.card(S, a.r).name)}, with the ${esc(M.card(S, a.i).name)}?</div><div class="resp" style="margin-top:calc(2*var(--u,1vh))">${resp}</div>
+          ${a.results.length === a.order.length && !a.results.some(r => r.had) ? `<div class="say" style="margin-top:calc(2*var(--u,1vh))">😮 Nobody could show a card!<small>That's a big clue…</small></div>` : ""}</div>`;
+      }
+    }
+    const f = S.found && S.found.pid === p.id && now() - S.found.at < 15000 ? S.found : null;
+    const msg = f ? f.witness ? `👀 ${esc(p.name)} talked to a witness.<small>What they said is on ${esc(p.name)}'s phone.</small>` : f.t === "clue" ? `🔎 ${esc(p.name)} found a clue in the ${esc(f.spot)}!<small>Only ${esc(p.name)} can see it.</small>` : f.t === "key" ? `🔑 The key! The ${esc(st().where[S.locked][1])} is now open.` : f.t === "mag" ? `🔍 A magnifying glass! One more search.` : `${esc(p.name)} searched the ${esc(f.spot || "room")}. Nothing there.` : `${esc(p.name)} is searching…`;
+    return `<div class="scene"><div class="big">${w[0]}</div><h2>The ${esc(w[1])}</h2>
+      <div class="spotrow">${w[3].map((h, k) => { const by = S.spots[p.room + ":" + k].by; return `<div class="${by.includes(p.id) ? "done" : ""}"><div class="hi">${h[0]}</div>${esc(h[1])}<div class="by">${by.map(id => `<i style="background:${S.players[id].color}"></i>`).join("")}</div></div>`; }).join("")}</div>
+      <div class="say">${msg}</div>
+      <div class="info" style="margin-top:auto;justify-content:center;color:var(--fg)"><span style="background:#3a2414">🔍 ${S.searches} search${S.searches === 1 ? "" : "es"} left</span>${S.bonus ? `<span style="background:#3a2414">👀 Witness available</span>` : ""}${p.guessed ? "" : `<span style="background:#3a2414">🤔 Can make a guess</span>`}</div></div>`;
+  }
+  function overHTML() {
+    if (S.phase === "end") {
+      const sol = S.sol, w = S.result && S.result.winner ? S.players[S.result.winner] : null;
+      return `<div class="over"><div class="box"><h2>${w ? `🎉 ${esc(w.name)} solved it!` : "Case closed"}</h2><div class="trio">${cardHTML(sol.s, 1, 0)}${cardHTML(sol.r, 1, .4)}${cardHTML(sol.i, 1, .8)}</div>
+        <p>${esc(st().reveal(M.card(S, sol.s).name, M.card(S, sol.r).name, M.card(S, sol.i).name))}</p>
+        <div style="display:flex;gap:1vh;justify-content:center"><button class="btn gold" id="again" style="font-size:calc(2.2*var(--u,1vh))">▶ New mystery</button><button class="btn" id="tolobby" style="font-size:calc(2*var(--u,1vh));color:var(--ink);border-color:#bbb">Back to the lobby</button></div></div></div>`;
+    }
+    const a = S.accuse;
+    if (a && now() - a.at < 8000) {
+      const q = S.players[a.pid], open = now() - a.at > 2600;
+      return `<div class="over"><div class="box"><h2>☝️ ${esc(q.name)} accuses!</h2><div class="trio">${cardHTML(a.s)}${cardHTML(a.r)}${cardHTML(a.i)}</div>
+        <p>${open ? (a.wrong ? `❌ Wrong! ${esc(q.name)} goes on the naughty step for 2 turns.` : "") : "✉️ Opening the secret envelope…"}</p></div></div>`;
+    }
+    if (S.paused) return `<div class="over"><div class="box"><h2>⏸️ Paused</h2></div></div>`;
+    return "";
+  }
+  function sideHTML() {
+    const p = S.players[S.turnPid];
+    const doing = S.step === "roll" ? (p.bot ? "🤖 thinking…" : "shake your phone to roll") : S.step === "room" ? `rolled ${S.die}, choosing a room` : S.step === "showing" ? `waiting for ${esc(S.players[S.ask.waiting].name)} to show a card` : S.step === "asking" ? "is asking a question" : "is searching";
+    return `<div class="info"><span>Round ${S.round}</span>${!S.unlocked && S.locked >= 0 ? `<span>🔒 Study locked</span>` : ""}<span style="display:flex;align-items:center;gap:.5em">🎲 <div class="die tvdie" id="tvd">${pipsHTML(S.die || 1)}</div></span></div>
+      <div class="panel" style="font-weight:900;font-size:calc(2.3*var(--u,1vh))"><span class="dot" style="background:${p.color}"></span> ${esc(p.name)}'s turn<br><span class="muted" style="font-size:.8em">${doing}</span></div>
+      <div class="plist">${S.order.map(id => { const q = S.players[id]; return `<div class="prow ${id === S.turnPid ? "turn" : ""}"><span class="dot" style="background:${q.color}"></span><div class="pn">${esc(q.name)}<small>${q.bot ? "🤖 · " : ""}${q.kid ? "🧒 · " : ""}🃏 ${(q.hand || []).length} card${(q.hand || []).length === 1 ? "" : "s"}${q.skip ? ` · 🪑 naughty step (${q.skip})` : ""}${alive(q) ? "" : " · 📵"}</small></div></div>`; }).join("")}</div>`;
+  }
+  function build() {
+    const s = st();
+    if (S.phase === "lobby") {
+      const n = S.order.length, nb = M.botCount(S);
+      app.innerHTML = `<div class="tv"><div class="bwrap">${houseHTML()}<div class="over" style="background:rgba(10,5,20,.55)"><div class="box"><h2>${esc(s.title)}</h2><p style="margin:.3em 0 1em">${esc(s.intro)}</p><div class="qrbox" id="qr"></div><p>Scan to join · code <b style="letter-spacing:.15em">${room}</b></p><p class="muted" style="color:#6b5a7a;margin:0">${!n ? "Waiting for detectives…" : `${n} detective${n > 1 ? "s" : ""}${nb ? ` + ${nb} computer detective${nb > 1 ? "s" : ""} 🤖` : ""}. Ready!`}</p></div></div></div>
+        <div class="side lobbyside"><div class="shead"><span class="ttl">Roll On</span><div class="code">Join code<b>${room}</b></div></div>
+        <div class="panel"><div class="plist">${S.order.map(id => { const q = S.players[id]; return `<div class="prow"><span class="dot" style="background:${q.color}"></span><div class="pn">${esc(q.name)}<small>${id === S.host ? "⭐ Host · " : ""}${q.kid ? "🧒 Child" : "Grown-up"}</small></div></div>`; }).join("") || `<div class="muted">Waiting for detectives…</div>`}</div></div>
+        <div class="panel" id="sets">${M.SETTINGS().map(([k, label, vals]) => `<div class="setrow"><b>${label}</b>${vals.map(([x, l]) => `<button class="chip ${S.settings[k] === x ? "on" : ""}" data-set="${k}" data-val="${x}">${esc(l)}</button>`).join("")}</div>`).join("")}</div>
+        <button class="btn gold big" id="start" ${n ? "" : "disabled"}>Start the mystery</button>${canFull() ? `<button class="btn" id="full">⛶ Full screen</button>` : ""}
+        <div class="muted" style="font-size:calc(1.5*var(--u,1vh))">More stories and the Detective Agency and Sneaky Suspect modes are coming. ${esc(conn)}</div></div></div>`;
+      try { new QRCode($("#qr"), { text: joinUrl, width: 400, height: 400, correctLevel: QRCode.CorrectLevel.M }); } catch (e) { $("#qr").textContent = joinUrl; }
+      $("#start").onclick = () => hostAct({ t: "start" });
+      $("#sets").onclick = e => { const b = e.target.closest("[data-set]"); if (!b) return; const v = b.dataset.val; hostAct({ t: "set", k: b.dataset.set, v: isNaN(v) ? v : Number(v) }); };
+    } else {
+      app.innerHTML = `<div class="tv"><div class="bwrap">${houseHTML()}<div id="scene"></div><div id="over"></div></div>
+        <div class="side"><div class="shead"><span class="ttl">${esc(s.title)}</span><div class="code">Join code<b>${room}</b></div></div><div id="sd"></div><div class="feed" id="feed"></div>
+        <div class="tvctl"><button class="btn" id="pause">⏸️ Pause</button><button class="btn" id="nudge">⏭ Move it along</button><button class="btn" id="snd">${SFX.on ? "🔊" : "🔇"}</button>${canFull() ? `<button class="btn" id="full">⛶</button>` : ""}<button class="btn" id="quit">🏳️ Reveal answer</button><span class="muted" style="font-size:calc(1.4*var(--u,1vh))">${esc(conn)}</span></div></div></div>`;
+      $("#pause").onclick = () => hostAct({ t: "pause" }); $("#nudge").onclick = () => hostAct({ t: "nudge" });
+      $("#snd").onclick = e => { e.target.textContent = SFX.toggle() ? "🔊" : "🔇"; };
+      $("#quit").onclick = () => { if (confirm("Give up and reveal the answer?")) hostAct({ t: "endnow" }); };
+    }
+    const f = $("#full"); if (f) f.onclick = goFull;
+  }
+  let lastScene = "", lastOver = "";
+  function render() {
+    const key = (S.phase === "lobby" ? "lobby" : "game") + "|" + (S.phase === "lobby" ? JSON.stringify([S.order.map(id => [S.players[id].name, S.players[id].kid]), S.settings, conn]) : S.n + conn);
+    if (key !== lastBuild) { lastBuild = key; lastScene = lastOver = ""; build(); }
+    updHouse();
+    if (S.phase === "lobby") return;
+    if (S.rollN !== lastRoll) { lastRoll = S.rollN; rollingUntil = now() + 900; SFX.dice(); }
+    $("#sd").innerHTML = sideHTML();
+    $("#feed").innerHTML = S.log.slice(-7).map(l => `<div>${esc(l)}</div>`).join("");
+    live();
+    $("#pause").textContent = S.paused ? "▶️ Resume" : "⏸️ Pause";
+    (S.fx || []).filter(f => f.n > lastFx).forEach(effect); lastFx = S.fxN;
+  }
+  function live() {
+    if (S.phase === "lobby") return;
+    const showScene = S.phase === "play" && ["search", "asking", "showing"].includes(S.step);
+    const sc = showScene ? sceneHTML() : ""; if (sc !== lastScene) { lastScene = sc; $("#scene").innerHTML = sc; }
+    const ov = overHTML(); if (ov !== lastOver) { lastOver = ov; $("#over").innerHTML = ov; const a = $("#again"); if (a) { a.onclick = () => hostAct({ t: "again" }); $("#tolobby").onclick = () => hostAct({ t: "lobby" }); } }
+    const d = $("#tvd"); if (d) { if (now() < rollingUntil) { d.classList.add("rolling"); d.innerHTML = pipsHTML(1 + Math.random() * 6 | 0); } else if (d.classList.contains("rolling")) { d.classList.remove("rolling"); d.innerHTML = pipsHTML(S.die); } }
+  }
+  function effect(f) {
+    switch (f.k) { case "clue": case "tip": SFX.clue(); break; case "guess": SFX.sus(); break; case "shown": SFX.show(); break; case "solved": SFX.win(); break; case "wrong": setTimeout(SFX.wrong, 2600); break; case "turn": SFX.turn(); break; }
+  }
+  addEventListener("resize", () => { lastBuild = ""; render(); });
+  addEventListener("click", () => SFX.unlock(), { once: true });
+  render();
+  try { link = await connect(room, onMsg, s => { const c = s === "ok" ? (LOCAL ? "Local test mode" : "") : "Connection lost. Reload if phones stop working."; if (c !== conn) { conn = c; lastBuild = ""; render(); } }); }
+  catch (e) { conn = "Couldn't connect. Check the internet and reload."; }
+  lastBuild = ""; push();
+}
+
+// ======================================================================
+// Phone
+// ======================================================================
+async function phoneMain(codeRaw) {
+  document.body.className = "ph";
+  const room = String(codeRaw || "").toUpperCase().replace(/[^A-Z]/g, "").slice(0, 4);
+  if (room.length !== 4) return home();
+  const SLOT = LOCAL ? (P.get("slot") || "") : "", KID = "mys_id" + SLOT, KME = "mys_me" + SLOT;
+  const id = ls.get(KID, null) || uid(); ls.set(KID, id);
+  let me = ls.get(KME, null), S = null, PV = null, link = null, lastKey = "", watch = false, tab = "play", lastFx = -1;
+  let mode = null, pickS = null, pickR = null, pickI = null, marks = ls.get("mys_marks" + SLOT, {}), seenFound = 0;
+  const send = m => link && link.send(Object.assign({ id }, m));
+  const act = a => { send({ t: "act", a }); vib(15); };
+  const mp = () => S && S.players[id];
+
+  function joinForm() {
+    lastKey = "join";
+    app.innerHTML = `<div class="home"><h1><small>ROLL ON</small>Mystery</h1><p class="muted" style="text-align:center">Game ${esc(room)}</p>
+      <input id="nm" maxlength="14" placeholder="Your name" value="${esc(me ? me.name : "")}">
+      <label class="card" style="display:flex;gap:.7em;align-items:flex-start"><input type="checkbox" id="kid" style="width:auto;margin-top:.3em" ${me && me.kid ? "checked" : ""}><span>🧒 <b>A child is playing</b><br><span class="muted" style="font-size:.9em">Clues are read out loud automatically, with extra tips.</span></span></label>
+      <button class="btn big gold" id="go">Join as a detective</button>${watch ? `<p class="muted">This mystery has already started. If you were playing, use the same name to carry on.</p>` : ""}</div>`;
+    const go = () => { const v = $("#nm").value.trim(); if (!v) return $("#nm").focus(); me = { name: v, kid: $("#kid").checked }; ls.set(KME, me); askMotion(); watch = false; lastKey = ""; send({ t: "join", name: me.name, kid: me.kid }); render(); };
+    $("#go").onclick = go; $("#nm").onkeydown = e => { if (e.key === "Enter") go(); };
+  }
+  let lastA = null, lastShake = 0;
+  function askMotion() { try { if (window.DeviceMotionEvent && typeof DeviceMotionEvent.requestPermission === "function") DeviceMotionEvent.requestPermission().catch(() => { }); } catch (e) { } try { speechSynthesis.getVoices(); } catch (e) { } }
+  addEventListener("devicemotion", e => { const a = e.accelerationIncludingGravity; if (!a || a.x == null) return; if (lastA) { const d = Math.abs(a.x - lastA.x) + Math.abs(a.y - lastA.y) + Math.abs(a.z - lastA.z); if (d > 26 && now() - lastShake > 1500 && S && S.phase === "play" && S.turnPid === id && S.step === "roll") { lastShake = now(); doRoll(); } } lastA = { x: a.x, y: a.y, z: a.z }; });
+  function doRoll() { act({ t: "roll" }); vib([40, 30, 40, 30, 80]); const d = $("#pdie"); if (d) d.innerHTML = dieHTML(1 + Math.random() * 6 | 0, "rolling"); }
+
+  function onMsg(m) {
+    if (!m) return;
+    if (m.t === "state") {
+      const first = !S; S = m.st;
+      if (me && !S.players[id] && !watch) send({ t: "join", name: me.name, kid: me.kid });
+      if (first) lastFx = S.fxN || 0;
+      (S.fx || []).filter(f => f.n > lastFx).forEach(effect); lastFx = S.fxN || 0;
+      if (S.phase !== "play") mode = null;
+      if (S.phase === "play" && S.turnPid !== id) mode = null;
+      render(); return;
+    }
+    if (m.to !== id) return;
+    if (m.t === "priv") {
+      PV = m.p;
+      const f = PV && PV.found; if (f && f.at > seenFound) { seenFound = f.at; tab = "play"; vib([30, 30, 60]); if (me && me.kid && f.t === "clue") setTimeout(() => say(clueText(f)), 400); }
+      if (PV && PV.mustShow) { tab = "play"; vib([80, 50, 80]); }
+      render(); return;
+    }
+    if (m.t === "rejoin" && me) send({ t: "join", name: me.name, kid: me.kid });
+    if (m.t === "nope" && m.why === "watch") { watch = true; lastKey = ""; render(); }
+    if (m.t === "nope" && m.why === "full") toast("Sorry, this mystery is full (6 detectives).");
+  }
+  function effect(f) {
+    if (f.k === "turn" && f.pid === id) { vib([80, 60, 80]); toast("🔎 Your turn, detective!"); tab = "play"; }
+    if (f.k === "tip") { toast("🔎 Detective's tip! Check your notebook."); }
+    if (f.k === "solved") vib([100, 50, 100, 50, 200]);
+  }
+  setInterval(() => send({ t: "hi" }), 5000);
+
+  const clueText = f => { if (!f) return ""; if (f.t !== "clue") return f.txt || ""; const c = M.card(S, f.c); return (f.by ? `${S.players[f.by] ? S.players[f.by].name : "Someone"} secretly showed you: ${c.name}. ` : f.witness ? "The witness says: " : f.accuse ? "One part of your accusation was wrong: " : "") + c.clue; };
+  const srcText = v => !v ? "" : v === "hand" ? "your card" : v === "found" ? "you found it" : v === "witness" ? "a witness" : v === "tip" ? "detective's tip" : v === "accuse" ? "wrong accusation" : v.startsWith("shown:") ? "shown by " + ((S.players[v.slice(6)] || {}).name || "?") : "";
+  const known = () => (PV && PV.known) || {};
+  const left = k => M.cards(S).filter(c => c[0] === k && !known()[c]);
+
+  function render() {
+    if (!me || (watch && !S?.players[id])) { if (lastKey !== "join") joinForm(); return; }
+    const p = mp();
+    const key = !S ? "wait" : !p ? "joining" : JSON.stringify([S.phase, S.step, S.turnPid, S.rollN, S.searches, S.bonus, p.room, p.guessed, p.skip, S.unlocked, S.ask && [S.ask.results, S.ask.waiting], PV, tab, mode, pickS, pickR, pickI, marks, S.settings, S.order.length, S.host, S.paused, S.spots && Object.values(S.spots).map(s => s.by.length).join("")]);
+    if (key === lastKey) return; lastKey = key;
+    if (!S) { app.innerHTML = `<div class="home" style="justify-content:center;text-align:center"><div class="bigemoji">🔍</div><h2>Finding the TV…</h2><p class="muted">Make sure the TV screen is on game ${esc(room)}.</p></div>`; return; }
+    if (!p) { app.innerHTML = `<div class="home" style="justify-content:center;text-align:center"><div class="bigemoji">🔍</div><h2>Joining…</h2></div>`; return; }
+    const inPlay = S.phase === "play";
+    app.innerHTML = `<div class="pw"><div class="ptop"><span class="dot" style="background:${p.color};width:1.4em;height:1.4em"></span><span class="nm">🕵️ ${esc(p.name)}${S.host === id ? " ⭐" : ""}</span>${S.host === id && inPlay ? `<button id="gear" style="font-size:1.3rem">⚙️</button>` : ""}</div>
+      <div class="pmain">${body()}</div>${inPlay ? `<div class="ptabs">${[["play", "🔍", "Play"], ["book", "📒", "Notebook"]].map(([k, i, l]) => `<button class="${tab === k ? "on" : ""}" data-tab="${k}"><b>${i}</b>${l}</button>`).join("")}</div>` : ""}</div>`;
+    wire();
+  }
+  function counts() { const s = left("s").length, r = left("r").length, i = left("i").length; return `<div class="count"><span>👤 ${s} suspect${s > 1 ? "s" : ""}</span><span>🏠 ${r} room${r > 1 ? "s" : ""}</span><span>🍴 ${i} thing${i > 1 ? "s" : ""}</span></div>`; }
+  function body() {
+    const p = mp(), s = M.st(S);
+    if (S.phase === "lobby") return `<div class="card cc"><div class="bigemoji">🕵️</div><h2>You're a detective!</h2><p class="muted" style="margin:0">${p.kid ? "🧒 Child player · clues read aloud" : "Grown-up player"} · <button id="edit" style="text-decoration:underline;color:var(--muted)">change</button></p></div>
+      ${S.host === id ? `<div class="card"><h3>⭐ You're the host</h3>${M.SETTINGS().map(([k, label, vals]) => `<div class="setrow"><b>${label}</b>${vals.map(([x, l]) => `<button class="chip ${S.settings[k] === x ? "on" : ""}" data-set="${k}" data-val="${x}">${esc(l)}</button>`).join("")}</div>`).join("")}<button class="btn gold big" id="start" style="margin-top:.6em">Start the mystery</button></div>` : `<div class="card cc">Waiting for ${esc((S.players[S.host] || {}).name || "the host")} to start.</div>`}
+      <div class="card">${RULES}</div><button class="btn" id="leave">Leave</button>`;
+    if (S.phase === "end") { const sol = S.sol, w = S.result && S.result.winner; return `<div class="card cc hot"><div class="bigemoji">${w === id ? "🏆" : "🎂"}</div><h2>${w === id ? "You solved it!" : w ? `${esc(S.players[w].name)} solved it!` : "Case closed"}</h2><p style="font-weight:800">${esc(s.reveal(M.card(S, sol.s).name, M.card(S, sol.r).name, M.card(S, sol.i).name))}</p><button class="btn" id="sayit">🔊 Read it out</button></div>${S.host === id ? `<button class="btn gold big" id="again">▶ New mystery</button><button class="btn big" id="tolobby">Back to the lobby</button>` : ""}`; }
+    if (S.paused) return `<div class="card cc"><div class="bigemoji">⏸️</div><h2>Paused</h2></div>`;
+    if (tab === "book") return notebook();
+    return play();
+  }
+  function play() {
+    const p = mp(), s = M.st(S), cur = S.players[S.turnPid], myTurn = S.turnPid === id, out = [];
+    const f = PV && PV.found && now() - PV.found.at < 60000 ? PV.found : null;
+    // must show a card?
+    if (PV && PV.mustShow) {
+      const ms = PV.mustShow;
+      out.push(`<div class="card hot cc"><h2>🃏 ${esc(S.players[ms.from].name)} asks you!</h2><p style="font-weight:800">Was it ${esc(M.card(S, ms.s).name)}, in the ${esc(M.card(S, ms.r).name)}, with the ${esc(M.card(S, ms.i).name)}?</p><p class="muted">You have ${ms.options.length > 1 ? "more than one of these. Pick one to show secretly" : "this one. Show it secretly"}:</p><div class="grid2">${ms.options.map(c => { const x = M.card(S, c); return `<button class="pick" data-show="${c}"><span class="pi">${x.icon}</span>${esc(x.name)}</button>`; }).join("")}</div></div>`);
+      return out.join("");
+    }
+    if (myTurn && mode === "guess") return guessPicker(false);
+    if (myTurn && mode === "accuse") return guessPicker(true);
+    if (myTurn) {
+      if (S.step === "roll") out.push(`<div class="card hot cc"><h2>🔎 Your turn, detective!</h2><div class="pdie shake" id="pdie">${dieHTML(S.die || 1)}</div><button class="btn gold big" id="roll">Tap to roll</button><p class="muted" style="margin:.5em 0 0">…or shake your phone!</p></div>`);
+      if (S.step === "room") out.push(`<div class="card hot"><h2 class="cc">You rolled ${S.die}: ${S.searches} search${S.searches > 1 ? "es" : ""}${S.bonus ? " + a witness 👀" : ""}</h2><p class="muted cc" style="margin:.2em 0 .7em">Which room do you want to search?</p><div class="grid2">${M.rooms(S).map(r => { const w = s.where[r], open = M.roomOpen(S, r), left2 = [0, 1, 2].filter(k => !S.spots[r + ":" + k].by.includes(id)).length; return `<button class="pick ${open ? "" : "lock"} ${known()["r" + r] ? "x" : ""}" ${open ? `data-room="${r}"` : ""}><span class="pi">${open ? w[0] : "🔒"}</span>${esc(w[1])}<span class="src">${open ? `${left2} spot${left2 === 1 ? "" : "s"} left for you` : "find the key"}</span></button>`; }).join("")}</div></div>`);
+      if (S.step === "asking" || S.step === "showing") out.push(`<div class="card cc"><div class="bigemoji">🤔</div><h2>Waiting for an answer…</h2><p class="muted">${S.ask && S.ask.waiting ? esc(S.players[S.ask.waiting].name) + " is choosing a card to show you." : ""}</p></div>`);
+      if (S.step === "search") {
+        const w = s.where[p.room];
+        if (f) out.push(foundHTML(f));
+        out.push(`<div class="card hot"><h2 class="cc">${w[0]} The ${esc(w[1])}</h2><p class="muted cc" style="margin:.2em 0 .7em">${S.searches ? `Tap a hiding spot to search (${S.searches} left)` : "No searches left this turn"}</p><div class="grid3">${w[3].map((h, k) => { const done = S.spots[p.room + ":" + k].by.includes(id); return `<button class="pick ${done ? "x" : ""}" ${!done && S.searches ? `data-search="${k}"` : ""}><span class="pi">${h[0]}</span>${esc(h[1])}</button>`; }).join("")}</div>
+          ${S.bonus ? `<button class="btn big" id="witness" style="margin-top:.7em">👀 Talk to a witness</button>` : ""}
+          <div class="grid2" style="margin-top:.7em">${p.guessed ? `<button class="btn" disabled>🤔 Guess used</button>` : `<button class="btn gold" id="guess">🤔 Make a guess</button>`}<button class="btn" id="accuse">☝️ Accuse!</button></div>
+          <button class="btn big" id="endturn" style="margin-top:.6em">End my turn ➜</button></div>`);
+        out.push(`<div class="card">${counts()}${helpHTML()}</div>`);
+      }
+    } else {
+      const doing = S.step === "roll" ? "is about to roll" : S.step === "room" ? "is choosing a room" : S.step === "asking" || S.step === "showing" ? "is asking a question" : `is searching the ${s.where[cur.room] ? s.where[cur.room][1] : ""}`;
+      out.push(`<div class="card cc"><span class="dot" style="background:${cur.color};width:2.4em;height:2.4em"></span><h2 style="margin-top:.4em">${esc(cur.name)}'s turn</h2><p class="muted" style="margin:0">${esc(cur.name)} ${doing}.</p>${p.skip ? `<p style="font-weight:800">🪑 You're on the naughty step for ${p.skip} more turn${p.skip > 1 ? "s" : ""}.</p>` : ""}</div>`);
+      if (f) out.push(foundHTML(f));
+      out.push(`<div class="card">${counts()}${helpHTML()}<button class="btn big" data-tab="book" style="margin-top:.7em">📒 Open my notebook</button></div>`);
+    }
+    return out.join("");
+  }
+  function foundHTML(f) {
+    if (f.t === "clue") { const c = M.card(S, f.c), txt = clueText(f); return `<div class="clue"><span class="ci">${c.icon}</span><span>${esc(txt)}<br><small style="opacity:.7">✖ ${esc(c.name)} crossed off your notebook</small></span><button class="say" data-say="${esc(txt)}">🔊</button></div>`; }
+    if (f.t === "key") return `<div class="clue"><span class="ci">🔑</span><span>You found the key! The ${esc(M.st(S).where[S.locked][1])} is open now.</span></div>`;
+    if (f.t === "mag") return `<div class="clue"><span class="ci">🔍</span><span>A magnifying glass! You get one more search.</span></div>`;
+    return `<div class="clue"><span class="ci">🕸️</span><span>${esc(f.txt || "Nothing here.")}</span><button class="say" data-say="${esc(f.txt || "Nothing here.")}">🔊</button></div>`;
+  }
+  function helpHTML() {
+    const s = left("s"), r = left("r"), i = left("i");
+    if (s.length === 1 && r.length === 1 && i.length === 1) return `<div class="clue" style="margin-top:.7em"><span class="ci">💡</span><span>You've worked it out! It must be ${esc(M.card(S, s[0]).name)}, in the ${esc(M.card(S, r[0]).name)}, with the ${esc(M.card(S, i[0]).name)}. ${S.turnPid === id ? "Press Accuse!" : "Accuse on your turn!"}</span></div>`;
+    if (!mp().kid) return "";
+    const tip = r.length > 1 ? `Go to a room that isn't crossed off and make a guess there.` : `You know WHERE it happened! Go to the ${M.card(S, r[0]).name} and make guesses.`;
+    return `<p style="margin:.6em 0 0;font-weight:700">💡 ${esc(tip)}</p>`;
+  }
+  function guessPicker(isAcc) {
+    const p = mp(), s = M.st(S), list = (k, sel) => M.cards(S).filter(c => c[0] === k).map(c => { const x = M.card(S, c); return `<button class="pick ${sel === c ? "on" : ""} ${known()[c] ? "x" : ""}" data-p${k}="${c}"><span class="pi">${x.icon}</span>${esc(x.name)}</button>`; }).join("");
+    const room = "r" + p.room, ready = pickS && pickI && (!isAcc || pickR);
+    return `<div class="card hot"><h2 class="cc">${isAcc ? "☝️ Accuse!" : "🤔 Make a guess"}</h2><p class="muted cc" style="margin:.2em 0 .6em">${isAcc ? "If you're right, you win. If you're wrong, it's the naughty step for 2 turns!" : `In the ${esc(s.where[p.room][1])}. Pick who and with what. Crossed-out ones are already ruled out.`}</p>
+      <h3>👤 Who?</h3><div class="grid3">${list("s", pickS)}</div>
+      ${isAcc ? `<h3 style="margin-top:.7em">🏠 Where?</h3><div class="grid3">${list("r", pickR)}</div>` : ""}
+      <h3 style="margin-top:.7em">🍴 With what?</h3><div class="grid3">${list("i", pickI)}</div>
+      <button class="btn ${isAcc ? "bad" : "gold"} big" id="send" style="margin-top:.8em" ${ready ? "" : "disabled"}>${isAcc ? "☝️ I accuse them!" : "Ask the others"}</button><button class="btn big" id="cancel" style="margin-top:.5em">Back</button></div>`;
+  }
+  function notebook() {
+    const s = M.st(S), k = known();
+    const sec = (kind, title) => `<h3>${title}</h3><div class="grid3">${M.cards(S).filter(c => c[0] === kind).map(c => { const x = M.card(S, c), v = k[c]; return `<button class="pick ${v ? "x" : ""} ${marks[c] && !v ? "mark" : ""}" data-mark="${c}"><span class="pi">${x.icon}</span>${esc(x.name)}<span class="src">${v ? esc(srcText(v)) : "still possible"}</span></button>`; }).join("")}</div>`;
+    const clues = Object.keys(k).map(c => { const x = M.card(S, c); return `<div class="clue" style="margin-top:.5em"><span class="ci" style="font-size:2rem">${x.icon}</span><span style="font-size:.95rem">${esc(x.clue)}<br><small style="opacity:.65">${esc(srcText(k[c]))}</small></span><button class="say" data-say="${esc(x.clue)}">🔊</button></div>`; }).join("");
+    return `<div class="card nb">${counts()}<p class="muted cc" style="font-size:.85rem;margin:.5em 0 0">✖ = ruled out. Tap a card to give it your own ⭐ "I suspect this" mark.</p>${sec("s", "👤 Who?")}${sec("r", "🏠 Where?")}${sec("i", "🍴 With what?")}</div>
+      <div class="card"><h3>🗂️ My clues (${Object.keys(k).length})</h3>${clues || `<span class="muted">No clues yet. Go searching!</span>`}</div>`;
+  }
+  function wire() {
+    const on = (s, f) => { const e = $(s); if (e) e.onclick = f; };
+    $$("[data-tab]").forEach(b => b.onclick = () => { tab = b.dataset.tab; mode = null; lastKey = ""; render(); scrollTo(0, 0); });
+    $$("[data-set]").forEach(b => b.onclick = () => { const v = b.dataset.val; act({ t: "set", k: b.dataset.set, v: isNaN(v) ? v : Number(v) }); });
+    on("#start", () => act({ t: "start" })); on("#again", () => act({ t: "again" })); on("#tolobby", () => act({ t: "lobby" }));
+    on("#edit", () => { lastKey = ""; me = null; joinForm(); me = ls.get(KME, null); });
+    on("#leave", () => { send({ t: "leave" }); ls.del(KME); me = null; lastKey = ""; render(); });
+    on("#roll", () => { askMotion(); doRoll(); });
+    $$("[data-room]").forEach(b => b.onclick = () => act({ t: "room", r: +b.dataset.room }));
+    $$("[data-search]").forEach(b => b.onclick = () => act({ t: "search", k: +b.dataset.search }));
+    on("#witness", () => act({ t: "witness" }));
+    on("#guess", () => { mode = "guess"; pickS = pickI = null; pickR = "r" + mp().room; lastKey = ""; render(); scrollTo(0, 0); });
+    on("#accuse", () => { mode = "accuse"; const l = k => left(k).length === 1 ? left(k)[0] : null; pickS = l("s"); pickR = l("r"); pickI = l("i"); lastKey = ""; render(); scrollTo(0, 0); });
+    on("#cancel", () => { mode = null; lastKey = ""; render(); });
+    $$("[data-ps]").forEach(b => b.onclick = () => { pickS = b.dataset.ps; lastKey = ""; render(); });
+    $$("[data-pr]").forEach(b => b.onclick = () => { pickR = b.dataset.pr; lastKey = ""; render(); });
+    $$("[data-pi]").forEach(b => b.onclick = () => { pickI = b.dataset.pi; lastKey = ""; render(); });
+    on("#send", () => { if (mode === "accuse") { if (!confirm("Are you sure? A wrong accusation means 2 turns on the naughty step.")) return; act({ t: "accuse", s: pickS, r: pickR, i: pickI }); } else act({ t: "guess", s: pickS, i: pickI }); mode = null; });
+    on("#endturn", () => act({ t: "endturn" }));
+    $$("[data-show]").forEach(b => b.onclick = () => act({ t: "show", c: b.dataset.show }));
+    $$("[data-mark]").forEach(b => b.onclick = () => { const c = b.dataset.mark; if (known()[c]) return; marks[c] = !marks[c]; ls.set("mys_marks" + SLOT, marks); lastKey = ""; render(); });
+    $$("[data-say]").forEach(b => b.onclick = () => say(b.dataset.say));
+    on("#sayit", () => { const sol = S.sol; say(M.st(S).reveal(M.card(S, sol.s).name, M.card(S, sol.r).name, M.card(S, sol.i).name)); });
+    on("#gear", () => { const d = document.createElement("div"); d.className = "sheet"; d.innerHTML = `<div><h3 style="margin:0">⚙️ Host controls</h3><button class="btn big" data-h="pause">${S.paused ? "▶️ Carry on" : "⏸️ Pause"}</button><button class="btn big" data-h="nudge">⏭ Move a stuck turn along</button><button class="btn big" data-h="endnow">🏳️ Give up and reveal the answer</button><button class="btn big gold" data-h="x">Close</button></div>`; document.body.appendChild(d); d.onclick = e => { const b = e.target.closest("[data-h]"); if (e.target === d || (b && b.dataset.h === "x")) return d.remove(); if (!b) return; if (b.dataset.h === "endnow" && !confirm("Reveal the answer and end the game?")) return; act({ t: b.dataset.h }); d.remove(); }; });
+  }
+  // new mystery = fresh marks
+  let lastStart = 0;
+  setInterval(() => { if (S && S.startedAt && S.startedAt !== lastStart) { if (lastStart) { marks = {}; ls.set("mys_marks" + SLOT, marks); } lastStart = S.startedAt; } }, 1000);
+
+  render();
+  try { link = await connect(room, onMsg, () => { }); if (me) send({ t: "join", name: me.name, kid: me.kid }); }
+  catch (e) { app.innerHTML = `<div class="home"><h2>Couldn't connect</h2><p class="muted">Check the internet and reload.</p></div>`; }
+}
+</script>
+</body>
+</html>

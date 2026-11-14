@@ -121,11 +121,34 @@ Everyone plays as one team against the board. Games take 20–30 minutes, and th
 - **One-player mode:** computer teammates join automatically when only one person has joined.
 - **🎨 Storybook look:** the same 🎨 button as Fortunes, in the lobby and next to Pause. Treasure Island becomes a real island: sandy shore and surf, a sea with a pirate ship, a sea serpent, a floating barrel and a compass rose, jungle over the unexplored squares, and hand-drawn art for every square (tent, palms, treasure chests, parrot, map pieces, quicksand, snake, cave, rockfall, lookout tower, the red X and the storm cloud). 🐉 **Dragon's Mountain** has misty clouds over the unexplored squares and a sky with a flying dragon, the moon, bats and purple crystals. It has its own art for the village, pine forests, travel packs, glowing riddle stones, blue rune stones, a giant web with a spider, a wolf, a goblin cave with glowing eyes, a high peak, scorched rocks on fire, and the dragon itself for the lair and the danger counter. 🎄 **Save Christmas** has snowflakes over the unexplored squares and a night sky with Santa's sleigh and a reindeer, plus an iceberg with a penguin. It has its own art for Santa's workshop, snowy pines, piles of presents, an elf jigsaw piece, present sacks, deep snow with an elf boot, a polar bear in a scarf, an ice cave, an avalanche, a lighthouse, sleigh tracks, Santa's sleigh and a midnight clock with holly.
 
+## Mystery: Who Ate the Cake? (Classic Whodunnit)
+**Play:** https://jimmywilson1979-arch.github.io/roll-on/mystery.html
+
+The game secretly picks **who** ate the birthday cake, **where**, and **with what**. Games take 30–45 minutes at full size. The small size, with 4 of each, takes about 15 minutes.
+
+- **Your phone is your private notebook.** You get a couple of clue cards at the start. Everything you learn is crossed off for you, and you can ⭐ your own suspicions.
+- **Your turn:**
+  1. Shake to roll.
+  2. Pick any room. The TV shows the house plan, then zooms into your room.
+  3. The dice sets how many hiding spots you can search: 1–2 gives one, 3–4 gives two, and 5–6 gives two plus a witness.
+- **What you find** (only you see it):
+  - a clue that rules something out
+  - the 🔑 key to the locked Study
+  - a 🔍 magnifying glass for one more search
+  - dust!
+- **Guess** (once a turn, in the room you're in): "Was it Uncle Bob, in the Lounge, with the Fork?" The next player who has one of those cards must secretly show you one on their phone.
+- **Accuse** when you're sure. If you're right, you win. If you're wrong, you spend 2 turns on the naughty step, but you learn one part that was wrong.
+- **Detective's tips:** from round 7, an innocent card is revealed to everyone every 3 rounds, so the game never drags.
+- **For the whole family:** every clue has a picture and a 🔊 read-aloud button. A child player gets clues read out automatically, plus extra tips.
+- **Computer detectives:** they join automatically when you play on your own.
+- **Coming next:** the Detective Agency (team) and Sneaky Suspect (traitor) modes, more stories (Stolen Crown, Santa's Sack, Haunted Manor) and family-as-suspects.
+
 ## Files
 - `index.html`: TV and phone screens, plus the live connection (Supabase Realtime broadcast, nothing stored).
 - `engine.js`: all the rules. It has no screen code, so it can be tested on its own.
 - `themes.js`: themes, cards and quest tasks. Add a theme here.
 - `art.js`: the Storybook art for both games (drawn in code as SVG, so there are no image files) and the 🎨 look switch. Add art for another theme or adventure here.
+- `mystery.html` and `mys-engine.js`: the mystery (screens; rules, stories and computer detectives). Phones only ever receive their own secret cards.
 - `adventure.html` and `adv-engine.js`: the team adventure (screens, and rules plus computer teammates).
 
 ## Coming next

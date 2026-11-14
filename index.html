@@ -398,7 +398,7 @@ function home() {
     <p class="muted" style="font-size:.9rem;margin:0">Open on the laptop you cast from or plug into the TV, the same as Buzz In.</p>
     <div style="display:flex;gap:.6em"><input id="code" maxlength="4" placeholder="Code" autocapitalize="characters" style="text-transform:uppercase;font-size:1.3rem;letter-spacing:.15em">
     <button class="btn ${phone ? "gold" : ""}" id="jb" style="flex:none">Join</button></div>
-    <div class="gamecard soon"><h3>🔍 Mystery <small class="muted">(coming soon)</small></h3><div class="muted">Secret clues on every phone. Who ate the cake?</div></div>
+    <a class="gamecard" href="mystery.html${LOCAL ? "?local=1" : ""}" style="color:inherit;text-decoration:none;display:block"><h3>🔍 Mystery: Who Ate the Cake? <small class="muted">›</small></h3><div class="muted">Search the house, question witnesses and keep your clues secret on your phone. Solve WHO, WHERE and WITH WHAT first. 30–45 minutes (or a quick kids' size).</div></a>
     <a class="gamecard" href="adventure.html${LOCAL ? "?local=1" : ""}" style="color:inherit;text-decoration:none;display:block"><h3>🏝️ Treasure Island <small class="muted">(team game) ›</small></h3><div class="muted">Everyone on one team: explore the island, find the map and dig up the treasure before the storm hits. Plus 🐉 Dragon's Mountain and 🎄 Save Christmas. 20–30 minutes.</div></a>
   </div>`;
   $("#tvb").onclick = () => { location.search = "?tv" + (LOCAL ? "&local=1" : ""); };
