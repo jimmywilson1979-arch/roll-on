@@ -569,6 +569,16 @@
       chance: "crystal-ball", quest: "quest-scroll", house: "cottage", hotel: "castle", win: "treasure-chest", coins: "gold-coins",
       tokens: ["token-baby-dragon", "token-unicorn", "token-wizard", "token-golden-crown", "token-knights-shield", "token-bow-and-arrow", "token-fairy", "token-horse"],
     },
+    northpole: {
+      dir: "img/northpole/",
+      props: ["snowdrift-lane", "icicle-row", "frosty-pond", "penguin-parade", "snowball-alley", "candy-cane-lane", "gingerbread-row", "sugarplum-street",
+        "cocoa-corner", "toy-workshop", "wrapping-room", "sleigh-bell-square", "holly-hill", "tinsel-town", "star-peak", "golden-bauble",
+        "mistletoe-mews", "pine-forest", "evergreen-glade", "christmas-tree-farm", "mrs-clauss-kitchen", "santas-grotto"],
+      stations: ["reindeer-express", "sleigh-port", "snow-train", "chimney-chute"],
+      start: "christmas-eve", jail: "naughty-corner", free: "fireside-rest", gojail: "naughty-elf",
+      chance: "cracker", quest: "elf-scroll", house: "elf-hut", hotel: "grotto", win: "spilling-present", coins: "chocolate-coins",
+      tokens: ["token-santa", "token-snowman", "token-reindeer", "token-elf", "token-penguin", "token-present", "token-gingerbread", "token-bell"],
+    },
     // Treasure Island (adventure.html). Places are found by their name, e.g. pic("island", "@Sandy Beach")
     island: {
       dir: "img/island/",
