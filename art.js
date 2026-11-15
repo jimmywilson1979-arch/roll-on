@@ -569,16 +569,27 @@
       chance: "crystal-ball", quest: "quest-scroll", house: "cottage", hotel: "castle", win: "treasure-chest", coins: "gold-coins",
       tokens: ["token-baby-dragon", "token-unicorn", "token-wizard", "token-golden-crown", "token-knights-shield", "token-bow-and-arrow", "token-fairy", "token-horse"],
     },
+    // Treasure Island (adventure.html). Places are found by their name, e.g. pic("island", "@Sandy Beach")
+    island: {
+      dir: "img/island/",
+      names: ["base-camp", "palm-grove", "sandy-beach", "jungle-path", "coconut-grove", "lagoon", "rock-pools", "shipwreck", "supply-crate", "old-chest",
+        "pirate-cache", "parrot-puzzle", "map-piece", "quicksand", "snake-pit", "dark-cave", "rockfall", "lookout-tower", "strange-marks"],
+      xknown: "strange-marks", danger: "storm", win: "treasure-chest",
+      heroes: { brave: "captain", peek: "lookout", heal: "ships-doctor", fast: "explorer" },
+      tokens: { brave: "token-captain", peek: "token-lookout", heal: "token-ships-doctor", fast: "token-explorer" },
+    },
   };
+  const slug = s => String(s).toLowerCase().replace(/'/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   function pic(theme, slot, n) {
     const P = on && PIC[theme]; if (!P) return null;
-    let f = P[slot]; if (Array.isArray(f)) f = f[n];
+    if (slot[0] === "@") { const s = slug(slot.slice(1)); return P.names && P.names.includes(s) ? P.dir + s + ".webp" : null; }
+    let f = P[slot]; if (f && typeof f === "object") f = f[n];
     return f ? P.dir + f + ".webp" : null;
   }
   const pre = {};
   function preload(theme) {
     const P = PIC[theme]; if (!on || !P || pre[theme]) return; pre[theme] = [];
-    Object.entries(P).forEach(([k, v]) => { if (k !== "dir") [].concat(v).forEach(f => { const im = new Image(); im.decoding = "async"; im.src = P.dir + f + ".webp"; pre[theme].push(im); }); });
+    Object.entries(P).forEach(([k, v]) => { if (k !== "dir") [].concat(v && typeof v === "object" && !Array.isArray(v) ? Object.values(v) : v).forEach(f => { const im = new Image(); im.decoding = "async"; im.src = P.dir + f + ".webp"; pre[theme].push(im); }); });
   }
 
   root.ART = {
