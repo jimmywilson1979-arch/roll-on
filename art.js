@@ -597,6 +597,15 @@
       heroes: { brave: "head-elf", peek: "star-gazer", heal: "mrs-claus", fast: "reindeer" },
       tokens: { brave: "token-head-elf", peek: "token-star-gazer", heal: "token-mrs-claus", fast: "token-reindeer" },
     },
+    // Dragon's Mountain (adventure.html). Five places reuse Fantasy Kingdom pictures (copied into img/dragon/).
+    dragon: {
+      dir: "img/dragon/",
+      names: ["village", "pine-forest", "meadow", "mountain-path", "stream", "old-bridge", "ruins", "blacksmith", "travellers-pack", "treasure-nook",
+        "hermits-hut", "riddle-stone", "rune-stone", "giant-web", "wolf-den", "goblin-cave", "rockslide", "high-peak", "scorched-rocks"],
+      xknown: "dragons-rest", danger: "dragon-waking", win: "dragons-rest",
+      heroes: { brave: "knight", peek: "wizard", heal: "healer", fast: "ranger" },
+      tokens: { brave: "token-knight", peek: "token-wizard", heal: "token-healer", fast: "token-ranger" },
+    },
   };
   const slug = s => String(s).toLowerCase().replace(/'/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   function pic(theme, slot, n) {
