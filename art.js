@@ -588,6 +588,15 @@
       heroes: { brave: "captain", peek: "lookout", heal: "ships-doctor", fast: "explorer" },
       tokens: { brave: "token-captain", peek: "token-lookout", heal: "token-ships-doctor", fast: "token-explorer" },
     },
+    // Save Christmas (adventure.html). Seven places reuse North Pole pictures (copied into img/xmas/).
+    xmas: {
+      dir: "img/xmas/",
+      names: ["santas-workshop", "pine-woods", "snowfield", "frozen-pond", "candy-cane-path", "igloo", "toy-shop", "gift-pile", "elf-store", "cocoa-hut",
+        "sweet-shop", "elf-puzzle", "present-sack", "deep-snow", "polar-bear", "ice-cave", "avalanche", "lighthouse", "sleigh-tracks"],
+      xknown: "santas-sleigh", danger: "midnight-clock", win: "santas-sleigh",
+      heroes: { brave: "head-elf", peek: "star-gazer", heal: "mrs-claus", fast: "reindeer" },
+      tokens: { brave: "token-head-elf", peek: "token-star-gazer", heal: "token-mrs-claus", fast: "token-reindeer" },
+    },
   };
   const slug = s => String(s).toLowerCase().replace(/'/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   function pic(theme, slot, n) {
