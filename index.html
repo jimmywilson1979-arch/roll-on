@@ -18,7 +18,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="themes.js?v=3"></script>
 <script src="engine.js?v=3"></script>
-<script src="art.js?v=3"></script>
+<script src="art.js?v=4"></script>
 <style>
 :root{
   --felt:#16351f; --felt2:#0b1f12; --board:#f1e4c0; --board2:#e6d3a2; --ink:#2b1d0e; --accent:#e0b23e; --accent-ink:#2a1b00;
@@ -193,6 +193,25 @@ body.th-space .stars{position:fixed;inset:0;pointer-events:none;background-image
 .sq .ic .art{width:1.35em;height:1.35em}
 .sq.corner .ic .art{width:1.5em;height:1.5em}
 .sq .band .art{width:1.15em;height:1.15em;flex:none}
+/* painted pictures (Storybook look) */
+.tki{display:inline-block;width:1.3em;height:1.3em;border-radius:50%;object-fit:cover;vertical-align:-.3em}
+.tok .tki,.tokdot .tki,.sq .own .tki{width:84%;height:84%;vertical-align:top}
+.bigemoji .tki{width:1.7em;height:1.7em;box-shadow:0 0 0 4px var(--accent),0 4px 12px rgba(0,0,0,.35)}
+.sq .tx.pic{position:relative;padding:0;gap:0;justify-content:flex-end}
+.sq.t .tx.pic{justify-content:flex-start}
+.sq .sqimg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.sq .tx.pic .lbl{position:relative;width:100%;display:flex;flex-direction:column;align-items:center;gap:.1vh;padding:.3vh .3vh;background:rgba(252,243,218,.9);box-shadow:0 0 .6vh rgba(60,35,5,.35)}
+.sq.corner .tx.pic .lbl .nm{font-size:calc(1.3*var(--vh,1vh))}
+.sq .own{z-index:2}
+.sq.haspic .own{top:.3vh;bottom:auto}.sq.t.haspic .own{top:auto;bottom:.3vh}
+.sq.haspic.owned::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;box-shadow:inset 0 0 0 .45vh var(--oc)}
+.sq.haspic.hl::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;box-shadow:inset 0 0 0 .5vh #ffd34d,inset 0 0 1.6vh #ffd34d}
+.sq.haspic.hl .sqimg{animation:hlp 1s ease-in-out infinite alternate}@keyframes hlp{to{filter:brightness(1.25) saturate(1.15)}}
+.deed .dpic,.pdeed .dpic{display:block;width:100%;aspect-ratio:2/1;object-fit:cover}
+.deed .dpic{border-bottom:.3vh solid #1d1d1d}
+.bigcard .cipic{display:block;width:100%;aspect-ratio:2/1;object-fit:cover;border-radius:calc(1*var(--vh,1vh));margin-bottom:calc(.8*var(--vh,1vh));box-shadow:0 .3vh 1vh rgba(0,0,0,.3)}
+.pcpic{display:block;width:100%;aspect-ratio:2/1;object-fit:cover;border-radius:12px;margin-bottom:.6em}
+.winpic{display:block;width:calc(20*var(--vh,1vh));aspect-ratio:3/2;object-fit:cover;margin:0 auto calc(.8*var(--vh,1vh));border-radius:calc(1.2*var(--vh,1vh));box-shadow:0 0 0 .4vh #e7c15a,0 1vh 2.4vh rgba(0,0,0,.45)}
 .bigcard .ci .art{width:1.4em;height:1.4em;margin:0 auto}
 .fx body{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .22 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),radial-gradient(ellipse at 50% 40%,var(--felt),var(--felt2) 75%)}
 .fx .board{box-shadow:0 0 0 calc(.4*var(--vh,1vh)) #d9b45a,0 0 0 calc(1.1*var(--vh,1vh)) #5a3714,0 0 0 calc(1.3*var(--vh,1vh)) #241405,0 calc(2*var(--vh,1vh)) calc(6*var(--vh,1vh)) rgba(0,0,0,.6)}
@@ -284,7 +303,13 @@ const ls = { get(k, d) { try { const v = localStorage.getItem(k); return v == nu
 const code4 = () => Array.from({ length: 4 }, () => "BCDFGHJKLMNPQRSTVWXZ"[Math.random() * 20 | 0]).join("");
 const vib = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) { } };
 const fmtN = n => Number(n).toLocaleString("en-GB");
-const tok = (S, p) => E.theme(S).tokens[p.ci % 8];
+// player token: the painted picture in the Storybook look (when the theme has one), otherwise the emoji
+const tok = (S, p) => { const t = E.theme(S), u = window.ART && ART.pic(t.key, "tokens", p.ci % 8); return u ? `<img class="tki" src="${u}" alt="${esc(t.tokens[p.ci % 8])}">` : t.tokens[p.ci % 8]; };
+// painted pictures for squares and cards (null = use the drawn icon / emoji)
+const pic = (S, slot, n) => window.ART && ART.pic ? ART.pic(E.theme(S).key, slot, n) : null;
+const sqPic = (S, i) => { const b = BOARD[i]; return b.t === "prop" ? pic(S, "props", b.pn) : b.t === "station" ? pic(S, "stations", b.sn) : pic(S, b.t); };
+const cardPic = (S, icon, cls) => { const t = E.theme(S), slot = icon === t.chance.icon ? "chance" : icon === t.quest.icon ? "quest" : null, u = slot && pic(S, slot);
+  return u ? `<img class="${cls}" src="${u}" alt="">` : null; };
 // 🎨 Storybook art (art.js) when the look is on, otherwise the emoji
 const art = (theme, slot, fallback) => (window.ART && ART.icon(theme, slot)) || fallback;
 const cardArt = (theme, emoji) => (window.ART && ART.card(theme, emoji)) || emoji;
@@ -318,11 +343,11 @@ function setTheme(key) {
 
 // deed (title card) for a property or station
 function deedHTML(S, i, cls) {
-  const b = BOARD[i], t = E.theme(S), m = n => E.money(S, n);
-  if (b.t === "station") return `<div class="${cls}"><div class="hd" style="background:#333"><small>${esc(t.icons.station)} TRAVEL</small>${esc(E.sqName(S, i))}</div>
+  const b = BOARD[i], t = E.theme(S), m = n => E.money(S, n), pu = sqPic(S, i), ph = pu ? `<img class="dpic" src="${pu}" alt="">` : "";
+  if (b.t === "station") return `<div class="${cls}"><div class="hd" style="background:#333"><small>${esc(t.icons.station)} TRAVEL</small>${esc(E.sqName(S, i))}</div>${ph}
     <table><tr><td>Price</td><td>${m(b.price)}</td></tr>${E.STATION_RENT.map((r, k) => `<tr><td>Rent if ${k + 1} owned</td><td>${m(r)}</td></tr>`).join("")}</table><div class="ft">Mortgage value ${m(b.price / 2)}</div></div>`;
   const G = GROUPS[b.g];
-  return `<div class="${cls}"><div class="hd" style="background:${G.c}"><small>${esc(G.name.toUpperCase())}</small>${esc(E.sqName(S, i))}</div>
+  return `<div class="${cls}"><div class="hd" style="background:${G.c}"><small>${esc(G.name.toUpperCase())}</small>${esc(E.sqName(S, i))}</div>${ph}
     <table><tr><td>Price</td><td>${m(b.price)}</td></tr><tr><td>Rent</td><td>${m(b.rent[0])}</td></tr><tr><td>With full set</td><td>${m(b.rent[0] * 2)}</td></tr>
     ${[1, 2, 3, 4].map(h => `<tr><td>With ${h} ${esc(t.house.i)}</td><td>${m(b.rent[h])}</td></tr>`).join("")}<tr><td>With a ${esc(t.hotel.n)} ${esc(t.hotel.i)}</td><td>${m(b.rent[5])}</td></tr></table>
     <div class="ft">Each ${esc(t.house.n)} costs ${m(b.house)} · Mortgage ${m(b.price / 2)}</div></div>`;
@@ -459,14 +484,17 @@ async function tvMain() {
   const side = i => [0, 9, 18, 27].includes(i) ? "corner" : i < 9 ? "b" : i < 18 ? "l" : i < 27 ? "t" : "r";
   function sqHTML(i) {
     const b = BOARD[i], t = E.theme(S), o = S.own[i];
+    const pu = sqPic(S, i), img = pu ? `<img class="sqimg" src="${pu}" alt="" decoding="async">` : "";
     if (b.t === "start" || b.t === "jail" || b.t === "free" || b.t === "gojail") {
       const extra = b.t === "start" ? `<div class="pr">Collect ${E.money(S, E.PASS)}</div>` : b.t === "jail" ? `<div class="pr">Just visiting</div>` : "";
+      if (pu) return `<div class="tx pic">${img}<div class="lbl"><div class="nm">${esc(E.sqName(S, i))}</div>${extra}</div></div>`;
       return `<div class="tx"><div class="ic">${art(t.key, b.t, t.icons[b.t])}</div><div class="nm">${esc(E.sqName(S, i))}</div>${extra}</div>`;
     }
-    if (b.t === "chance" || b.t === "quest") { const c = b.t === "chance" ? t.chance : t.quest; return `<div class="tx"><div class="ic">${art(t.key, b.t, c.icon)}</div><div class="nm">${esc(c.name)}</div></div>`; }
+    if (b.t === "chance" || b.t === "quest") { const c = b.t === "chance" ? t.chance : t.quest; if (pu) return `<div class="tx pic">${img}<div class="lbl"><div class="nm">${esc(c.name)}</div></div></div>`; return `<div class="tx"><div class="ic">${art(t.key, b.t, c.icon)}</div><div class="nm">${esc(c.name)}</div></div>`; }
     const owner = o && S.players[o.o];
     const band = b.t === "prop" ? `<div class="band" style="background:${GROUPS[b.g].c}">${o && o.h ? (o.h === 5 ? art(t.key, "hotel", t.hotel.i) : art(t.key, "house", t.house.i).repeat(o.h)) : ""}</div>` : "";
     const price = owner ? (o.m ? "" : `Rent ${E.money(S, E.rentOf(S, i))}`) : E.money(S, b.price);
+    if (pu) return `${band}<div class="tx pic">${img}<div class="lbl"><div class="nm">${esc(E.sqName(S, i))}</div><div class="pr">${price}</div></div></div>${owner ? `<span class="own">${tok(S, owner)}</span>` : ""}`;
     return `${band}<div class="tx">${b.t === "station" ? `<div class="ic" style="font-size:calc(2.4*var(--vh,1vh))">${art(t.key, "station", t.icons.station)}</div>` : ""}<div class="nm">${esc(E.sqName(S, i))}</div><div class="pr">${price}</div></div>${owner ? `<span class="own">${tok(S, owner)}</span>` : ""}`;
   }
   function boardHTML(centre) {
@@ -478,9 +506,9 @@ async function tvMain() {
     const hl = S.phase === "play" ? (S.step === "buy" ? S.offer : S.auction ? S.auction.sq : -1) : -1;
     BOARD.forEach((b, i) => {
       const el = $("#sq" + i); if (!el) return;
-      const o = S.own[i], key = S.settings.theme + "|" + JSON.stringify(o) + "|" + (o ? E.rentOf(S, i) : "") + (hl === i);
+      const o = S.own[i], key = S.settings.theme + (window.ART && ART.on ? "*" : "") + "|" + JSON.stringify(o) + "|" + (o ? E.rentOf(S, i) : "") + (hl === i);
       if (sqCache[i] === key) return; sqCache[i] = key;
-      el.innerHTML = sqHTML(i);
+      el.innerHTML = sqHTML(i); el.classList.toggle("haspic", !!el.querySelector(".sqimg"));
       el.classList.toggle("owned", !!o); el.classList.toggle("mort", !!(o && o.m)); el.classList.toggle("hl", hl === i);
       if (o) el.style.setProperty("--oc", S.players[o.o].color);
     });
@@ -532,9 +560,9 @@ async function tvMain() {
       case "moving": return `${dice}<div class="msg">${tok(S, cp)} ${cn} rolled ${S.dice[0] + S.dice[1]}${S.dice[0] === S.dice[1] ? " · a double!" : ""}</div>`;
       case "buy": return `<div style="display:flex;gap:calc(3*var(--vh,1vh));align-items:center">${deedHTML(S, S.offer, "deed")}<div style="max-width:calc(24*var(--vh,1vh))"><div class="msg">${tok(S, cp)} ${cn}</div><div class="sub">Buy it for ${E.money(S, BOARD[S.offer].price)}, or send it to auction?</div></div></div>`;
       case "auction": { const a = S.auction, al = E.alive(S); return `<div style="display:flex;gap:calc(3*var(--vh,1vh));align-items:center">${deedHTML(S, a.sq, "deed")}<div style="max-width:calc(26*var(--vh,1vh))"><div class="msg">🔨 AUCTION!</div><div class="sub">Everyone bid secretly on your phone. Highest bid wins.</div><div class="bidders" id="bidders">${al.map(id => `<span class="${a.bids[id] ? "in" : ""}" title="${esc(S.players[id].name)}">${tok(S, S.players[id])}</span>`).join("")}</div></div></div><div class="timerbar"><i id="tb"></i></div>`; }
-      case "card": { const c = S.card; return `<div class="bigcard"><div class="ci">${cardArt(t.key, c.icon)}</div><h4>${esc(c.title)}</h4><p>${esc(c.txt)}</p></div><div class="sub">${cn}, tap OK on your phone.</div>`; }
+      case "card": { const c = S.card; return `<div class="bigcard">${cardPic(S, c.icon, "cipic") || `<div class="ci">${cardArt(t.key, c.icon)}</div>`}<h4>${esc(c.title)}</h4><p>${esc(c.txt)}</p></div><div class="sub">${cn}, tap OK on your phone.</div>`; }
       case "quest": {
-        const q = S.quest, title = `<div class="ci">${cardArt(t.key, q.icon)}</div><h4>${esc(q.title)} for ${cn} · win ${E.money(S, q.reward)}</h4>`;
+        const q = S.quest, title = `${cardPic(S, q.icon, "cipic") || `<div class="ci">${cardArt(t.key, q.icon)}</div>`}<h4>${esc(q.title)} for ${cn} · win ${E.money(S, q.reward)}</h4>`;
         if (q.t === "secret") return `<div class="bigcard">${title}<p>🤫 ${esc(q.cat)}…<br>Their phone says what. <b>Shout out your guesses!</b></p></div><div class="timerbar"><i id="tb"></i></div><div class="sub">${cn} taps ✅ when someone guesses it.</div>`;
         const v = E.voters(S); return `<div class="bigcard">${title}<p>${esc(q.txt)}</p></div><div class="timerbar"><i id="tb"></i></div><div class="sub">Everyone else: vote 👍 or 👎 on your phone</div><div class="bidders">${v.map(id => `<span class="${q.votes[id] != null ? "in" : ""}">${tok(S, S.players[id])}</span>`).join("")}</div>`;
       }
@@ -599,7 +627,7 @@ async function tvMain() {
       $("#endnow").onclick = () => { if (confirm("Finish the game now and count up everyone's fortune?")) hostAct({ t: "endnow" }); };
     } else {
       const R = S.results, P0 = S.players, rk = R.rank, pod = [rk[1], rk[0], rk[2]].filter(Boolean);
-      app.innerHTML = `<div class="tv"><div class="bwrap">${boardHTML(`${logo}<div class="stage"><div class="msg" style="font-size:calc(3.4*var(--vh,1vh))">🏆 ${esc(P0[rk[0].id].name)} wins!</div>
+      app.innerHTML = `<div class="tv"><div class="bwrap">${boardHTML(`${logo}<div class="stage">${pic(S, "win") ? `<img class="winpic" src="${pic(S, "win")}" alt="">` : ""}<div class="msg" style="font-size:calc(3.4*var(--vh,1vh))">🏆 ${esc(P0[rk[0].id].name)} wins!</div>
         <div class="podium">${pod.map(r => { const k = rk.indexOf(r), p = P0[r.id]; return `<div class="pp"><span class="tokdot" style="background:${p.color};font-size:calc(3*var(--vh,1vh))">${tok(S, p)}</span>${esc(p.name)}<small>${r.out ? "Out" : E.money(S, fmtN(r.nw))}</small><div class="blk" style="height:calc(${[16, 11, 8][k]}*var(--vh,1vh))">${k + 1}</div></div>`; }).join("")}</div>
         <div class="awards">${R.awards.map(a => `<div class="award"><span class="ai">${a[0]}</span><div>${esc(a[1])}<br><span style="opacity:.7">${esc(P0[a[2]].name)} · ${esc(a[3])}</span></div></div>`).join("")}</div></div>`)}</div>
         <div class="side lobbyside"><div class="shead"><span class="ttl">Final fortunes</span></div>
@@ -622,6 +650,7 @@ async function tvMain() {
   function setClick(e) { const b = e.target.closest("[data-set]"); if (!b) return; const v = b.dataset.val; hostAct({ t: "set", k: b.dataset.set, v: v === "true" ? true : v === "false" ? false : isNaN(v) ? v : Number(v) }); }
 
   function render() {
+    if (window.ART && ART.preload) ART.preload(E.theme(S).key);
     const key = S.phase + "|" + S.settings.theme + "|" + (S.phase === "lobby" || S.phase === "end" ? JSON.stringify([S.order, S.order.map(id => [S.players[id].name, S.players[id].kid]), S.settings, S.host, conn]) : conn);
     if (key !== lastBuild) { lastBuild = key; build(); }
     if (S.phase === "lobby" || S.phase === "end") { updBoard(); return; }
@@ -744,7 +773,7 @@ async function phoneMain(codeRaw) {
 
   function render() {
     if (!me || (watch && !S?.players[id])) { if (lastKey !== "join") joinForm(); return; }
-    if (S) setTheme(S.settings.theme);
+    if (S) { setTheme(S.settings.theme); if (window.ART && ART.preload) ART.preload(E.theme(S).key); }
     const p = mineP();
     const key = !S ? "wait" : !p ? "joining" : [S.phase, tab, S.step, S.turnPid, S.offer, S.rollN, S.auction ? S.auction.sq + (S.auction.bids[id] ? "b" : "") : "", S.quest ? S.quest.ti + (S.quest.votes[id] != null ? "v" : "") + (S.quest.ready ? "r" : "") : "", JSON.stringify(S.debts), JSON.stringify(S.trades), S.card ? S.card.ci : "", p.cash, p.jail, p.esc ? p.esc.length : 0, JSON.stringify(S.own), S.paused, S.settings, S.host, S.order.length, secret ? secret.what : "", S.phase !== "play" ? JSON.stringify(S.order.map(x => S.players[x].name + S.players[x].kid)) : "", p.out, JSON.stringify(tr)].join("|");
     if (key === lastKey) return; lastKey = key;
@@ -833,7 +862,7 @@ async function phoneMain(codeRaw) {
         out.push(`<div class="card hot"><h2>Buy ${esc(E.sqName(S, S.offer))}?</h2>${deedHTML(S, S.offer, "pdeed")}${adviceHTML() ? `<div style="margin-top:.7em">${adviceHTML()}</div>` : ""}
           <div class="row2" style="margin-top:.8em"><button class="btn gold big" id="buy" ${p.cash < b.price ? "disabled" : ""}>Buy ${m(b.price)}</button><button class="btn big" id="pass">🔨 Auction</button></div>
           ${p.cash < b.price ? `<p class="muted">Not enough ${esc(t.moneyWord)}. You can mortgage something in My lands first.</p>` : ""}</div>`);
-      } else if (S.step === "card" && S.card) out.push(`<div class="card hot center-c"><div class="bigemoji">${S.card.icon}</div><h2>${esc(S.card.title)}</h2><p style="font-size:1.2rem;font-weight:800">${esc(S.card.txt)}</p><button class="btn gold big" id="cardok">OK</button></div>`);
+      } else if (S.step === "card" && S.card) out.push(`<div class="card hot center-c">${cardPic(S, S.card.icon, "pcpic") || `<div class="bigemoji">${S.card.icon}</div>`}<h2>${esc(S.card.title)}</h2><p style="font-size:1.2rem;font-weight:800">${esc(S.card.txt)}</p><button class="btn gold big" id="cardok">OK</button></div>`);
       else if (S.step === "end") out.push(`<div class="card hot center-c"><h2>Anything else?</h2>${adviceHTML()}<p class="muted">Build, mortgage or trade now, or pass the dice on.</p><button class="btn gold big" id="endturn">End my turn ➜</button></div>`);
       else if (S.step === "debt") out.push(`<div class="card center-c"><div class="bigemoji">⏳</div><h2>Waiting for ${S.debts.map(d => pname(d.pid)).join(" and ")} to pay up…</h2></div>`);
     } else {

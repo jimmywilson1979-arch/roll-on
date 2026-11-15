@@ -554,7 +554,35 @@
   const SCENES = { kingdom: kingdomScene, city: cityScene, space: spaceScene, northpole: northScene };
   const CARD = { kingdom: { "🔮": K.chance, "📜": K.quest }, city: { "🍀": C.chance, "⭐": C.quest }, space: { "🌠": SP.chance, "🛰️": SP.quest }, northpole: { "🎉": N.chance, "🧝": N.quest } };
 
+  // ---------------- Painted pictures ----------------
+  // Storybook look only. Files live in img/<theme>/ (copies of the art library:
+  // github.com/jimmywilson1979-arch/art-library, folder roll-on/<theme>).
+  // Lists are in board order, the same as themes.js.
+  const PIC = {
+    kingdom: {
+      dir: "img/kingdom/",
+      props: ["mudwallow-lane", "toadstool-row", "millers-bridge", "willow-green", "fishers-wharf", "candlewick-street", "bakers-row", "tinkers-yard",
+        "lantern-hill", "blacksmiths-forge", "market-cross", "knights-way", "archery-field", "tournament-ground", "wizards-tower", "golden-meadow",
+        "dragons-rest", "elven-glade", "crystal-falls", "moonlit-gardens", "crown-keep", "palace-of-kings"],
+      stations: ["north-gate-stables", "river-ferry", "griffin-roost", "southern-port"],
+      start: "castle-gate", jail: "the-dungeon", free: "village-fair", gojail: "dungeon-guard",
+      chance: "crystal-ball", quest: "quest-scroll", house: "cottage", hotel: "castle", win: "treasure-chest", coins: "gold-coins",
+      tokens: ["token-baby-dragon", "token-unicorn", "token-wizard", "token-golden-crown", "token-knights-shield", "token-bow-and-arrow", "token-fairy", "token-horse"],
+    },
+  };
+  function pic(theme, slot, n) {
+    const P = on && PIC[theme]; if (!P) return null;
+    let f = P[slot]; if (Array.isArray(f)) f = f[n];
+    return f ? P.dir + f + ".webp" : null;
+  }
+  const pre = {};
+  function preload(theme) {
+    const P = PIC[theme]; if (!on || !P || pre[theme]) return; pre[theme] = [];
+    Object.entries(P).forEach(([k, v]) => { if (k !== "dir") [].concat(v).forEach(f => { const im = new Image(); im.decoding = "async"; im.src = P.dir + f + ".webp"; pre[theme].push(im); }); });
+  }
+
   root.ART = {
+    pic, preload,
     get on() { return on; },
     toggle() { on = !on; try { localStorage.setItem(KEY, JSON.stringify(on)); } catch (e) { } apply(); return on; },
     icon(theme, slot) { return on && ICONS[theme] && ICONS[theme][slot] || null; },
