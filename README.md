@@ -11,6 +11,9 @@ Family board games on the TV. Each phone is that player's dice, wallet and cards
 2. Players scan the QR code or enter the 4-letter code. Tick **A child is playing** for kids.
 3. The first player to join is the **host**. The host picks the settings on their phone or on the TV, then presses **Start**. You can play on your own: computer players join automatically.
 
+### 📱 Getting back in (all Roll On games)
+If someone drops out mid-game, or a late arrival wants to join, press **📱 Join QR** on the TV (next to Move it along). The host can also find **📱 Show the join QR code** under ⚙️ on their phone, so others can scan the host's screen. Scan it, or open the game and type the 4-letter code. Join with the **same name** to get your old place back with your cards, clues and money.
+
 ### Settings (chosen before the game)
 - **Theme:** 🏰 Fantasy Kingdom, 🏙️ City Streets, 🚀 Space Colony or 🎄 North Pole. The rules are the same in every theme. Only the names, money, pieces and look change.
 - **How the game ends:**

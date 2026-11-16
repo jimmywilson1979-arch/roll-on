@@ -14,6 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Fredoka:wght@600;700&family=Nunito:wght@600;700;800;900&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="rejoin.js?v=1"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="adv-engine.js?v=1"></script>
 <script src="art.js?v=7"></script>
@@ -453,8 +454,8 @@ async function tvMain() {
       app.innerHTML = `<div class="tv"><div class="bwrap">${mapHTML}<div id="over"></div></div>
         <div class="side"><div class="shead"><span class="ttl">${esc(T.title)}</span><div class="code">Join code<b>${room}</b></div></div>
           <div id="sd"></div><div class="panel" id="ev"></div><div class="feed" id="feed"></div>
-          <div class="tvctl"><button class="btn" id="pause">⏸️ Pause</button><button class="btn" id="nudge">⏭ Move it along</button><button class="btn" id="snd">${SFX.on ? "🔊" : "🔇"}</button>${canFull() ? `<button class="btn" id="full">⛶</button>` : ""}${lookBtn()}<button class="btn" id="quit">🏳️ Give up</button><span class="muted" style="font-size:calc(1.4*var(--vh,1vh))">${esc(conn)}</span></div></div></div>`;
-      $("#pause").onclick = () => hostAct({ t: "pause" }); $("#nudge").onclick = () => hostAct({ t: "nudge" });
+          <div class="tvctl"><button class="btn" id="pause">⏸️ Pause</button><button class="btn" id="nudge">⏭ Move it along</button><button class="btn" id="joinqr" title="Show the QR code so people can join or get back in">📱 Join QR</button><button class="btn" id="snd">${SFX.on ? "🔊" : "🔇"}</button>${canFull() ? `<button class="btn" id="full">⛶</button>` : ""}${lookBtn()}<button class="btn" id="quit">🏳️ Give up</button><span class="muted" style="font-size:calc(1.4*var(--vh,1vh))">${esc(conn)}</span></div></div></div>`;
+      $("#pause").onclick = () => hostAct({ t: "pause" }); $("#nudge").onclick = () => hostAct({ t: "nudge" }); $("#joinqr").onclick = () => joinQR(room);
       $("#snd").onclick = e => { e.target.textContent = SFX.toggle() ? "🔊" : "🔇"; };
       $("#quit").onclick = () => { if (confirm("Give up this adventure?")) hostAct({ t: "endnow" }); };
     }
@@ -667,9 +668,9 @@ async function phoneMain(codeRaw) {
   function wirePk() { $$("[data-pk]").forEach(b => b.onclick = () => { act({ t: "peek", i: +b.dataset.pk }); peekMode = false; lastKey = ""; }); }
   function hostSheet() {
     const d = document.createElement("div"); d.className = "sheet";
-    d.innerHTML = `<div><h3 style="margin:0">⚙️ Host controls</h3><button class="btn big" data-h="pause">${S.paused ? "▶️ Carry on" : "⏸️ Pause"}</button><button class="btn big" data-h="nudge">⏭ Move a stuck turn along</button><button class="btn big" data-h="endnow">🏳️ Give up this adventure</button><button class="btn big gold" data-h="x">Close</button></div>`;
+    d.innerHTML = `<div><h3 style="margin:0">⚙️ Host controls</h3><button class="btn big" data-h="pause">${S.paused ? "▶️ Carry on" : "⏸️ Pause"}</button><button class="btn big" data-h="nudge">⏭ Move a stuck turn along</button><button class="btn big" data-q="1">📱 Show the join QR code</button><button class="btn big" data-h="endnow">🏳️ Give up this adventure</button><button class="btn big gold" data-h="x">Close</button></div>`;
     document.body.appendChild(d);
-    d.onclick = e => { const b = e.target.closest("[data-h]"); if (e.target === d || (b && b.dataset.h === "x")) return d.remove(); if (!b) return; if (b.dataset.h === "endnow" && !confirm("Give up?")) return; act({ t: b.dataset.h }); d.remove(); };
+    d.onclick = e => { if (e.target.closest("[data-q]")) { d.remove(); joinQR(room); return; } const b = e.target.closest("[data-h]"); if (e.target === d || (b && b.dataset.h === "x")) return d.remove(); if (!b) return; if (b.dataset.h === "endnow" && !confirm("Give up?")) return; act({ t: b.dataset.h }); d.remove(); };
   }
 
   // ---------- Team Finale ----------
