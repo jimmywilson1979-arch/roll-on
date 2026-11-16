@@ -159,3 +159,48 @@ The game secretly picks **who** ate the birthday cake, **where**, and **with wha
 
 ## Coming next
 - 🔍 Mystery: secret clues on every phone.
+
+## Snakes & Ladders
+**Play:** https://jimmywilson1979-arch.github.io/roll-on/ladders.html
+
+The classic race to square 100, on the TV. Each phone is that player's dice. Games take 10–15 minutes. The set-up is the same as the other games: open the page on the TV screen and phones scan the QR code to join.
+
+### Settings (chosen in the lobby)
+- **Theme:**
+  - 🌴 **Jungle:** snakes and vine ladders. The pieces are a lion, tiger, chimp, giraffe, elephant, parrot, sloth and zebra.
+  - 🎄 **Christmas (Slides & Ladders):** icy slides and candy-cane ladders, racing to the tree. The pieces are the North Pole tokens.
+  - 🚀 **Space (Black Holes & Rockets):** black holes and rockets, racing to the far planet. The pieces are the planets.
+- **Style:**
+  - 🎲 Classic
+  - ⭐ Power-ups
+  - 🌀 Moving board
+  - 🎉 Everything (power-ups and moving board together)
+- **Finishing:** any roll gets you home (quicker), or an exact roll with bounce-back (classic).
+- **Roll a 6:** go again, or no extra go.
+- **Computer players:** Auto, None, 1, 2 or 3. Auto adds 2 when you play on your own.
+- **🔀 Shuffle the board:** gives a new random layout. Every game gets a new board anyway, and the ladders never cross each other.
+
+### Power-ups
+Land on a ⭐ (🎁 at Christmas, 💫 in Space) to get a card. You can hold 3. Play one on your phone before you roll:
+- ⚡ **Double dice:** roll two dice this turn.
+- 🎯 **Pick a number:** choose your roll. The phone shows what each number lands on.
+- 💨 **Push back:** send a player back 5 squares. If they land on a snake, down they go!
+- 🔄 **Swap places:** swap places with any player.
+- 🧊 **Freeze:** a player misses their next go.
+- 🛡️ **Shield:** saves you from the next snake. It works by itself.
+
+### Moving board
+Every 3 rounds, 2 snakes and 2 ladders move to new places. The board shakes, and the TV warns everyone the round before.
+
+### Helpers
+- Child players see what each roll of 1–6 would land on (ladder, snake, star or nothing), and their power-ups are read out.
+- The narrator uses the same studio voices as Mystery, or the device's voice.
+- Host controls (on the TV or under ⚙️ on the host's phone): Pause, Move it along and Finish game.
+- The TV saves the game as it goes, so you can press **Carry on the saved game** if the page closes.
+
+### Pictures
+The pieces and the board frames come from the art library (animal cards, planet cards, North Pole tokens and Buzz In frames). They are in `img/ladders/`, and the Christmas pieces use `img/northpole/`. The snakes, ladders, slides, black holes and rockets are drawn in code.
+
+### Testing on one computer
+Open `ladders.html?tv=TEST&local=1` in one tab. Then open `ladders.html?join=TEST&local=1&slot=1` in other tabs, changing the slot number for each player.
+

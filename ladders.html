@@ -1,0 +1,766 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#123a1c">
+<title>Roll On · Snakes & Ladders</title>
+<meta name="description" content="Snakes and ladders on the TV, with power-up cards and a board that moves. Phones are the dice.">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐍</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800;900&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="lad-engine.js?v=1"></script>
+<style>
+:root{--bg:#1f5a2a;--bg2:#0b2410;--accent:#ffc94a;--fg:#fff;--muted:#cfe3c8;--panel:rgba(0,0,0,.32);--line:rgba(255,255,255,.17);--good:#3ddc84;--bad:#ff5d5d;--title:"Fredoka","Nunito",system-ui,sans-serif;--body:"Nunito",system-ui,sans-serif;color-scheme:dark}
+.th-xmas{--bg:#7a1c22;--bg2:#2a070b;--muted:#f3d3d3}
+.th-space{--bg:#1d2160;--bg2:#05061a;--muted:#c9cdf5}
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{background:radial-gradient(ellipse at 50% 30%,var(--bg),var(--bg2) 80%);color:var(--fg);font-family:var(--body);overflow:hidden;-webkit-tap-highlight-color:transparent}
+body.th-space{background:radial-gradient(1px 1px at 12% 22%,#fff,transparent),radial-gradient(1.5px 1.5px at 72% 12%,#fff,transparent),radial-gradient(1px 1px at 40% 78%,#fff,transparent),radial-gradient(1.5px 1.5px at 88% 64%,#fff,transparent),radial-gradient(1px 1px at 22% 58%,#cfd6ff,transparent),radial-gradient(1px 1px at 58% 40%,#fff,transparent),radial-gradient(ellipse at 50% 30%,var(--bg),var(--bg2) 80%)}
+body.th-xmas{background:radial-gradient(2px 2px at 10% 20%,rgba(255,255,255,.7),transparent),radial-gradient(2px 2px at 80% 30%,rgba(255,255,255,.6),transparent),radial-gradient(1.5px 1.5px at 30% 80%,rgba(255,255,255,.7),transparent),radial-gradient(2px 2px at 65% 70%,rgba(255,255,255,.5),transparent),radial-gradient(ellipse at 50% 30%,var(--bg),var(--bg2) 80%)}
+body.ph,body.home-b{overflow:auto}
+body.tvb{display:flex;align-items:center;justify-content:center}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+input{font:inherit;color:var(--fg);background:rgba(0,0,0,.3);border:2px solid var(--line);border-radius:12px;padding:.8em .9em;width:100%}
+.muted{color:var(--muted)}.hidden{display:none!important}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.4em;border-radius:14px;padding:.75em 1.1em;font-weight:800;font-size:1rem;background:rgba(255,255,255,.1);border:2px solid var(--line);line-height:1.15;text-align:center}
+.btn.gold{background:var(--accent);color:#2a1b00;border-color:var(--accent)}
+.btn.good{background:var(--good);color:#04210f;border-color:var(--good)}
+.btn.big{font-size:1.15rem;padding:.9em 1.1em;width:100%}
+.btn:disabled{opacity:.4}
+.chip{display:inline-flex;align-items:center;gap:.35em;padding:.42em .75em;border-radius:99px;border:2px solid var(--line);background:rgba(0,0,0,.25);font-weight:800;font-size:.88rem}
+.chip.on{background:var(--accent);color:#2a1b00;border-color:var(--accent)}
+.setrow{display:flex;flex-wrap:wrap;gap:.35em;margin:.3em 0}.setrow b{width:100%;font-size:.8em;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.dot{display:inline-block;width:1em;height:1em;border-radius:50%;box-shadow:0 0 0 2px #fff;flex:none}
+.toast{position:fixed;left:50%;top:14px;transform:translateX(-50%);background:var(--accent);color:#2a1b00;padding:.6em 1.1em;border-radius:99px;font-weight:900;z-index:99;max-width:92vw;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.4)}
+.home{max-width:520px;margin:0 auto;padding:6vh 1.2em 2em;display:flex;flex-direction:column;gap:1em;min-height:100vh}
+.home h1{font-family:var(--title);font-size:clamp(2.3rem,9.5vw,3.4rem);margin:0;line-height:1;text-align:center}
+.home h1 small{display:block;font-family:var(--body);font-size:.3em;letter-spacing:.3em;color:var(--accent);margin-bottom:.4em}
+.gamecard{border:2px solid var(--line);border-radius:18px;padding:1em;background:var(--panel)}
+/* ---------------- TV (sizes in --u: 1% of the board's height) ---------------- */
+.tv{display:grid;grid-template-columns:auto 1fr;height:calc(100*var(--h,1vh));width:100vw;gap:calc(1.6*var(--u,1vh));padding:calc(1.4*var(--u,1vh))}
+.bwrap{position:relative;width:var(--bw,94vh);height:var(--bw,94vh);flex:none}
+.frame{position:absolute;inset:0;border:calc(5.2*var(--u,1vh)) solid #2b6e2f;border-radius:calc(2*var(--u,1vh));background:#173d1b}
+.th-jungle .frame{border-image:url(img/ladders/frame-jungle.webp) 134 144 221 157 / calc(5.2*var(--u,1vh)) / 0 stretch}
+.th-xmas .frame{border-image:url(img/ladders/frame-christmas.webp) 167 137 167 147 / calc(5.2*var(--u,1vh)) / 0 stretch}
+.th-space .frame{border-image:url(img/ladders/frame-space.webp) 156 119 158 119 / calc(5.2*var(--u,1vh)) / 0 stretch}
+.board{position:absolute;inset:calc(5.2*var(--u,1vh));display:grid;grid-template:repeat(10,1fr)/repeat(10,1fr);border-radius:calc(.6*var(--u,1vh));overflow:hidden;box-shadow:0 0 0 calc(.4*var(--u,1vh)) rgba(0,0,0,.35)}
+.board.shake{animation:quake .5s ease-in-out 5}
+@keyframes quake{25%{transform:translate(calc(.4*var(--u,1vh)),calc(-.3*var(--u,1vh))) rotate(.3deg)}75%{transform:translate(calc(-.4*var(--u,1vh)),calc(.3*var(--u,1vh))) rotate(-.3deg)}}
+.cell{position:relative;font-family:var(--title);font-weight:700;color:#2d4a1c;background:#e9f5c9}
+.cell.alt{background:#c9e6a2}
+.cell .no{position:absolute;left:8%;top:4%;font-size:calc(1.9*var(--u,1vh));opacity:.8}
+.cell .ic{position:absolute;inset:0;display:grid;place-items:center;font-size:calc(3.6*var(--u,1vh))}
+.cell.star .ic{animation:twinkle 1.6s ease-in-out infinite alternate}
+@keyframes twinkle{to{transform:scale(1.15);filter:drop-shadow(0 0 calc(.6*var(--u,1vh)) #fff59a)}}
+.cell.fin{background:linear-gradient(135deg,#ffe58a,#ffbf3f)!important}
+.cell.fin .ic{font-size:calc(5*var(--u,1vh))}
+.cell.st{background:linear-gradient(135deg,#bff3c4,#7fd88a)!important}
+.cell.st .lbl{position:absolute;bottom:4%;left:0;right:0;text-align:center;font-size:calc(1.4*var(--u,1vh));letter-spacing:.08em}
+.th-xmas .cell{background:#fffaf3;color:#8a1c22}.th-xmas .cell.alt{background:#ffe1df}.th-xmas .cell.alt2{background:#e2f2e3}
+.th-space .cell{background:#2b3075;color:#d7dcff}.th-space .cell.alt{background:#20245c}
+.th-space .cell.fin{background:radial-gradient(circle,#ffd98a,#d88b2f)!important;color:#3b2200}.th-space .cell.st{background:radial-gradient(circle,#7fc8ff,#2f6fd8)!important;color:#fff}
+.snl{position:absolute;inset:calc(5.2*var(--u,1vh));width:calc(100% - 10.4*var(--u,1vh));height:calc(100% - 10.4*var(--u,1vh));pointer-events:none;overflow:visible}
+.snl .old{animation:fadeout 1.2s forwards}
+.snl .new{animation:fadein 1.2s 1.4s both}
+@keyframes fadeout{to{opacity:0;transform:scale(.9)}}
+@keyframes fadein{from{opacity:0}}
+.snl .hot{animation:glowl 1s ease-in-out infinite alternate}
+@keyframes glowl{to{filter:drop-shadow(0 0 8px #fff7b0)}}
+.pieces{position:absolute;inset:calc(5.2*var(--u,1vh));pointer-events:none}
+.pc{position:absolute;left:0;top:0;width:7.2%;height:7.2%;margin:-3.6% 0 0 -3.6%;border-radius:50%;background:#fff;box-shadow:0 0 0 calc(.45*var(--u,1vh)) var(--c),0 calc(.6*var(--u,1vh)) calc(1.2*var(--u,1vh)) rgba(0,0,0,.55);display:grid;place-items:center;font-size:calc(3.6*var(--u,1vh));transition:transform .25s ease;will-change:transform}
+.pc img{width:100%;height:100%;border-radius:50%;object-fit:cover}
+.pc.turn{z-index:3;animation:bob .9s ease-in-out infinite alternate}
+.pc.go{transition:none}
+@keyframes bob{to{margin-top:calc(-3.6% - .8*var(--u,1vh))}}
+.pc .fz{position:absolute;inset:-10%;border-radius:50%;background:rgba(170,225,255,.45);box-shadow:inset 0 0 calc(1*var(--u,1vh)) #fff;display:grid;place-items:center;font-size:.6em}
+.side{display:flex;flex-direction:column;gap:calc(1.2*var(--u,1vh));min-width:0;min-height:0}
+.shead{display:flex;align-items:center;gap:1.4vh}
+.shead .ttl{font-family:var(--title);font-size:calc(3.8*var(--u,1vh));line-height:1}
+.shead .code{margin-left:auto;text-align:right;font-size:calc(1.6*var(--u,1vh));color:var(--muted);font-weight:800}
+.shead .code b{display:block;font-size:calc(3.6*var(--u,1vh));color:var(--fg);letter-spacing:.12em}
+.panel{background:var(--panel);border:calc(.25*var(--u,1vh)) solid var(--line);border-radius:calc(1.6*var(--u,1vh));padding:calc(1.4*var(--u,1vh))}
+.plist{display:flex;flex-direction:column;gap:calc(.8*var(--u,1vh))}
+.prow{display:flex;align-items:center;gap:calc(1.1*var(--u,1vh));background:var(--panel);border:calc(.25*var(--u,1vh)) solid var(--line);border-radius:calc(1.3*var(--u,1vh));padding:calc(.8*var(--u,1vh)) calc(1.1*var(--u,1vh));font-weight:800;font-size:calc(2*var(--u,1vh))}
+.prow.turn{border-color:var(--accent);background:rgba(255,255,255,.14)}
+.prow .pn{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prow .pn small{display:block;font-size:.72em;color:var(--muted)}
+.prow .sq{font-family:var(--title);font-size:1.4em;min-width:2.2em;text-align:right}
+.tok{width:calc(4.6*var(--u,1vh));height:calc(4.6*var(--u,1vh));border-radius:50%;flex:none;background:#fff;box-shadow:0 0 0 calc(.35*var(--u,1vh)) var(--c);display:grid;place-items:center;font-size:calc(2.8*var(--u,1vh));overflow:hidden}
+.tok img{width:100%;height:100%;object-fit:cover}
+.meter{height:calc(.8*var(--u,1vh));border-radius:99px;background:rgba(255,255,255,.15);margin-top:calc(.5*var(--u,1vh));overflow:hidden}
+.meter i{display:block;height:100%;border-radius:99px;transition:width .8s ease}
+.info{display:flex;gap:1vh;flex-wrap:wrap}.info span{background:var(--panel);border:1px solid var(--line);border-radius:99px;padding:calc(.5*var(--u,1vh)) calc(1.3*var(--u,1vh));font-weight:800;font-size:calc(1.8*var(--u,1vh));display:inline-flex;align-items:center;gap:.4em}
+.turnbox{display:flex;align-items:center;gap:calc(1.4*var(--u,1vh));font-weight:900;font-size:calc(2.4*var(--u,1vh))}
+.turnbox .tok{width:calc(7*var(--u,1vh));height:calc(7*var(--u,1vh));font-size:calc(4*var(--u,1vh))}
+.turnbox small{display:block;font-size:.72em;color:var(--muted);font-weight:800}
+.dice{display:flex;gap:calc(1*var(--u,1vh));margin-left:auto}
+.feed{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;gap:calc(.6*var(--u,1vh));font-size:calc(1.75*var(--u,1vh));font-weight:700;color:var(--muted);mask-image:linear-gradient(transparent,#000 40%)}
+.feed div:last-child{color:var(--fg)}
+.tvctl{display:flex;gap:calc(.8*var(--u,1vh));flex-wrap:wrap}.tvctl .btn{font-size:calc(1.5*var(--u,1vh));padding:calc(.7*var(--u,1vh)) calc(1.2*var(--u,1vh))}
+.lobbyside{font-size:calc(1.8*var(--u,1vh))}.lobbyside .chip{font-size:calc(1.6*var(--u,1vh))}
+.over{position:absolute;inset:0;z-index:8;display:grid;place-items:center;background:rgba(5,15,5,.55);animation:fade .4s;border-radius:calc(2*var(--u,1vh))}
+.over .box{background:#fffaf0;color:#2b1d12;border-radius:calc(2*var(--u,1vh));padding:calc(3*var(--u,1vh));text-align:center;max-width:86%;border:calc(.5*var(--u,1vh)) solid var(--accent);box-shadow:0 calc(2*var(--u,1vh)) calc(5*var(--u,1vh)) rgba(0,0,0,.5)}
+.over h2{font-family:var(--title);font-size:calc(5.2*var(--u,1vh));margin:0;line-height:1.05}
+.over p{font-weight:800;font-size:calc(2.3*var(--u,1vh));margin:.5em 0}
+.over .rank{display:flex;flex-direction:column;gap:calc(.6*var(--u,1vh));margin:calc(1.6*var(--u,1vh)) 0;font-weight:800;font-size:calc(2.2*var(--u,1vh));text-align:left}
+.over .rank div{display:flex;align-items:center;gap:calc(1*var(--u,1vh))}
+@keyframes fade{from{opacity:0}}
+.banner{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:7;background:rgba(10,10,30,.86);color:#fff;border:calc(.4*var(--u,1vh)) solid var(--accent);border-radius:calc(2*var(--u,1vh));padding:calc(2*var(--u,1vh)) calc(3*var(--u,1vh));font-family:var(--title);font-size:calc(4.4*var(--u,1vh));text-align:center;animation:pop .5s;max-width:80%;pointer-events:none}
+.banner small{display:block;font-family:var(--body);font-weight:800;font-size:.45em;opacity:.85;margin-top:.4em}
+@keyframes pop{from{transform:translate(-50%,-50%) scale(.3);opacity:0}}
+.cap{position:absolute;left:50%;top:calc(6.5*var(--u,1vh));transform:translate(-50%,-150%);max-width:80%;z-index:30;background:rgba(10,20,8,.86);color:#fffbe8;border:calc(.25*var(--u,1vh)) solid rgba(255,230,160,.45);border-radius:calc(1.6*var(--u,1vh));padding:calc(1*var(--u,1vh)) calc(2*var(--u,1vh));font-weight:800;font-size:calc(2.3*var(--u,1vh));text-align:center;opacity:0;transition:transform .35s ease,opacity .35s;pointer-events:none}
+.cap.show{transform:translate(-50%,0);opacity:1}
+.wake{position:absolute;left:50%;bottom:calc(7*var(--u,1vh));transform:translateX(-50%);z-index:31;font-size:calc(2.2*var(--u,1vh))}
+.wake[hidden]{display:none}
+.qrbox{background:#fff;padding:calc(1.2*var(--u,1vh));border-radius:calc(1.2*var(--u,1vh));display:inline-block}
+.qrbox img,.qrbox canvas{display:block;width:calc(24*var(--u,1vh))!important;height:calc(24*var(--u,1vh))!important}
+.die{width:5.5rem;height:5.5rem;border-radius:1rem;background:#fff;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:.8rem;box-shadow:0 .3rem .8rem rgba(0,0,0,.35)}
+.die i{width:1.1rem;height:1.1rem;border-radius:50%;background:#222;place-self:center;visibility:hidden}.die i.on{visibility:visible}
+.die.rolling{animation:tumble .18s linear infinite}@keyframes tumble{50%{transform:rotate(180deg)}100%{transform:rotate(360deg)}}
+.tvdie{width:calc(6*var(--u,1vh));height:calc(6*var(--u,1vh));border-radius:calc(1*var(--u,1vh));padding:calc(.7*var(--u,1vh))}
+.tvdie i{width:calc(1.1*var(--u,1vh));height:calc(1.1*var(--u,1vh))}
+.die.pick{background:var(--accent)}
+.sheet{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:20;display:flex;align-items:flex-end}
+.sheet>div{background:var(--bg2);border-top:2px solid var(--line);border-radius:22px 22px 0 0;width:100%;max-width:560px;margin:0 auto;padding:1.1em 1em 2em;display:flex;flex-direction:column;gap:.7em}
+.vsheet{align-items:center}.vsheet>div{border-radius:22px;max-width:640px;font-size:calc(2.2*var(--u,1vh))}
+.vsheet select{width:100%;font-size:1em;padding:.5em;border-radius:12px;margin-top:.3em}.vsheet input[type=range]{width:100%}
+.vseg{display:flex;gap:.5em}.vseg .btn{flex:1;font-size:.9em}
+.vrow{display:flex;gap:.6em;align-items:center;font-weight:800}.vrow input{width:auto}
+/* ---------------- phone ---------------- */
+.pw{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh;max-width:560px;margin:0 auto}
+.ptop{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:.6em;padding:.6em .9em;background:rgba(0,0,0,.45);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.ptop .nm{font-weight:900;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ptop .sqchip{font-family:var(--title);font-size:1.1rem;background:var(--accent);color:#2a1b00;border-radius:99px;padding:.15em .7em}
+.ptok{width:2.6rem;height:2.6rem;border-radius:50%;background:#fff;box-shadow:0 0 0 3px var(--c);display:grid;place-items:center;font-size:1.6rem;overflow:hidden;flex:none}
+.ptok img{width:100%;height:100%;object-fit:cover}
+.ptok.big{width:6rem;height:6rem;font-size:3.6rem;box-shadow:0 0 0 5px var(--c);margin:0 auto}
+.pmain{flex:1;padding:1em .9em 2em;display:flex;flex-direction:column;gap:.9em}
+.card{background:var(--panel);border:2px solid var(--line);border-radius:18px;padding:1em}
+.card.hot{border-color:var(--accent)}
+.card h2{margin:0 0 .3em;font-size:1.3rem;font-family:var(--title)}.card h3{margin:0 0 .4em;font-size:1.05rem}
+.cc{text-align:center}.bigemoji{font-size:4.2rem;line-height:1.1}
+.pdie{display:flex;justify-content:center;gap:.6em;margin:.4em 0}
+.shake{animation:shk 1.2s ease-in-out infinite}@keyframes shk{0%,100%{transform:rotate(0)}10%{transform:rotate(-14deg)}20%{transform:rotate(12deg)}30%{transform:rotate(-8deg)}40%{transform:rotate(0)}}
+.pcards{display:flex;flex-direction:column;gap:.55em}
+.pcard{display:flex;align-items:center;gap:.7em;background:#fffaf0;color:#2b1d12;border-radius:14px;padding:.6em .7em;font-weight:800;line-height:1.25}
+.pcard .ci{font-size:2.2rem;line-height:1;flex:none}
+.pcard small{display:block;font-weight:700;opacity:.75}
+.pcard .btn{margin-left:auto;flex:none;padding:.55em .9em;font-size:.95rem}
+.picks{display:grid;grid-template-columns:repeat(3,1fr);gap:.55em}
+.picks button{border:2px solid var(--line);border-radius:14px;padding:.55em .3em;background:rgba(0,0,0,.25);font-weight:800;font-size:.8rem;display:flex;flex-direction:column;align-items:center;gap:.2em}
+.picks button b{font-family:var(--title);font-size:2rem;line-height:1}
+.picks button.good{border-color:var(--good);background:rgba(61,220,132,.18)}
+.picks button.bad{border-color:var(--bad);background:rgba(255,93,93,.15)}
+.ahead{display:flex;gap:.35em;justify-content:center;flex-wrap:wrap;margin-top:.6em}
+.ahead span{background:rgba(0,0,0,.25);border-radius:10px;padding:.3em .5em;font-weight:800;font-size:.85rem;text-align:center;min-width:3.2em}
+.ahead span b{display:block;font-size:1.2rem}
+.tlist{display:flex;flex-direction:column;gap:.5em}
+.tlist button{display:flex;align-items:center;gap:.7em;border:2px solid var(--line);border-radius:14px;padding:.6em .8em;background:rgba(0,0,0,.25);font-weight:800;text-align:left}
+details.rules summary{font-weight:900;cursor:pointer}details.rules li{margin:.25em 0}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// =====================================================================
+// Roll On · Snakes & Ladders. Same set-up as the other games:
+// the TV runs it, phones scan to join and are the dice.
+// Add &local=1 (and &slot=N) to test with tabs on one computer.
+// =====================================================================
+const SUPA_URL = "https://uqwlmegbelyqtbegxqlz.supabase.co";
+const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVxd2xtZWdiZWx5cXRiZWd4cWx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3NTYzNzAsImV4cCI6MjEwNzMzMjM3MH0.bSeF8_kwKqSrEj3n8Ku2OeSU8E5nMqJj0hcfgXb8cW0";
+const L = window.Lad;
+const P = new URLSearchParams(location.search), LOCAL = P.has("local");
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const app = $("#app");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const now = () => Date.now(), uid = () => Math.random().toString(36).slice(2, 10);
+const ls = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { } }, del(k) { try { localStorage.removeItem(k); } catch (e) { } } };
+const code4 = () => Array.from({ length: 4 }, () => "BCDFGHJKLMNPQRSTVWXZ"[Math.random() * 20 | 0]).join("");
+const vib = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) { } };
+const pickOne = a => a[Math.random() * a.length | 0];
+const PIPS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
+const pipsHTML = n => Array.from({ length: 9 }, (_, i) => `<i class="${PIPS[n].includes(i) ? "on" : ""}"></i>`).join("");
+const dieHTML = (n, cls) => `<div class="die ${cls || ""}">${pipsHTML(n)}</div>`;
+function toast(t, ms) { const d = document.createElement("div"); d.className = "toast"; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), ms || 2200); }
+function say(text) { try { const u = new SpeechSynthesisUtterance(text); u.lang = "en-GB"; u.rate = .95; const v = speechSynthesis.getVoices().find(v => /en-GB/i.test(v.lang)); if (v) u.voice = v; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (e) { } }
+const setTheme = k => { document.body.classList.remove("th-jungle", "th-xmas", "th-space"); document.body.classList.add("th-" + k); };
+// player pieces: painted pictures from the art library, emoji if a picture won't load
+const pieceOf = (S, p) => L.THEMES[S.settings.theme].pieces[p.ci % 8];
+const pieceSrc = (S, pc) => (S.settings.theme === "xmas" ? "img/northpole/" : "img/ladders/") + pc[0] + ".webp";
+const tokHTML = (S, p, cls) => { const pc = pieceOf(S, p); return `<span class="${cls || "tok"}" style="--c:${p.color}"><img src="${pieceSrc(S, pc)}" alt="${esc(pc[2])}" onerror="this.replaceWith(document.createTextNode('${pc[1]}'))"></span>`; };
+function fit() {
+  const vv = window.visualViewport, H = vv ? vv.height : innerHeight, W = vv ? vv.width : innerWidth, r = document.documentElement.style;
+  r.setProperty("--h", H / 100 + "px");
+  let u = H / 100;
+  if (document.body.classList.contains("tvb")) { const bw = Math.min(H * .972, W * .63); u = bw / 97.2; r.setProperty("--bw", bw + "px"); }
+  r.setProperty("--u", u + "px");
+}
+addEventListener("resize", fit); if (window.visualViewport) visualViewport.addEventListener("resize", fit);
+const canFull = () => !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
+function goFull() { const d = document.documentElement; if (document.fullscreenElement || document.webkitFullscreenElement) { (document.exitFullscreen || document.webkitExitFullscreen).call(document); return; } const r = (d.requestFullscreen || d.webkitRequestFullscreen).call(d); if (r && r.catch) r.catch(() => { }); }
+document.addEventListener("fullscreenchange", () => setTimeout(fit, 200));
+
+async function connect(room, onMsg, onStatus) {
+  if (LOCAL) { const bc = new BroadcastChannel("ladders-" + room); bc.onmessage = e => onMsg(e.data); onStatus && onStatus("ok"); return { send: m => bc.postMessage(m) }; }
+  const sb = window.supabase.createClient(SUPA_URL, SUPA_KEY, { realtime: { params: { eventsPerSecond: 40 } } });
+  const ch = sb.channel("ladders-" + room, { config: { broadcast: { self: false } } });
+  ch.on("broadcast", { event: "m" }, ({ payload }) => onMsg(payload));
+  await new Promise((res, rej) => { let done = false; ch.subscribe(st => { if (st === "SUBSCRIBED") { onStatus && onStatus("ok"); if (!done) { done = true; res(); } } else if (["CHANNEL_ERROR", "TIMED_OUT", "CLOSED"].includes(st)) { onStatus && onStatus("lost"); if (!done) { done = true; rej(new Error(st)); } } }); });
+  return { send: m => ch.send({ type: "broadcast", event: "m", payload: m }) };
+}
+const SFX = (() => {
+  let ac = null, on = ls.get("lad_sound", true);
+  const ctx = () => { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { } } if (ac && ac.state === "suspended") ac.resume(); return ac; };
+  const tone = (f, d, type, vol, at) => { const a = ctx(); if (!a || !on) return; const t0 = a.currentTime + (at || 0), o = a.createOscillator(), g = a.createGain(); o.type = type || "sine"; o.frequency.setValueAtTime(f, t0); g.gain.setValueAtTime(vol || .14, t0); g.gain.exponentialRampToValueAtTime(.001, t0 + d); o.connect(g); g.connect(a.destination); o.start(t0); o.stop(t0 + d + .02); };
+  const sweep = (f1, f2, d, type, vol, at) => { const a = ctx(); if (!a || !on) return; const t0 = a.currentTime + (at || 0), o = a.createOscillator(), g = a.createGain(); o.type = type || "sine"; o.frequency.setValueAtTime(f1, t0); o.frequency.exponentialRampToValueAtTime(f2, t0 + d); g.gain.setValueAtTime(vol || .12, t0); g.gain.exponentialRampToValueAtTime(.001, t0 + d); o.connect(g); g.connect(a.destination); o.start(t0); o.stop(t0 + d + .02); };
+  return {
+    get on() { return on; }, toggle() { on = !on; ls.set("lad_sound", on); return on; }, unlock() { ctx(); },
+    dice() { for (let i = 0; i < 7; i++) tone(200 + Math.random() * 300, .04, "square", .05, i * .08); },
+    step() { tone(520 + Math.random() * 80, .05, "triangle", .06); },
+    climb() { [392, 494, 587, 698, 784, 988].forEach((f, i) => tone(f, .14, "triangle", .1, i * .13)); },
+    slide() { sweep(900, 110, 1.3, "sawtooth", .07); },
+    star() { [1319, 1568, 2093, 2637].forEach((f, i) => tone(f, .18, "sine", .08, i * .07)); },
+    shield() { tone(660, .1, "square", .07); tone(990, .3, "triangle", .1, .1); },
+    card() { tone(523, .1, "triangle", .12); tone(784, .25, "triangle", .12, .1); },
+    freeze() { [2093, 1760, 1568, 1319].forEach((f, i) => tone(f, .25, "sine", .06, i * .08)); },
+    whoosh() { sweep(300, 1500, .5, "sawtooth", .05); },
+    rumble() { for (let i = 0; i < 10; i++) tone(55 + Math.random() * 30, .25, "sawtooth", .07, i * .12); },
+    win() { [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => tone(f, i === 6 ? .9 : .18, "triangle", .14, i * .16)); },
+    turn() { tone(880, .1, "sine", .08); },
+  };
+})();
+// The TV narrator. "Studio" voices come from ElevenLabs via our Supabase function
+// (the same one Mystery uses); it falls back to the device's own voice.
+const NARR = (() => {
+  const FN = SUPA_URL + "/functions/v1/narrator";
+  let on = ls.get("lad_narr", true), q = [], busy = false, voice = null, capT = null, rate = ls.get("lad_rate", 1.05), cur = null;
+  let engine = ls.get("lad_engine", ls.get("mys_engine", "cloud")), cvoice = ls.get("lad_cvoice", ls.get("mys_cvoice", "JBFqnCBsd6RMkjVDRZzb")), cmodel = ls.get("lad_cmodel", "quick"), cloudDown = 0, status = null, studio = null;
+  const good = v => /natural|neural|online|premium|enhanced|wavenet|google/i.test(v.name);
+  const list = () => { try { const vs = speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang)); const sc = v => (/en-GB/i.test(v.lang) ? 0 : 2) + (good(v) ? 0 : 1); return vs.sort((a, b) => sc(a) - sc(b) || a.name.localeCompare(b.name)); } catch (e) { return []; } };
+  const pick = () => { const vs = list(), want = ls.get("lad_voice", ""); return vs.find(v => v.name === want) || vs.find(v => /en-GB/i.test(v.lang) && good(v)) || vs[0] || null; };
+  try { speechSynthesis.addEventListener("voiceschanged", () => { voice = null; }); } catch (e) { }
+  const clips = new Map();
+  function clip(t) {
+    const k = cvoice + "|" + cmodel + "|" + t; if (clips.has(k)) return clips.get(k);
+    const p = fetch(FN, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: t, voice: cvoice, model: cmodel }) })
+      .then(r => { if (!r.ok) throw new Error("narrator " + r.status); return r.blob(); }).then(b => URL.createObjectURL(b));
+    p.catch(() => { clips.delete(k); cloudDown = Date.now(); });
+    clips.set(k, p); if (clips.size > 150) clips.delete(clips.keys().next().value);
+    return p;
+  }
+  const useCloud = () => engine === "cloud" && Date.now() - cloudDown > 60000 && !LOCAL;
+  function cap(t) { const c = document.getElementById("cap"); if (!c) return; c.textContent = "🗣️ " + t; c.classList.add("show"); clearTimeout(capT); capT = setTimeout(() => c.classList.remove("show"), 2200 + t.length * 55); }
+  function device(x, fin) {
+    try {
+      const u = new SpeechSynthesisUtterance(x.t); u.lang = "en-GB"; u.rate = rate;
+      voice = voice || pick(); if (voice) { u.voice = voice; u.lang = voice.lang; }
+      u.onend = fin; u.onerror = fin; speechSynthesis.speak(u);
+      setTimeout(fin, 1800 + x.t.length * 85);
+    } catch (e) { fin(); }
+  }
+  function playClip(url, x, fin) {
+    const a = new Audio(url); cur = a; a.playbackRate = rate;
+    a.onended = fin; a.onerror = () => device(x, fin);
+    a.onloadedmetadata = () => { if (isFinite(a.duration)) setTimeout(fin, a.duration * 1000 / rate + 1500); };
+    setTimeout(fin, 20000);
+    a.play().catch(() => device(x, fin));
+  }
+  function next() {
+    if (busy) return;
+    const t = Date.now(); q = q.filter(x => t - x.at < (x.p >= 2 ? 12000 : 5000));
+    const x = q.shift(); if (!x) return;
+    cap(x.t);
+    if (!on) return setTimeout(next, 30);
+    busy = true; let done = false;
+    const fin = () => { if (done) return; done = true; busy = false; cur = null; setTimeout(next, 120); };
+    if (x.clip) Promise.race([x.clip, new Promise((_, no) => setTimeout(() => no(new Error("slow")), 6000))]).then(u => playClip(u, x, fin)).catch(() => device(x, fin));
+    else device(x, fin);
+  }
+  function stop() { q = []; busy = false; try { speechSynthesis.cancel(); } catch (e) { } if (cur) { try { cur.pause(); } catch (e) { } cur = null; } }
+  return {
+    get on() { return on; },
+    toggle() { on = !on; ls.set("lad_narr", on); stop(); return on; },
+    line(t, p) {
+      p = p || 1; if (p >= 2) q = q.filter(x => x.p >= 2);
+      const x = { t, p, at: Date.now() }; if (on && useCloud()) x.clip = clip(t);
+      q.push(x); while (q.length > 3) { const i = q.findIndex(x => x.p < 2); q.splice(i >= 0 ? i : 0, 1); } next();
+    },
+    voices: list, get voice() { const v = voice || pick(); return v ? v.name : ""; }, good,
+    setVoice(name) { ls.set("lad_voice", name); voice = null; },
+    get rate() { return rate; }, setRate(r) { rate = r; ls.set("lad_rate", r); },
+    get engine() { return engine; }, setEngine(e) { engine = e; ls.set("lad_engine", e); cloudDown = 0; },
+    get cvoice() { return cvoice; }, setCvoice(v) { cvoice = v; ls.set("lad_cvoice", v); },
+    get cmodel() { return cmodel; }, setCmodel(m) { cmodel = m; ls.set("lad_cmodel", m); },
+    status(force) { if (!status || force) status = fetch(FN + "?status").then(r => r.json()).catch(() => ({ ready: false, why: "offline" })); return status; },
+    studio() { if (!studio) studio = fetch(FN + "?voices").then(r => r.json()).then(d => d.voices || []).catch(() => { studio = null; return []; }); return studio; },
+    test(t) { stop(); const was = on; on = true; cloudDown = 0; this.line(t || "Roll the dice! Climb the ladders and watch out for the snakes!", 2); on = was; },
+  };
+})();
+
+// =====================================================================
+// Drawing the snakes, slides, black holes, ladders and rockets (SVG, board = 1000 x 1000)
+// =====================================================================
+const C100 = q => { const [x, y] = L.xy(q); return [x * 100, y * 100]; };
+const SNAKE_COL = { jungle: [["#3d9b35", "#f4d03f"], ["#c0392b", "#f5b041"], ["#e67e22", "#5d4037"], ["#8e44ad", "#f7dc6f"], ["#2e86c1", "#f9e79f"], ["#16a085", "#f0b27a"], ["#b7950b", "#1b4f72"], ["#6d4c41", "#f5cba7"]] };
+// a point along the wiggly body: s = 0 at the head, 1 at the tail
+function snakePt(h, t, s) {
+  const [x1, y1] = C100(h), [x2, y2] = C100(t), dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy) || 1, nx = -dy / len, ny = dx / len;
+  const waves = Math.max(1, Math.round(len / 260)), amp = Math.min(42, 20 + len * .04), env = Math.min(1, s * 5, (1 - s) * 5);
+  const off = amp * Math.sin(s * Math.PI * 2 * waves) * env;
+  return [x1 + dx * s + nx * off, y1 + dy * s + ny * off];
+}
+function snakeSVG(theme, h, t, i, cls) {
+  const N = 48, pts = Array.from({ length: N + 1 }, (_, k) => snakePt(h, t, k / N));
+  const w = k => (theme === "space" ? 30 - 14 * k / N : 30 - 18 * k / N);
+  const side = sgn => pts.map((p, k) => { const a = pts[Math.max(0, k - 1)], b = pts[Math.min(N, k + 1)], dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1; return [p[0] - dy / l * w(k) / 2 * sgn, p[1] + dx / l * w(k) / 2 * sgn]; });
+  const poly = side(1).concat(side(-1).reverse()).map(p => p.map(v => v.toFixed(1)).join(",")).join(" ");
+  const line = pts.map(p => p.map(v => v.toFixed(1)).join(",")).join(" ");
+  const [hx, hy] = pts[0], [ax, ay] = pts[2], ang = Math.atan2(hy - ay, hx - ax) * 180 / Math.PI;
+  let body, head;
+  if (theme === "xmas") {
+    body = `<polygon points="${poly}" fill="#f4fbff" stroke="#7fb3d5" stroke-width="4"/><polyline points="${line}" fill="none" stroke="#e8f6ff" stroke-width="6" opacity=".9"/><polyline points="${line}" fill="none" stroke="#9fd3f5" stroke-width="3" stroke-dasharray="6 22"/>`;
+    head = `<g transform="translate(${hx},${hy})"><circle r="27" fill="#d6eefc" stroke="#4a90c2" stroke-width="4"/><text y="11" text-anchor="middle" font-size="32">❄️</text></g><g transform="translate(${pts[N][0]},${pts[N][1]})"><circle r="12" fill="#bfe3fa" stroke="#4a90c2" stroke-width="3"/></g>`;
+  } else if (theme === "space") {
+    body = `<polygon points="${poly}" fill="url(#holeg)" stroke="#b388ff" stroke-width="3" opacity=".92"/><polyline points="${line}" fill="none" stroke="#e1bee7" stroke-width="3" stroke-dasharray="2 18" stroke-linecap="round"/>`;
+    head = `<g transform="translate(${hx},${hy})"><circle r="34" fill="url(#bh)"/><circle r="14" fill="#000"/><path d="M-22 0a22 22 0 0 1 22-22M22 0a22 22 0 0 1-22 22" fill="none" stroke="#d1a3ff" stroke-width="4" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="3s" repeatCount="indefinite"/></path></g>`;
+  } else {
+    const [c1, c2] = SNAKE_COL.jungle[i % 8];
+    body = `<polygon points="${poly}" fill="${c1}" stroke="rgba(0,0,0,.45)" stroke-width="3"/><polyline points="${line}" fill="none" stroke="${c2}" stroke-width="8" stroke-dasharray="10 18" stroke-linecap="round" opacity=".9"/>`;
+    head = `<g transform="translate(${hx},${hy}) rotate(${ang})"><path d="M22 0 l18 -6 M22 0 l18 6" stroke="#e53935" stroke-width="4" stroke-linecap="round"/><ellipse rx="26" ry="20" fill="${c1}" stroke="rgba(0,0,0,.5)" stroke-width="3"/><circle cx="6" cy="-9" r="7" fill="#fff"/><circle cx="6" cy="9" r="7" fill="#fff"/><circle cx="8" cy="-9" r="3.5" fill="#111"/><circle cx="8" cy="9" r="3.5" fill="#111"/></g>`;
+  }
+  return `<g class="sn ${cls || ""}" data-s="${i}">${body}${head}</g>`;
+}
+function ladderSVG(theme, f, t, i, cls) {
+  const [x1, y1] = C100(f), [x2, y2] = C100(t), dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy) || 1, ux = dx / len, uy = dy / len, nx = -uy, ny = ux;
+  if (theme === "space") {
+    const ang = Math.atan2(dy, dx) * 180 / Math.PI;
+    return `<g class="ld ${cls || ""}" data-l="${i}"><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#ffd36b" stroke-width="26" opacity=".18" stroke-linecap="round"/><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#fff3c4" stroke-width="7" stroke-dasharray="3 20" stroke-linecap="round"/>
+      <g transform="translate(${x2},${y2})"><circle r="20" fill="#ffe082" opacity=".35"/><text y="12" text-anchor="middle" font-size="32">✨</text></g>
+      <g transform="translate(${x1},${y1}) rotate(${ang + 45})"><text y="16" text-anchor="middle" font-size="52">🚀</text></g></g>`;
+  }
+  const W = 21, rail = s => `${x1 + nx * W * s},${y1 + ny * W * s} ${x2 + nx * W * s},${y2 + ny * W * s}`;
+  const rungs = []; for (let d = 26; d < len - 14; d += 40) { const cx = x1 + ux * d, cy = y1 + uy * d; rungs.push(`${cx + nx * W},${cy + ny * W} ${cx - nx * W},${cy - ny * W}`); }
+  const xm = theme === "xmas";
+  const railC = xm ? "#ffffff" : "#8d5a2b", rungC = xm ? "#ffffff" : "#b07b45", edge = xm ? "#c62828" : "#4e2f12";
+  const rails = [1, -1].map(s => `<polyline points="${rail(s)}" stroke="${edge}" stroke-width="13" stroke-linecap="round" fill="none"/><polyline points="${rail(s)}" stroke="${railC}" stroke-width="8" stroke-linecap="round" fill="none"/>${xm ? `<polyline points="${rail(s)}" stroke="#e53935" stroke-width="8" stroke-dasharray="9 11" fill="none"/>` : `<polyline points="${rail(s)}" stroke="#4caf50" stroke-width="3" stroke-dasharray="14 24" fill="none"/>`}`).join("");
+  const rg = rungs.map(r => `<polyline points="${r}" stroke="${edge}" stroke-width="9" stroke-linecap="round"/><polyline points="${r}" stroke="${rungC}" stroke-width="5" stroke-linecap="round"/>`).join("");
+  return `<g class="ld ${cls || ""}" data-l="${i}">${rg}${rails}${xm ? `<text x="${x2}" y="${y2 + 12}" text-anchor="middle" font-size="30">🍬</text>` : `<text x="${x2}" y="${y2 + 10}" text-anchor="middle" font-size="26">🍃</text>`}</g>`;
+}
+const SVG_DEFS = `<defs><radialGradient id="bh"><stop offset="0" stop-color="#000"/><stop offset=".55" stop-color="#2a0845"/><stop offset=".8" stop-color="#7b2ff7" stop-opacity=".8"/><stop offset="1" stop-color="#b388ff" stop-opacity="0"/></radialGradient>
+  <linearGradient id="holeg" x1="0" x2="1"><stop offset="0" stop-color="#3a0d6b"/><stop offset=".5" stop-color="#6a1b9a"/><stop offset="1" stop-color="#3a0d6b"/></linearGradient></defs>`;
+function boardSVG(S) {
+  const th = S.settings.theme, B = S.board; if (!B) return "";
+  const sh = S.phase === "play" && S.step === "shift" && S.shift ? S.shift : null;
+  const movedS = sh ? new Set(sh.moved.filter(m => m.k === "s").map(m => m.i)) : new Set(), movedL = sh ? new Set(sh.moved.filter(m => m.k === "l").map(m => m.i)) : new Set();
+  const old = sh ? sh.moved.map(m => m.k === "s" ? snakeSVG(th, m.old[0], m.old[1], m.i, "old") : ladderSVG(th, m.old[0], m.old[1], m.i, "old")).join("") : "";
+  const lad = B.ladders.map((l, i) => ladderSVG(th, l[0], l[1], i, movedL.has(i) ? "new" : "")).join("");
+  const sna = B.snakes.map((s, i) => snakeSVG(th, s[0], s[1], i, movedS.has(i) ? "new" : "")).join("");
+  return `<svg class="snl" viewBox="0 0 1000 1000">${SVG_DEFS}${old}${lad}${sna}</svg>`;
+}
+function cellsHTML(S) {
+  const t = L.t(S), out = [];
+  for (let y = 0; y < 10; y++) for (let x = 0; x < 10; x++) {
+    const r = 9 - y, q = r * 10 + (r % 2 ? 10 - x : x + 1), alt = (x + y) % 2;
+    const star = S.board && L.starAt(S, q), home = q === L.N, go = q === 1;
+    const alt2 = S.settings.theme === "xmas" && alt && y % 2 ? " alt2" : alt ? " alt" : "";
+    out.push(`<div class="cell${alt2}${star ? " star" : ""}${home ? " fin" : ""}${go ? " st" : ""}"><span class="no">${q}</span>${home ? `<span class="ic">${t.finish}</span>` : go ? `<span class="ic" style="font-size:calc(2.6*var(--u,1vh))">${t.start}</span><span class="lbl">START</span>` : star ? `<span class="ic">${t.star}</span>` : ""}</div>`);
+  }
+  return out.join("");
+}
+
+if (P.has("tv")) tvMain(); else if (P.has("join")) phoneMain(P.get("join")); else home();
+
+function home() {
+  document.body.className = "home-b th-jungle";
+  const phone = matchMedia("(pointer:coarse)").matches && Math.min(innerWidth, innerHeight) < 700;
+  const sv = ls.get("lad_save", null), canResume = sv && sv.S && sv.S.phase === "play";
+  app.innerHTML = `<div class="home"><div style="font-size:5rem;text-align:center;line-height:1">🐍🪜</div><h1><small>ROLL ON</small>Snakes &amp; Ladders</h1>
+    <p class="muted" style="text-align:center;margin:0">The board goes on the TV and your phone is the dice. Climb the ladders, dodge the snakes, collect power-up cards and hold on tight when the board starts moving! About 10–15 minutes.</p>
+    ${canResume ? `<button class="btn big gold" id="res">▶ Carry on the saved game (code ${esc(sv.S.room)})</button>` : ""}
+    <button class="btn big ${phone || canResume ? "" : "gold"}" id="tvb">📺 This is the TV screen</button>
+    <p class="muted" style="font-size:.9rem;margin:0">Open on the laptop you cast from or plug into the TV, the same as Buzz In.</p>
+    <div style="display:flex;gap:.6em"><input id="code" maxlength="4" placeholder="Code" autocapitalize="characters" style="text-transform:uppercase;font-size:1.3rem;letter-spacing:.15em"><button class="btn ${phone ? "gold" : ""}" id="jb" style="flex:none">Join</button></div>
+    <a class="btn" href="index.html${LOCAL ? "?local=1" : ""}">← All Roll On games</a></div>`;
+  $("#tvb").onclick = () => { location.search = "?tv" + (LOCAL ? "&local=1" : ""); };
+  if (canResume) $("#res").onclick = () => { location.search = "?tv=" + sv.S.room + (LOCAL ? "&local=1" : ""); };
+  const go = () => { const c = $("#code").value.trim().toUpperCase(); if (c.length === 4) location.search = "?join=" + c + (LOCAL ? "&local=1" : ""); };
+  $("#jb").onclick = go; $("#code").onkeydown = e => { if (e.key === "Enter") go(); };
+}
+const RULES = t => `<details class="rules"><summary>📖 How to play</summary><ul>
+  <li>On your turn, <b>shake your phone</b> (or tap) to roll. Your piece moves on the TV.</li>
+  <li>Land at the bottom of a ${t.up} to climb up. Land on the top of a ${t.down} and down you go!</li>
+  <li>First to square 100 wins.</li>
+  <li><b>⭐ Power-ups:</b> land on a ${t.star} to get a card (you can hold 3). Play one before you roll: ⚡ Double dice, 🎯 Pick a number, 💨 Push back, 🔄 Swap places, 🧊 Freeze. A 🛡️ Shield saves you from the next ${t.down} by itself.</li>
+  <li><b>🌀 Moving board:</b> every ${L.SHIFT_EVERY} rounds some ${t.downs} and ${t.ups} move to new places. You get a warning the round before.</li></ul></details>`;
+
+// ======================================================================
+// TV
+// ======================================================================
+async function tvMain() {
+  document.body.className = "tvb"; fit();
+  let room = (P.get("tv") || "").toUpperCase().replace(/[^A-Z]/g, "").slice(0, 4);
+  const sv = ls.get("lad_save", null);
+  let S;
+  if (room && sv && sv.S && sv.S.room === room && sv.S.phase !== "lobby") S = sv.S;
+  else { room = room || code4(); S = L.newState(room); const st = ls.get("lad_settings", null); if (st) Object.assign(S.settings, st); L.setSetting(S, "theme", S.settings.theme); }
+  history.replaceState(null, "", "?tv=" + room + (LOCAL ? "&local=1" : ""));
+  const joinUrl = location.origin + location.pathname + "?join=" + room + (LOCAL ? "&local=1" : "");
+  let link = null, conn = "", lastBuild = "", lastFx = S.fxN || 0, pushT = null, saveT = null, lastRoll = S.rollN || 0, rollingUntil = 0, pending = [];
+  const send = m => link && link.send(m);
+  const alive = p => p.bot || (p.seen && now() - p.seen < 20000);
+  function sendAll() { send({ t: "state", st: L.pub(S) }); if (S.phase !== "lobby") S.order.forEach(id => { if (!S.players[id].bot) send({ t: "priv", to: id, p: L.priv(S, id) }); }); }
+  function push() {
+    render();
+    clearTimeout(pushT); pushT = setTimeout(sendAll, 40);
+    clearTimeout(saveT); saveT = setTimeout(() => { if (S.phase === "lobby") ls.set("lad_settings", S.settings); ls.set("lad_save", { S, at: now() }); }, 500);
+  }
+  function onMsg(m) {
+    if (!m || !m.t || !m.id || ["state", "priv", "nope", "rejoin"].includes(m.t)) return;
+    const id = String(m.id);
+    if (m.t === "join") { const r = L.join(S, id, m.name, m.kid); if (r !== "ok") send({ t: "nope", to: id, why: r }); else S.players[id].seen = now(); return push(); }
+    const p = S.players[id]; if (!p) { send({ t: "rejoin", to: id }); return; }
+    const was = alive(p); p.seen = now();
+    if (m.t === "hi") { if (!was) push(); else if (S.phase !== "lobby") send({ t: "priv", to: id, p: L.priv(S, id) }); return; }
+    if (m.t === "leave") { L.leaveLobby(S, id); return push(); }
+    if (m.t === "act" && m.a) { const a = Object.assign({}, m.a); delete a.tv; if (L.act(S, id, a)) push(); }
+  }
+  const hostAct = a => { SFX.unlock(); if (L.act(S, S.host || "tv", Object.assign({ tv: true }, a))) push(); };
+  if (LOCAL) { window.__S = () => S; window.__push = () => push(); window.__L = L; }
+  setInterval(() => { const a = L.tick(S), b = L.botStep(S); if (a || b) push(); }, 250);
+  setInterval(sendAll, 3000);
+  setInterval(fireFx, 100);
+
+  // ---- pieces and animation ----
+  function pt(q) { return L.xy(q); }
+  function segPoint(g, local, moveDur, prev) {
+    const f = Math.min(1, Math.max(0, local / moveDur));
+    if (g.k === "walk") {
+      const n = g.path.length || 1, x = f * n, k = Math.min(n - 1, Math.floor(x)), fr = x - k;
+      const a = pt(k === 0 ? prev : g.path[k - 1]), b = pt(g.path[k]);
+      return [a[0] + (b[0] - a[0]) * fr, a[1] + (b[1] - a[1]) * fr - Math.sin(fr * Math.PI) * .35, k];
+    }
+    const e = f < .5 ? 2 * f * f : 1 - Math.pow(-2 * f + 2, 2) / 2;
+    if (g.k === "slide") { const s = S.board.snakes[g.i]; const [x, y] = s && s[0] === g.from ? snakePt(g.from, g.to, e) : [0, 0].map((_, j) => (C100(g.from)[j] + (C100(g.to)[j] - C100(g.from)[j]) * e)); return [x / 100, y / 100]; }
+    const a = pt(g.from), b = pt(g.to);
+    return [a[0] + (b[0] - a[0]) * e, a[1] + (b[1] - a[1]) * e - (g.k === "fly" ? Math.sin(e * Math.PI) * 1.4 : 0)];
+  }
+  let lastStepK = {};
+  function pieceXY(pid, t) {
+    const m = S.move, p = S.players[pid];
+    if (!m || !(pid in m.start)) return [pt(p.pos), false];
+    const el = (S.paused ? S.pausedAt : t) - m.t0;
+    let cur = m.start[pid];
+    for (const g of m.segs) {
+      if (g.pid !== pid) continue;
+      if (el < g.t0) return [pt(cur), true];
+      const moveDur = g.dur - 350 * L.pace, local = el - g.t0;
+      const end = g.k === "walk" ? g.path[g.path.length - 1] ?? cur : g.to;
+      if (local >= moveDur) { cur = end; continue; }
+      const r = segPoint(g, local, moveDur, cur);
+      if (g.k === "walk" && lastStepK[pid] !== r[2] + "|" + g.t0) { lastStepK[pid] = r[2] + "|" + g.t0; SFX.step(); }
+      return [[r[0], r[1]], true];
+    }
+    return [pt(m.final[pid] ?? cur), true];
+  }
+  function drawPieces() {
+    const box = $("#pieces"); if (!box) return;
+    const t = now(), spots = {};
+    S.order.forEach(id => { const [xy, mv] = pieceXY(id, t); const k = mv ? "m" + id : Math.round(xy[0] * 10) + "," + Math.round(xy[1] * 10); (spots[k] = spots[k] || []).push([id, xy, mv]); });
+    Object.values(spots).forEach(list => list.forEach(([id, xy, mv], j) => {
+      let el = box.querySelector(`[data-p="${id}"]`);
+      const p = S.players[id];
+      if (!el) { el = document.createElement("div"); el.className = "pc"; el.dataset.p = id; el.innerHTML = tokHTML(S, p, "").replace(/^<span[^>]*>|<\/span>$/g, ""); box.appendChild(el); }
+      el.style.setProperty("--c", p.color);
+      const n = list.length, off = n > 1 ? [[-.2, -.2], [.2, -.2], [-.2, .2], [.2, .2], [0, 0], [-.3, 0], [.3, 0], [0, -.3]][j % 8] : [0, 0];
+      const x = (xy[0] + off[0]) * 10, y = (xy[1] + off[1]) * 10;
+      el.style.left = x + "%"; el.style.top = y + "%";
+      el.classList.toggle("go", mv);
+      el.classList.toggle("turn", S.phase === "play" && id === S.turnPid && !mv && S.step === "roll");
+      const fz = !!p.frozen; if (fz !== !!el.querySelector(".fz")) { if (fz) el.insertAdjacentHTML("beforeend", `<span class="fz">🧊</span>`); else el.querySelector(".fz").remove(); }
+    }));
+    box.querySelectorAll(".pc").forEach(el => { if (!S.players[el.dataset.p]) el.remove(); });
+  }
+  (function loop() { if (S.phase !== "lobby" || S.order.length) drawPieces(); requestAnimationFrame(loop); })();
+
+  // ---- screens ----
+  function boardHTML() { return `<div class="frame"></div><div class="board ${S.phase === "play" && S.step === "shift" ? "shake" : ""}" id="board">${cellsHTML(S)}</div><div id="svgw">${boardSVG(S)}</div><div class="pieces" id="pieces"></div>`; }
+  function overHTML() {
+    const t = L.t(S);
+    if (S.phase === "end" && S.result) {
+      const w = S.players[S.result.winner];
+      return `<div class="over"><div class="box"><div style="display:flex;justify-content:center;margin-bottom:calc(1*var(--u,1vh))">${tokHTML(S, w, "tok").replace('class="tok"', 'class="tok" style="--c:' + w.color + ';width:calc(12*var(--u,1vh));height:calc(12*var(--u,1vh));font-size:calc(7*var(--u,1vh))"')}</div><h2>🏆 ${esc(w.name)} wins!</h2><p>${S.result.early ? "Game finished early. Furthest along wins." : `First to reach ${esc(t.finishName)}!`}</p>
+        <div class="rank">${S.result.order.map((id, i) => { const q = S.players[id]; return `<div><b style="width:1.6em">${["🥇", "🥈", "🥉"][i] || i + 1 + "."}</b>${tokHTML(S, q)}<span style="flex:1">${esc(q.name)}</span><span>square ${q.pos}</span></div>`; }).join("")}</div>
+        <div style="display:flex;gap:1vh;justify-content:center"><button class="btn gold" id="again" style="font-size:calc(2.2*var(--u,1vh))">▶ Play again (new board)</button><button class="btn" id="tolobby" style="font-size:calc(2*var(--u,1vh));color:#2b1d12;border-color:#bbb">Back to the lobby</button></div></div></div>`;
+    }
+    if (S.paused) return `<div class="over"><div class="box"><h2>⏸️ Paused</h2></div></div>`;
+    if (S.phase === "play" && S.step === "shift") return `<div class="banner">🌀 ${esc(t.shifted)}</div>`;
+    return "";
+  }
+  function sideHTML() {
+    const t = L.t(S), p = S.players[S.turnPid];
+    const doing = S.step === "roll" ? (p.bot ? "🤖 thinking…" : S.boost === "pick" ? "🎯 picking a number" : S.boost === "double" ? "⚡ rolling two dice!" : "shake your phone to roll") : S.step === "move" ? "on the move…" : S.step === "shift" ? "hold on tight!" : "";
+    const nextShift = L.moving(S) ? L.SHIFT_EVERY - ((S.round - 1) % L.SHIFT_EVERY) : 0;
+    return `<div class="info"><span>Round ${S.round}</span><span>${esc(L.STYLES[S.settings.style])}</span>${L.moving(S) ? `<span>🌀 Board moves ${nextShift === L.SHIFT_EVERY ? "in 3 rounds" : nextShift === 1 ? "<b>next round!</b>" : `in ${nextShift} rounds`}</span>` : ""}</div>
+      <div class="panel turnbox">${tokHTML(S, p)}<div style="flex:1;min-width:0">${esc(p.name)}'s turn<small>${doing}</small></div><div class="dice" id="tvd">${(S.die || [1]).map(n => dieHTML(n, "tvdie" + (S.boost === "pick" && S.step !== "roll" ? " pick" : ""))).join("")}</div></div>
+      <div class="plist">${S.order.slice().sort((a, b) => S.players[b].pos - S.players[a].pos).map(id => { const q = S.players[id], sh = (q.cards || []).includes("shield"); return `<div class="prow ${id === S.turnPid ? "turn" : ""}">${tokHTML(S, q)}<div class="pn">${esc(q.name)}<small>${q.bot ? "🤖 · " : ""}${q.kid ? "🧒 · " : ""}${L.powers(S) ? `🃏 ${(q.cards || []).length}${sh ? " · 🛡️" : ""}` : ""}${q.frozen ? " · 🧊 frozen" : ""}${alive(q) ? "" : " · 📵"}</small><div class="meter"><i style="width:${q.pos}%;background:${q.color}"></i></div></div><span class="sq">${q.pos || "–"}</span></div>`; }).join("")}</div>`;
+  }
+  function build() {
+    const t = L.t(S); setTheme(S.settings.theme); document.body.classList.add("tvb");
+    if (S.phase === "lobby") {
+      const n = S.order.length, nb = L.botCount(S);
+      app.innerHTML = `<div class="tv"><div class="bwrap">${boardHTML()}<div class="over" style="background:rgba(5,10,5,.45)"><div class="box"><div style="font-size:calc(7*var(--u,1vh));line-height:1">${t.icon}</div><h2>${esc(t.title)}</h2><p style="margin:.3em 0 .8em;max-width:calc(60*var(--u,1vh))">${esc(t.intro)}</p><div class="qrbox" id="qr"></div><p>Scan to join · code <b style="letter-spacing:.15em">${room}</b></p><p style="margin:0;opacity:.7">${!n ? "Waiting for players…" : `${n} player${n > 1 ? "s" : ""}${nb ? ` + ${nb} computer player${nb > 1 ? "s" : ""} 🤖` : ""}. Ready!`}</p></div></div></div>
+        <div class="side lobbyside"><div class="shead"><span class="ttl">Roll On</span><div class="code">Join code<b>${room}</b></div></div>
+        <div class="panel"><div class="plist">${S.order.map(id => { const q = S.players[id]; return `<div class="prow">${tokHTML(S, q)}<div class="pn">${esc(q.name)}<small>${id === S.host ? "⭐ Host · " : ""}${q.kid ? "🧒 Child" : "Grown-up"} · ${esc(pieceOf(S, q)[2])}</small></div></div>`; }).join("") || `<div class="muted">Waiting for players…</div>`}</div></div>
+        <div class="panel" id="sets">${L.SETTINGS().map(([k, label, vals]) => `<div class="setrow"><b>${label}</b>${vals.map(([x, l]) => `<button class="chip ${S.settings[k] === x ? "on" : ""}" data-set="${k}" data-val="${x}">${esc(l)}</button>`).join("")}</div>`).join("")}<button class="chip" id="reboard" style="margin-top:.4em">🔀 Shuffle the board</button></div>
+        <button class="btn gold big" id="start" ${n ? "" : "disabled"}>Start the game</button><div style="display:flex;gap:1vh">${canFull() ? `<button class="btn" id="full" style="flex:1">⛶ Full screen</button>` : ""}</div>
+        <div class="muted" style="font-size:calc(1.5*var(--u,1vh))">${esc(conn)}</div></div></div>`;
+      try { new QRCode($("#qr"), { text: joinUrl, width: 400, height: 400, correctLevel: QRCode.CorrectLevel.M }); } catch (e) { $("#qr").textContent = joinUrl; }
+      $("#start").onclick = () => hostAct({ t: "start" });
+      $("#sets").onclick = e => { if (e.target.id === "reboard") { hostAct({ t: "set", k: "theme", v: S.settings.theme }); return; } const b = e.target.closest("[data-set]"); if (!b) return; const v = b.dataset.val; hostAct({ t: "set", k: b.dataset.set, v: isNaN(v) ? v : Number(v) }); };
+    } else {
+      app.innerHTML = `<div class="tv"><div class="bwrap">${boardHTML()}<div id="over"></div><div id="cap" class="cap"></div><button class="btn gold wake" id="wake" ${woke() ? "hidden" : ""}>🔊 Tap here to turn on the narrator and sounds</button></div>
+        <div class="side"><div class="shead"><span class="ttl">${esc(t.title)}</span><div class="code">Join code<b>${room}</b></div></div><div id="sd"></div><div class="feed" id="feed"></div>
+        <div class="tvctl"><button class="btn" id="pause">⏸️ Pause</button><button class="btn" id="nudge">⏭ Move it along</button><button class="btn" id="snd" title="Sound effects">${SFX.on ? "🔊" : "🔇"}</button><button class="btn" id="narr">${NARR.on ? "🗣️ Narrator" : "🤐 Narrator"}</button>${canFull() ? `<button class="btn" id="full">⛶</button>` : ""}<button class="btn" id="quit">🏁 Finish game</button><span class="muted" style="font-size:calc(1.4*var(--u,1vh))">${esc(conn)}</span></div></div></div>`;
+      $("#pause").onclick = () => hostAct({ t: "pause" }); $("#nudge").onclick = () => hostAct({ t: "nudge" });
+      $("#snd").onclick = e => { e.target.textContent = SFX.toggle() ? "🔊" : "🔇"; };
+      $("#narr").onclick = () => narrSheet();
+      $("#wake").onclick = () => { SFX.unlock(); $("#wake").hidden = true; if (NARR.on) NARR.line("Narrator ready. Let's play!", 2); };
+      $("#quit").onclick = () => { if (confirm("Finish the game now? Whoever is furthest along wins.")) hostAct({ t: "endnow" }); };
+    }
+    const f = $("#full"); if (f) f.onclick = goFull;
+  }
+  const woke = () => !navigator.userActivation || navigator.userActivation.hasBeenActive;
+  let lastOver = "", lastSvg = "", lastCells = "", lastSide = "";
+  function render() {
+    const key = (S.phase === "lobby" ? "lobby" : "game") + "|" + S.settings.theme + "|" + (S.phase === "lobby" ? JSON.stringify([S.order.map(id => [S.players[id].name, S.players[id].kid]), S.settings, conn, S.board]) : conn);
+    if (key !== lastBuild) { lastBuild = key; lastOver = lastSvg = lastCells = lastSide = ""; build(); $$(".pc").forEach(e => e.remove()); }
+    // board pictures (snakes and ladders move in the moving-board style)
+    const svg = boardSVG(S); if (svg !== lastSvg) { lastSvg = svg; const w = $("#svgw"); if (w) w.innerHTML = svg; }
+    const cells = cellsHTML(S) + (S.phase === "play" && S.step === "shift"); if (cells !== lastCells) { lastCells = cells; const b = $("#board"); if (b) { b.innerHTML = cellsHTML(S); b.classList.toggle("shake", S.phase === "play" && S.step === "shift"); } }
+    if (S.phase === "lobby") return;
+    if (S.rollN !== lastRoll) { lastRoll = S.rollN; rollingUntil = now() + 800; }
+    const sd = sideHTML(); if (sd !== lastSide) { lastSide = sd; $("#sd").innerHTML = sd; }
+    $("#feed").innerHTML = S.log.slice(-7).map(l => `<div>${esc(l)}</div>`).join("");
+    $("#pause").textContent = S.paused ? "▶️ Resume" : "⏸️ Pause";
+    L.pace = NARR.on ? 1.25 : 1;
+    const ov = overHTML(); if (ov !== lastOver) { lastOver = ov; $("#over").innerHTML = ov; const a = $("#again"); if (a) { a.onclick = () => hostAct({ t: "again" }); $("#tolobby").onclick = () => hostAct({ t: "lobby" }); } }
+    (S.fx || []).filter(f => f.n > lastFx).forEach(f => pending.push(f)); lastFx = S.fxN;
+  }
+  // dice tumbling on the TV
+  setInterval(() => { const d = $("#tvd"); if (!d || S.phase !== "play") return; if (now() < rollingUntil) { d.querySelectorAll(".die").forEach(x => { x.classList.add("rolling"); x.innerHTML = pipsHTML(1 + Math.random() * 6 | 0); }); } else if (d.querySelector(".rolling")) { d.innerHTML = (S.die || [1]).map(n => dieHTML(n, "tvdie")).join(""); } }, 90);
+  // narration and sounds, each at the moment it happens on the board
+  function fireFx() {
+    if (!pending.length || S.paused) return;
+    const t = now(); pending.sort((a, b) => a.at - b.at);
+    while (pending.length && pending[0].at <= t) effect(pending.shift());
+  }
+  const nm = id => (S.players[id] || {}).name || "Someone";
+  const fill = (s, o) => s.replace(/\{(\w+)\}/g, (_, k) => o[k]);
+  let nearSaid = {};
+  function effect(f) {
+    const t = L.t(S), n = nm(f.pid);
+    switch (f.k) {
+      case "intro": nearSaid = {}; NARR.line(t.intro, 2); break;
+      case "turn": SFX.turn(); NARR.line(pickOne([`Over to ${n}.`, `${n}, your turn!`, `Your go, ${n}.`, `Next up, ${n}.`]), 1); break;
+      case "roll": SFX.dice(); if (f.pick) NARR.line(`${n} picks a ${f.d[0]}!`, 1); else if (f.d.length > 1) NARR.line(`${f.d[0]} and ${f.d[1]}. That's ${f.d[0] + f.d[1]}!`, 1); else NARR.line(pickOne([`A ${f.d[0]}.`, `${n} rolls a ${f.d[0]}.`, `It's a ${f.d[0]}!`]), 0); break;
+      case "snake": SFX.slide(); NARR.line(fill(pickOne(t.slideSay), { n, to: f.to }), 2); hot("sn", f.from); break;
+      case "ladder": SFX.climb(); NARR.line(fill(pickOne(t.climbSay), { n, to: f.to }), 2); hot("ld", f.from); break;
+      case "star": SFX.star(); NARR.line(pickOne([`${n} found a ${t.starName}! A power-up card.`, `Ooh, a ${t.starName}! ${n} gets a power-up.`]), 1); break;
+      case "fullhand": NARR.line(`${n}'s hands are full of cards already!`, 0); break;
+      case "shield": SFX.shield(); NARR.line(`${n}'s shield saves them from the ${t.down}!`, 2); break;
+      case "bounce": NARR.line(`Too far! ${n} bounces back.`, 1); break;
+      case "six": NARR.line(pickOne([`A six! ${n} goes again.`, `Six! Roll again, ${n}!`]), 1); break;
+      case "frozen": SFX.freeze(); NARR.line(`${n} is frozen solid and misses a go!`, 2); break;
+      case "card": {
+        const q = nm(f.target);
+        if (f.c === "double") { SFX.card(); NARR.line(`Double dice! ${n} rolls two dice this turn.`, 2); }
+        else if (f.c === "pick") { SFX.card(); NARR.line(`${n} gets to pick a number!`, 2); }
+        else if (f.c === "push") { SFX.whoosh(); NARR.line(`Whoosh! ${n} pushes ${q} back five squares!`, 2); }
+        else if (f.c === "swap") { SFX.whoosh(); NARR.line(`${n} swaps places with ${q}!`, 2); }
+        else if (f.c === "freeze") { SFX.freeze(); NARR.line(`Brrr! ${n} freezes ${q}. They miss their next go!`, 2); }
+        break;
+      }
+      case "warn": SFX.rumble(); NARR.line(t.warn, 2); break;
+      case "shift": SFX.rumble(); NARR.line(t.shifted, 2); break;
+      case "win": SFX.win(); NARR.line(`${n} wins! Well done, ${n}!`, 2); break;
+    }
+    // "nearly home" news
+    if (S.phase === "play") S.order.forEach(id => { const q = S.players[id]; if (q.pos >= 90 && !nearSaid[id]) { nearSaid[id] = 1; NARR.line(pickOne([`${q.name} is nearly home!`, `Watch out, ${q.name} is in the nineties!`]), 0); } });
+  }
+  function hot(cls, q) { const sel = cls === "sn" ? S.board.snakes.findIndex(s => s[0] === q) : S.board.ladders.findIndex(l => l[0] === q); const el = $(`.snl .${cls}[data-${cls === "sn" ? "s" : "l"}="${sel}"]`); if (el) { el.classList.add("hot"); setTimeout(() => el.classList.remove("hot"), 2200); } }
+  function narrSheet() {
+    SFX.unlock();
+    const d = document.createElement("div"); d.className = "sheet vsheet"; document.body.appendChild(d);
+    let st = null, sv = null;
+    const paint = () => {
+      const cloud = NARR.engine === "cloud", vs = NARR.voices();
+      const brit = v => /brit|engl|uk/i.test(v.accent) ? 0 : 1;
+      const sl = (sv || []).slice().sort((a, b) => (b.mine - a.mine) || brit(a) - brit(b) || a.name.localeCompare(b.name));
+      const stTxt = !st ? "Checking the studio voices…" : st.ready ? "✅ Studio voices are ready" : "⚠️ Studio voices aren't available right now. Using this device's voice.";
+      d.innerHTML = `<div><h2 style="margin:0">🗣️ Narrator</h2>
+        <label class="vrow"><input type="checkbox" id="von" ${NARR.on ? "checked" : ""}> Read everything out loud</label>
+        <div class="vseg"><button class="btn ${cloud ? "gold" : ""}" data-eng="cloud">⭐ Studio voice</button><button class="btn ${cloud ? "" : "gold"}" data-eng="device">📱 This device's voice</button></div>
+        ${cloud ? `<p class="muted" style="margin:0;font-size:.85em">${stTxt}</p>
+          ${sl.length ? `<label>Voice<select id="csel">${sl.map(v => `<option value="${esc(v.id)}" ${v.id === NARR.cvoice ? "selected" : ""}>${v.mine ? "💛 " : ""}${esc(v.name)}${v.accent ? ` · ${esc(v.accent)}` : ""}${v.gender ? ` · ${esc(v.gender)}` : ""}</option>`).join("")}</select></label>
+          <div class="vseg"><button class="btn ${NARR.cmodel === "quick" ? "gold" : ""}" data-mod="quick">⚡ Quick (goes further)</button><button class="btn ${NARR.cmodel === "best" ? "gold" : ""}" data-mod="best">🎭 Best</button></div>` : ""}`
+        : vs.length ? `<label>Voice <span class="muted">(⭐ = better quality)</span><select id="vsel">${vs.map(v => `<option value="${esc(v.name)}" ${v.name === NARR.voice ? "selected" : ""}>${NARR.good(v) ? "⭐ " : ""}${esc(v.name)} · ${esc(v.lang)}</option>`).join("")}</select></label>` : `<p class="muted">This device hasn't given us any voices yet.</p>`}
+        <label>Speed <input type="range" id="vrate" min="0.7" max="1.4" step="0.05" value="${NARR.rate}"></label>
+        <div style="display:flex;gap:.6em"><button class="btn" id="vtest">▶️ Test voice</button><button class="btn gold" id="vok">Done</button></div></div>`;
+      const q = s => d.querySelector(s);
+      if (q("#csel")) q("#csel").onchange = e => { NARR.setCvoice(e.target.value); NARR.test(); };
+      if (q("#vsel")) q("#vsel").onchange = e => { NARR.setVoice(e.target.value); NARR.test(); };
+      d.querySelectorAll("[data-eng]").forEach(b => b.onclick = () => { NARR.setEngine(b.dataset.eng); paint(); });
+      d.querySelectorAll("[data-mod]").forEach(b => b.onclick = () => { NARR.setCmodel(b.dataset.mod); paint(); NARR.test(); });
+      q("#vrate").oninput = e => NARR.setRate(+e.target.value);
+      q("#vtest").onclick = () => NARR.test();
+      q("#von").onchange = e => { if (e.target.checked !== NARR.on) NARR.toggle(); $("#narr").textContent = NARR.on ? "🗣️ Narrator" : "🤐 Narrator"; };
+      q("#vok").onclick = () => d.remove();
+    };
+    d.onclick = e => { if (e.target === d) d.remove(); };
+    paint();
+    NARR.status(true).then(r => { st = r; if (r.ready) return NARR.studio().then(v => { sv = v; }); }).then(() => { if (d.isConnected) paint(); });
+  }
+  addEventListener("resize", () => { lastBuild = ""; render(); });
+  addEventListener("click", () => { SFX.unlock(); const w = $("#wake"); if (w) w.hidden = true; });
+  render();
+  try { link = await connect(room, onMsg, s => { const c = s === "ok" ? (LOCAL ? "Local test mode" : "") : "Connection lost. Reload if phones stop working."; if (c !== conn) { conn = c; lastBuild = ""; render(); } }); }
+  catch (e) { conn = "Couldn't connect. Check the internet and reload."; }
+  lastBuild = ""; push();
+}
+
+// ======================================================================
+// Phone
+// ======================================================================
+async function phoneMain(codeRaw) {
+  document.body.className = "ph th-jungle";
+  const room = String(codeRaw || "").toUpperCase().replace(/[^A-Z]/g, "").slice(0, 4);
+  if (room.length !== 4) return home();
+  const SLOT = LOCAL ? (P.get("slot") || "") : "", KID = "lad_id" + SLOT, KME = "lad_me" + SLOT;
+  const id = ls.get(KID, null) || uid(); ls.set(KID, id);
+  let me = ls.get(KME, null), S = null, PV = null, link = null, lastKey = "", watch = false, lastFx = -1, aim = null, prevCards = null;
+  const send = m => link && link.send(Object.assign({ id }, m));
+  const act = a => { send({ t: "act", a }); vib(15); };
+  const mp = () => S && S.players[id];
+
+  function joinForm() {
+    lastKey = "join";
+    app.innerHTML = `<div class="home"><h1><small>ROLL ON</small>Snakes &amp; Ladders</h1><p class="muted" style="text-align:center">Game ${esc(room)}</p>
+      <input id="nm" maxlength="14" placeholder="Your name" value="${esc(me ? me.name : "")}">
+      <label class="card" style="display:flex;gap:.7em;align-items:flex-start"><input type="checkbox" id="kid" style="width:auto;margin-top:.3em" ${me && me.kid ? "checked" : ""}><span>🧒 <b>A child is playing</b><br><span class="muted" style="font-size:.9em">Shows what's coming up ahead, and reads out your power-ups.</span></span></label>
+      <button class="btn big gold" id="go">Join the game</button>${watch ? `<p class="muted">This game has already started. If you were playing, use the same name to carry on.</p>` : ""}</div>`;
+    const go = () => { const v = $("#nm").value.trim(); if (!v) return $("#nm").focus(); me = { name: v, kid: $("#kid").checked }; ls.set(KME, me); askMotion(); watch = false; lastKey = ""; send({ t: "join", name: me.name, kid: me.kid }); render(); };
+    $("#go").onclick = go; $("#nm").onkeydown = e => { if (e.key === "Enter") go(); };
+  }
+  let lastA = null, lastShake = 0;
+  function askMotion() { try { if (window.DeviceMotionEvent && typeof DeviceMotionEvent.requestPermission === "function") DeviceMotionEvent.requestPermission().catch(() => { }); } catch (e) { } try { speechSynthesis.getVoices(); } catch (e) { } }
+  addEventListener("devicemotion", e => { const a = e.accelerationIncludingGravity; if (!a || a.x == null) return; if (lastA) { const d = Math.abs(a.x - lastA.x) + Math.abs(a.y - lastA.y) + Math.abs(a.z - lastA.z); if (d > 26 && now() - lastShake > 1500 && canRoll() && S.boost !== "pick" && !aim) { lastShake = now(); doRoll(); } } lastA = { x: a.x, y: a.y, z: a.z }; });
+  const canRoll = () => S && S.phase === "play" && !S.paused && S.turnPid === id && S.step === "roll";
+  function doRoll(n) { act(n ? { t: "roll", n } : { t: "roll" }); vib([40, 30, 40, 30, 80]); const d = $("#pdie"); if (d) d.innerHTML = (S.boost === "double" ? [1, 1] : [1]).map(() => dieHTML(1 + Math.random() * 6 | 0, "rolling")).join(""); }
+
+  function onMsg(m) {
+    if (!m) return;
+    if (m.t === "state") {
+      const first = !S; S = m.st; setTheme(S.settings.theme);
+      if (me && !S.players[id] && !watch) send({ t: "join", name: me.name, kid: me.kid });
+      if (first) lastFx = S.fxN || 0;
+      (S.fx || []).filter(f => f.n > lastFx).forEach(effect); lastFx = S.fxN || 0;
+      if (!canRoll()) aim = null;
+      render(); return;
+    }
+    if (m.to !== id) return;
+    if (m.t === "priv") {
+      const cards = (m.p && m.p.cards) || [];
+      if (prevCards && cards.length > prevCards.length && S && S.phase === "play") { const c = L.CARDS[cards[cards.length - 1]]; vib([30, 30, 60]); toast(`${c.icon} New power-up: ${c.name}!`, 3000); if (me && me.kid) say(`You got a power-up! ${c.name}. ${c.txt(L.t(S))}`); }
+      prevCards = cards; PV = m.p; render(); return;
+    }
+    if (m.t === "rejoin" && me) send({ t: "join", name: me.name, kid: me.kid });
+    if (m.t === "nope" && m.why === "watch") { watch = true; lastKey = ""; render(); }
+    if (m.t === "nope" && m.why === "full") toast("Sorry, this game is full (8 players).");
+  }
+  function effect(f) {
+    const t = L.t(S);
+    if (f.k === "turn" && f.pid === id) { vib([80, 60, 80]); toast("🎲 Your turn!"); }
+    if (f.k === "card" && f.target === id) { const c = L.CARDS[f.c]; const by = (S.players[f.pid] || {}).name || "Someone"; vib([100, 50, 100]); toast(f.c === "freeze" ? `🧊 ${by} froze you! You miss your next go.` : f.c === "push" ? `💨 ${by} pushed you back 5!` : `🔄 ${by} swapped places with you!`, 3500); void c; }
+    if ((f.k === "snake" || f.k === "ladder") && f.pid === id) setTimeout(() => { vib(f.k === "snake" ? [200, 80, 200] : [40, 40, 40, 40, 40]); toast(f.k === "snake" ? `😱 Down the ${t.down} to ${f.to}!` : `🎉 Up the ${t.up} to ${f.to}!`); }, Math.max(0, f.at - now()));
+    if (f.k === "win") vib([100, 50, 100, 50, 200]);
+  }
+  setInterval(() => send({ t: "hi" }), 5000);
+
+  function render() {
+    if (!me || (watch && !S?.players[id])) { if (lastKey !== "join") joinForm(); return; }
+    const p = mp();
+    const key = !S ? "wait" : !p ? "joining" : JSON.stringify([S.phase, S.step, S.turnPid, S.rollN, S.boost, S.cardUsed, S.paused, S.settings, S.order.map(x => [S.players[x].pos, S.players[x].frozen, S.players[x].name]), S.host, PV, aim, S.round]);
+    if (key === lastKey) return; lastKey = key;
+    if (!S) { app.innerHTML = `<div class="home" style="justify-content:center;text-align:center"><div class="bigemoji">🐍</div><h2>Finding the TV…</h2><p class="muted">Make sure the TV screen is on game ${esc(room)}.</p></div>`; return; }
+    if (!p) { app.innerHTML = `<div class="home" style="justify-content:center;text-align:center"><div class="bigemoji">🐍</div><h2>Joining…</h2></div>`; return; }
+    app.innerHTML = `<div class="pw"><div class="ptop">${tokHTML(S, p, "ptok")}<span class="nm">${esc(p.name)}${S.host === id ? " ⭐" : ""}</span>${S.phase !== "lobby" ? `<span class="sqchip">${p.pos ? "Square " + p.pos : "Start"}</span>` : ""}${S.host === id && S.phase === "play" ? `<button id="gear" style="font-size:1.3rem">⚙️</button>` : ""}</div><div class="pmain">${body()}</div></div>`;
+    wire();
+  }
+  const myCards = () => (PV && PV.cards) || [];
+  function aheadHTML(p) {
+    const t = L.t(S), out = [];
+    for (let n = 1; n <= 6; n++) { const v = L.preview(S, Object.assign({}, p, { cards: myCards() }), n); const ic = v.snake ? (myCards().includes("shield") ? "🛡️" : t.key === "space" ? "🕳️" : t.key === "xmas" ? "❄️" : "🐍") : v.ladder ? (t.key === "space" ? "🚀" : "🪜") : v.star ? t.star : v.q >= L.N ? t.finish : "·"; out.push(`<span>${n}<b>${ic}</b></span>`); }
+    return `<div class="ahead">${out.join("")}</div><p class="muted cc" style="margin:.3em 0 0;font-size:.8rem">What each roll would land on</p>`;
+  }
+  function cardsHTML(canPlay) {
+    if (!L.powers(S)) return "";
+    const t = L.t(S), cs = myCards();
+    return `<div class="card"><h3>🃏 My power-ups (${cs.length}/${L.MAXCARDS})</h3>${cs.length ? `<div class="pcards">${cs.map((c, i) => { const C = L.CARDS[c]; return `<div class="pcard"><span class="ci">${C.icon}</span><span>${esc(C.name)}<small>${esc(C.txt(t))}</small></span>${c === "shield" ? `<span class="btn" style="background:#e8f5e9;color:#1b5e20;border-color:#a5d6a7">Ready</span>` : canPlay ? `<button class="btn gold" data-card="${i}">Play</button>` : ""}</div>`; }).join("")}</div>${canPlay ? `<p class="muted" style="margin:.5em 0 0;font-size:.85rem">You can play one card before you roll.</p>` : ""}` : `<p class="muted" style="margin:0">Land on a ${t.star} to get a power-up card.</p>`}</div>`;
+  }
+  function body() {
+    const p = mp(), t = L.t(S);
+    if (S.phase === "lobby") return `<div class="card cc">${tokHTML(S, p, "ptok big")}<h2 style="margin-top:.5em">You're the ${esc(pieceOf(S, p)[2])}!</h2><p class="muted" style="margin:0">${p.kid ? "🧒 Child player" : "Grown-up player"} · <button id="edit" style="text-decoration:underline;color:var(--muted)">change</button></p></div>
+      ${S.host === id ? `<div class="card"><h3>⭐ You're the host</h3>${L.SETTINGS().map(([k, label, vals]) => `<div class="setrow"><b>${label}</b>${vals.map(([x, l]) => `<button class="chip ${S.settings[k] === x ? "on" : ""}" data-set="${k}" data-val="${x}">${esc(l)}</button>`).join("")}</div>`).join("")}<button class="btn gold big" id="start" style="margin-top:.6em">Start the game</button></div>` : `<div class="card cc">Waiting for ${esc((S.players[S.host] || {}).name || "the host")} to start.</div>`}
+      <div class="card">${RULES(t)}</div><button class="btn" id="leave">Leave</button>`;
+    if (S.phase === "end") { const w = S.result && S.result.winner; return `<div class="card cc hot"><div class="bigemoji">${w === id ? "🏆" : t.icon}</div><h2>${w === id ? "You win!" : `${esc((S.players[w] || {}).name)} wins!`}</h2><p class="muted">${S.result.order.map((x, i) => `${["🥇", "🥈", "🥉"][i] || i + 1 + "."} ${esc(S.players[x].name)} (${S.players[x].pos})`).join("<br>")}</p></div>${S.host === id ? `<button class="btn gold big" id="again">▶ Play again (new board)</button><button class="btn big" id="tolobby">Back to the lobby</button>` : ""}`; }
+    if (S.paused) return `<div class="card cc"><div class="bigemoji">⏸️</div><h2>Paused</h2></div>`;
+    const myTurn = S.turnPid === id, cur = S.players[S.turnPid], out = [];
+    if (aim) {
+      const C = L.CARDS[myCards()[aim.i]];
+      out.push(`<div class="card hot"><h2 class="cc">${C.icon} ${esc(C.name)}</h2><p class="muted cc" style="margin:.2em 0 .7em">${aim.c === "swap" ? "Who do you want to swap places with?" : aim.c === "push" ? "Who do you want to push back 5 squares?" : "Who do you want to freeze?"}</p><div class="tlist">${S.order.filter(x => x !== id).sort((a, b) => S.players[b].pos - S.players[a].pos).map(x => { const q = S.players[x], to = Math.max(0, q.pos - 5), sn = aim.c === "push" && L.snakeAt(S, to); return `<button data-target="${x}">${tokHTML(S, q, "ptok")}<span style="flex:1">${esc(q.name)}<br><small class="muted">square ${q.pos || "start"}${aim.c === "push" ? ` → ${to}${sn ? ` ${t.key === "space" ? "🕳️" : t.key === "xmas" ? "❄️" : "🐍"} ${t.down}!` : L.ladderAt(S, to) ? ` (a ${t.up}, careful!)` : ""}` : ""}</small></span></button>`; }).join("")}</div><button class="btn big" id="cancel" style="margin-top:.7em">Back</button></div>`);
+      return out.join("");
+    }
+    if (myTurn && S.step === "roll") {
+      if (S.boost === "pick") {
+        out.push(`<div class="card hot"><h2 class="cc">🎯 Pick your number</h2><div class="picks">${[1, 2, 3, 4, 5, 6].map(n => { const v = L.preview(S, Object.assign({}, p, { cards: myCards() }), n); const what = v.q >= L.N ? `${t.finish} Home!` : v.snake ? (myCards().includes("shield") ? `🛡️ shield saves you` : `↓ ${t.down} to ${v.end}`) : v.ladder ? `↑ ${t.up} to ${v.end}` : v.star ? `${t.star} power-up` : `to ${v.q}`; return `<button data-pick="${n}" class="${v.end > p.pos + 6 || v.q >= L.N ? "good" : v.end < p.pos ? "bad" : ""}"><b>${n}</b>${esc(what)}</button>`; }).join("")}</div></div>`);
+      } else {
+        out.push(`<div class="card hot cc"><h2>🎲 Your turn!</h2>${S.boost === "double" ? `<p style="font-weight:900;margin:.2em 0">⚡ Double dice!</p>` : ""}<div class="pdie shake" id="pdie">${(S.boost === "double" ? [S.die[0] || 1, S.die[1] || 1] : [S.die[0] || 1]).map(n => dieHTML(n)).join("")}</div><button class="btn gold big" id="roll">Tap to roll</button><p class="muted" style="margin:.5em 0 0">…or shake your phone!</p>${p.kid && S.boost !== "double" ? aheadHTML(p) : ""}</div>`);
+      }
+      out.push(cardsHTML(!S.cardUsed && !S.boost));
+      return out.join("");
+    }
+    if (myTurn) out.push(`<div class="card cc"><div class="bigemoji">${S.step === "shift" ? "🌀" : "🏃"}</div><h2>${S.step === "shift" ? "The board is moving!" : "Watch the TV!"}</h2><p class="muted" style="margin:0">${S.step === "move" ? `You rolled ${S.die.join(" + ")}.` : ""}</p></div>`);
+    else out.push(`<div class="card cc">${tokHTML(S, cur, "ptok big")}<h2 style="margin-top:.4em">${esc(cur.name)}'s turn</h2><p class="muted" style="margin:0">${S.step === "shift" ? "🌀 The board is moving!" : `${esc(cur.name)} is on square ${cur.pos || "start"}.`}</p>${p.frozen ? `<p style="font-weight:800">🧊 You're frozen! You'll miss your next go.</p>` : ""}</div>`);
+    out.push(`<div class="card"><h3>🏁 The race</h3>${S.order.slice().sort((a, b) => S.players[b].pos - S.players[a].pos).map(x => { const q = S.players[x]; return `<div style="display:flex;align-items:center;gap:.6em;margin:.35em 0;font-weight:800">${tokHTML(S, q, "ptok")}<span style="flex:1">${esc(q.name)}${x === id ? " (you)" : ""}${q.frozen ? " 🧊" : ""}</span><span>${q.pos || "start"}</span></div>`; }).join("")}</div>`);
+    out.push(cardsHTML(false));
+    if (p.kid && !myTurn) out.push(`<div class="card"><h3>👀 Coming up for you</h3>${aheadHTML(p)}</div>`);
+    return out.join("");
+  }
+  function wire() {
+    const on = (s, f) => { const e = $(s); if (e) e.onclick = f; };
+    $$("[data-set]").forEach(b => b.onclick = () => { const v = b.dataset.val; act({ t: "set", k: b.dataset.set, v: isNaN(v) ? v : Number(v) }); });
+    on("#start", () => act({ t: "start" })); on("#again", () => act({ t: "again" })); on("#tolobby", () => act({ t: "lobby" }));
+    on("#edit", () => { lastKey = ""; me = null; joinForm(); me = ls.get(KME, null); });
+    on("#leave", () => { send({ t: "leave" }); ls.del(KME); me = null; lastKey = ""; render(); });
+    on("#roll", () => { askMotion(); doRoll(); });
+    $$("[data-pick]").forEach(b => b.onclick = () => doRoll(+b.dataset.pick));
+    $$("[data-card]").forEach(b => b.onclick = () => { const i = +b.dataset.card, c = myCards()[i]; if (L.TARGETED.includes(c)) { aim = { i, c }; lastKey = ""; render(); scrollTo(0, 0); } else act({ t: "card", i }); });
+    $$("[data-target]").forEach(b => b.onclick = () => { act({ t: "card", i: aim.i, target: b.dataset.target }); aim = null; lastKey = ""; render(); });
+    on("#cancel", () => { aim = null; lastKey = ""; render(); });
+    on("#gear", () => { const d = document.createElement("div"); d.className = "sheet"; d.innerHTML = `<div><h3 style="margin:0">⚙️ Host controls</h3><button class="btn big" data-h="pause">${S.paused ? "▶️ Carry on" : "⏸️ Pause"}</button><button class="btn big" data-h="nudge">⏭ Move a stuck turn along</button><button class="btn big" data-h="endnow">🏁 Finish the game now</button><button class="btn big gold" data-h="x">Close</button></div>`; document.body.appendChild(d); d.onclick = e => { const b = e.target.closest("[data-h]"); if (e.target === d || (b && b.dataset.h === "x")) return d.remove(); if (!b) return; if (b.dataset.h === "endnow" && !confirm("Finish now? Whoever is furthest along wins.")) return; act({ t: b.dataset.h }); d.remove(); }; });
+  }
+  render();
+  try { link = await connect(room, onMsg, () => { }); if (me) send({ t: "join", name: me.name, kid: me.kid }); }
+  catch (e) { app.innerHTML = `<div class="home"><h2>Couldn't connect</h2><p class="muted">Check the internet and reload.</p></div>`; }
+}
+</script>
+</body>
+</html>
